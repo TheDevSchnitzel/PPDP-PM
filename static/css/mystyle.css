@@ -27,3 +27,8 @@ overflow:scroll;
     max-height: 150px !important;
     overflow-y: auto !important;
 }
+
+.input-group-mediumWith {
+    min-width:125px;
+    text-align:left;
+}
