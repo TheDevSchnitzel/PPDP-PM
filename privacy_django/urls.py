@@ -26,7 +26,7 @@ urlpatterns = [
     path('role_mining/', include('role_mining.urls')),
     path('connector/', include('connector.urls')),
     path('tlkc_privacy/', include('tlkc_privacy.urls')),
-    path('anonymization_main/', views.anonymization_main, name='anonymization_main'),
+    path('anonymization/', include('anonymization.urls')),
     path('analyses_main/', views.analyses_main, name='analyses_main'),
     path('comming_main/', views.comming_main, name='comming_main')
 ]

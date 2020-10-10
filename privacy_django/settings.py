@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     'role_mining.apps.RoleMiningConfig',
     'connector.apps.ConnectorConfig',
     'tlkc_privacy.apps.TlkcPrivacyConfig',
+    'anonymization.apps.AnonymizationConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
