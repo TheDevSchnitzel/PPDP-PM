@@ -211,6 +211,21 @@
 {% block script %}
 
 <script>
+    var token = '{{csrf_token}}';
+
+    var conditionStructure = //Index of the conditions is the order of application to the log
+        [
+            {
+                'Operation': 'Addition',
+                'Level': '',
+                'Target': ''
+            },
+            {
+                'Operation': 'Cryptography',
+                'Level': '',
+                'Target': ''
+            },
+        ];
 
     $(document).ready(function () {
         $('[data-toggle="tooltip"]').tooltip();
@@ -221,9 +236,27 @@
             $(this).parents(".dropdown").find('.btn').val($(this).data('value'));
 
             let id = $(this).parents(".dropdown").find('.btn')[0].id;
-            $('#' + id + '_DATA').val($(this).text());
+            $('#' + id + '_DATA')
+                .val($(this).text())
+                .trigger('change');
         });
 
+        $("#DDMB_anon_operation_DATA").change(function () {
+            var selectedlog = $(this).val();
+            $.ajax({
+                headers: { "X-CSRFToken": token },
+                type: "POST",
+                url: "anonymization_main",
+                data: { log_name: selectedlog },
+                dataType: 'json',
+            }).done(function (result) {
+                no_trace = result.log_attributes.no_traces;
+                $('#no_trace').text("No of traces: " + no_trace);
+
+                no_event = result.log_attributes.no_events;
+                $('#no_event').text("No of events: " + no_event);
+            });
+        });
     });
 </script>
 

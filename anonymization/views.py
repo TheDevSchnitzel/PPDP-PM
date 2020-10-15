@@ -8,7 +8,7 @@ from datetime import datetime
 from pp_role_mining.privacyPreserving import privacyPreserving
 from django.http import HttpResponseRedirect, HttpResponse
 from wsgiref.util import FileWrapper
-
+import json
 from .anonymizationOperations import *
 
 
@@ -21,11 +21,31 @@ def anonymization_main(request):
         reqValues = extractHttpRequestValues(request)
         result = {'State' : 'Empty'}
 
-        if 'testButton' in request.POST:
+        if request.is_ajax():
+            xes_log = xes_importer_factory.apply(event_log)
+            case_attribs = []
+            for case_index, case in enumerate(xes_log):
+                for key in case.attributes.keys():
+                    if key not in case_attribs:
+                        case_attribs.append(key)
+            event_attribs = []
+            for case_index, case in enumerate(xes_log):
+                for event_index, event in enumerate(case):
+                    for key in event.keys():
+                        if key not in event_attribs:
+                            event_attribs.append(key)
+
+            json_respone = {'case_attributes': case_attribs, 'event_attributes': event_attribs}
+            return HttpResponse(json.dumps(json_respone),content_type='application/json')
+
+        elif 'testButton' in request.POST:
             result['OP'] = reqValues['OP_Operation'].Process(event_log, reqValues)
 
             if(settings.DEBUG):
                 result['Log'] = event_log
+
+        elif 'applyButton' in request.POST:
+            result['OP'] = reqValues['OP_Operation'].Process(event_log, reqValues)
 
         return render(request, 'anonymization_main.html', {'log_name': settings.EVENT_LOG_NAME, 'values': '', 'outputs': result})
 
