@@ -102,6 +102,29 @@
                             </div>
                         </div>
 
+                        <div class="input-group mb-3 d-none" id="DDMB_anon_target_attribute_div">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-mediumWith"
+                                    id="basic-addon1">Attribute:</span>
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-secondary dropdown-toggle" type="button"
+                                    id="DDMB_anon_target_attribute" data-toggle="dropdown" aria-haspopup="true"
+                                    aria-expanded="false">
+                                    Choose Attribute
+                                    <span class="caret"></span>
+                                </button>
+                                <div class="dropdown-menu" aria-labelledby="DDMB_anon_target_attribute">
+                                    <a class="dropdown-item" href="#">Case</a>
+                                    <a class="dropdown-item" href="#">Event</a>
+                                    <a class="dropdown-item" href="#">Case.Attribute</a>
+                                    <a class="dropdown-item" href="#">Event.Attribute</a>
+                                </div>
+                                <input type="hidden" id="DDMB_anon_target_attribute_DATA"
+                                    name="DDMB_anon_target_attribute_DATA" />
+                            </div>
+                        </div>
+
 
                         <div class="pt-4">
                             <button type="submit" class="btn btn-primary mb-2" id='applyButton' name="applyButton">
@@ -213,19 +236,25 @@
 <script>
     var token = '{{csrf_token}}';
 
-    var conditionStructure = //Index of the conditions is the order of application to the log
-        [
-            {
-                'Operation': 'Addition',
-                'Level': '',
-                'Target': ''
-            },
-            {
-                'Operation': 'Cryptography',
-                'Level': '',
-                'Target': ''
-            },
-        ];
+    var conditionStructure = [//Index of the conditions is the order of application to the log
+        {
+            'Operation': 'Addition',
+            'Level': '',
+            'Target': ''
+        },
+        {
+            'Operation': 'Supression',
+            'Level': '',
+            'Target': '',
+            'Supression_Attribute': '',
+            'Supression_Attribute_Value': '',
+        },
+        {
+            'Operation': 'Cryptography',
+            'Level': '',
+            'Target': ''
+        }
+    ];
 
     $(document).ready(function () {
         $('[data-toggle="tooltip"]').tooltip();
@@ -257,7 +286,47 @@
                 $('#no_event').text("No of events: " + no_event);
             });
         });
-    });
-</script>
 
+        $("#DDMB_anon_target_DATA").change(function () {
+            let selectedTarget = $(this).val();
+
+            if (selectedTarget === "Event" || selectedTarget === "Case") {
+                $("#DDMB_anon_target_attribute_div").addClass("d-none");
+            }
+            else {
+                $("#DDMB_anon_target_attribute_div").removeClass("d-none");
+                let attributes = [];
+
+                let ddm = $("#DDMB_anon_target_attribute_div").find(".dropdown-menu");
+                ddm.empty();
+
+                if (selectedTarget.startsWith("Event")) {
+                    attributes = getEventAttributes(attr => attr.forEach(a => ddm.append("<a class=\"dropdown-item\" href=\"#\">" + a + "</a>")));
+                }
+                else if (selectedTarget.startsWith("Case")) {
+                    attributes = getCaseAttributes(attr => attr.forEach(a => ddm.append("<a class=\"dropdown-item\" href=\"#\">" + a + "</a>")));
+                }
+            }
+        });
+    });
+
+    function getCaseAttributes(callback) {
+        $.ajax({
+            headers: { "X-CSRFToken": token },
+            type: "GET",
+            url: "anonymization_main",
+            data: { 'action': 'getLogCaseAttributes' },
+            dataType: 'json',
+        }).done(result => callback(result['attributes']));
+    }
+    function getEventAttributes(callback) {
+        $.ajax({
+            headers: { "X-CSRFToken": token },
+            type: "GET",
+            url: "anonymization_main",
+            data: { 'action': 'getLogEventAttributes' },
+            dataType: 'json',
+        }).done(result => callback(result['attributes']));
+    }
+</script>
 {% endblock %}

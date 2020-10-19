@@ -11,6 +11,8 @@ from wsgiref.util import FileWrapper
 import json
 from .anonymizationOperations import *
 
+from pm4py.objects.log.exporter.xes import factory as xes_exporter
+
 
 def anonymization_main(request):
     event_logs_path = os.path.join(settings.MEDIA_ROOT, "event_logs")
@@ -51,22 +53,35 @@ def anonymization_main(request):
 
 
     else:
-        return render(request, 'anonymization_main.html', {'log_name': settings.EVENT_LOG_NAME, 'values':'', 'outputs':'Main Else Case'})
+        if request.is_ajax():
+            attributes = []
+            action = getRequestParameter(request.GET, 'action')
+
+            if 'getLogCaseAttributes' == action:
+                attributes = getLogCaseAttributes(event_log)
+            elif 'getLogEventAttributes' == action:
+                attributes = getLogEventAttributes(event_log)
+
+            json_respone = {'attributes': attributes}
+            return HttpResponse(json.dumps(json_respone),content_type='application/json')
+        else:
+            return render(request, 'anonymization_main.html', {'log_name': settings.EVENT_LOG_NAME, 'values':'', 'outputs':'Main Else Case'})
 
 
 def extractHttpRequestValues(request):
     values = {}
 
-    if 'DDMB_anon_operation_DATA' in request.POST:
-        values['OP_Operation'] = getAnonymizer(request.POST['DDMB_anon_operation_DATA'])
-
-    if 'DDMB_anon_applLevel_DATA' in request.POST:
-        values['OP_Level'] = request.POST['DDMB_anon_applLevel_DATA']
-
-    if 'DDMB_anon_target_DATA' in request.POST:
-        values['OP_Target'] = request.POST['DDMB_anon_target_DATA']
+    values['OP_Operation'] = getAnonymizer(getRequestParameter(request.POST,'DDMB_anon_operation_DATA'))
+    values['OP_Level'] = getRequestParameter(request.POST,'DDMB_anon_applLevel_DATA')
+    values['OP_Target'] = getRequestParameter(request.POST,'DDMB_anon_target_DATA')
 
     return values
+
+def getRequestParameter(requestData, parameter):
+    if parameter in requestData:
+        return requestData[parameter]
+    else:
+        return None
 
 def getAnonymizer(name):
     if(name == 'Addition'):
@@ -85,4 +100,25 @@ def getAnonymizer(name):
         return Swapping_AO()
     else:
         raise NotImplementedError
+    pass
+
+def getLogCaseAttributes(event_log):
+    xes_log = xes_importer_factory.apply(event_log)
+    case_attribs = []
+    for case_index, case in enumerate(xes_log):
+        for key in case.attributes.keys():
+            if key not in case_attribs:
+                case_attribs.append(key)
+    return case_attribs
+    pass
+
+def getLogEventAttributes(event_log):
+    xes_log = xes_importer_factory.apply(event_log)
+    event_attribs = []
+    for case_index, case in enumerate(xes_log):
+        for event_index, event in enumerate(case):
+            for key in event.keys():
+                if key not in event_attribs:
+                    event_attribs.append(key)
+    return event_attribs
     pass
