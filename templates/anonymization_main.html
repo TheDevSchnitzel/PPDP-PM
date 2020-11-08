@@ -1,11 +1,21 @@
 {% extends 'base.html' %}
 
+{% block style %}
+<link href="/static/plugins/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet">
+
+<style>
+    .dropdown-menu {
+        max-height: 100% !important;
+        overflow-y: auto !important;
+    }
+</style>
+{% endblock %}
+
 {% block content  %}
 
 <div class="container-fluid">
     <h3 class="mt-4" style="color:#00529F;">Anonymization Operations</h3>
 
-    <form name="apply_anonymization" action="anonymization_main" method="POST">
 
         {% csrf_token %}
 
@@ -23,252 +33,198 @@
 
 
         {% if log_name != ':notset:' %}
-        <div class="accordion" id="acc_anon_op">
-            <div class="card">
-                <div class="card-header" id="headingOne">
-                    <h2 class="mb-0">
-                        <button class="btn btn-link btn-block text-left" type="button" data-toggle="collapse"
-                            data-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                            Operation
-                        </button>
-                    </h2>
-                </div>
-
-                <div id="collapseOne" class="collapse show" aria-labelledby="headingOne"
-                    data-parent="#accordionExample">
-                    <div class="card-body" style="min-height: 300px;">
-
+        <form class="needs-validation" action="#" onsubmit="addOperation()" novalidate>
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm">
                         <div class="input-group mb-3">
                             <div class="input-group-prepend">
-                                <span class="input-group-text input-group-mediumWith"
-                                    id="basic-addon1">Operation:</span>
+                                <span class="input-group-text input-group-mediumWith" id="basic-addon1">Operation:</span>
                             </div>
-                            <div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" id="DDMB_anon_operation"
-                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    Choose operation
-                                    <span class="caret"></span>
-                                </button>
-                                <div class="dropdown-menu" aria-labelledby="DDMB_anon_operation">
-                                    <a class="dropdown-item" href="#">Addition</a>
-                                    <a class="dropdown-item" href="#">Condensation</a>
-                                    <a class="dropdown-item" href="#">Cryptography</a>
-                                    <a class="dropdown-item" href="#">Generalization</a>
-                                    <a class="dropdown-item" href="#">Substitution</a>
-                                    <a class="dropdown-item" href="#">Supression</a>
-                                    <a class="dropdown-item" href="#">Swapping</a>
-                                </div>
-                                <input type="hidden" id="DDMB_anon_operation_DATA" name="DDMB_anon_operation_DATA" />
+                            <select class="selectpicker" title="Choose Operation..." id="DDMB_anon_level" required>
+                                <option>Addition</option>
+                                <option>Condensation</option>
+                                <option>Cryptography</option>
+                                <option>Generalization</option>
+                                <option>Substitution</option>
+                                <option>Supression</option>
+                                <option>Swapping</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Please choose an operation
                             </div>
                         </div>
-
-
+                    </div>
+                    <div class="col-sm">
                         <div class="input-group mb-3">
                             <div class="input-group-prepend">
                                 <span class="input-group-text input-group-mediumWith" id="basic-addon1">Level:</span>
                             </div>
-                            <div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" id="DDMB_anon_applLevel"
-                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    Choose Level
-                                    <span class="caret"></span>
-                                </button>
-                                <div class="dropdown-menu" aria-labelledby="DDMB_anon_applLevel">
-                                    <a class="dropdown-item" href="#">Case</a>
-                                    <a class="dropdown-item" href="#">Event</a>
+                            <select class="selectpicker" title="Choose Level..." id="DDMB_anon_level" required>
+                                <option>Case</option>
+                                <option>Event</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Please choose an operation level
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm">
+                        <button class="btn btn-primary mb-2" id='addOperationButton' name="addOperationButton" type="submit">
+                            Add Operation
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <hr />
+
+        <form name="apply_anonymization" action="anonymization_main" method="POST">
+            <div class="row">
+                <div class="col-2">
+                    <label for="operationsList">Operations to apply (in order):</label>
+                    <div class="list-group" id="operationsList" role="tablist" style="max-height: 250px; overflow-y: auto;">
+                        <a class="list-group-item list-group-item-action active d-none" data-toggle="list" href="#anonOpConfig-default" role="tab">Default</a>
+                    </div>
+                </div>
+                <div class="col-10">
+                    <label for="anonOpConfig">Configure:</label>
+                    <div class="tab-content border rounded" id="anonOpConfig" style="padding: 10px;">
+                        <div class="tab-pane fade show active" id="anonOpConfig-default" role="tabpanel">No operation currently selected</div>
+
+                        <div class="tab-pane fade" id="anonOpConfig-Addition" role="tabpanel">Addition</div>
+                        <div class="tab-pane fade" id="anonOpConfig-Condensation" role="tabpanel">Condensation</div>
+
+                        <div class="tab-pane fade" id="anonOpConfig-Cryptography" role="tabpanel">
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text input-group-mediumWith">Cryptography-Operation:</span>
                                 </div>
-                                <input type="hidden" id="DDMB_anon_applLevel_DATA" name="DDMB_anon_applLevel_DATA" />
+                                <select class="selectpicker" id="anonOpConfig-Cryptography-Operation">
+                                    <option selected>Hash</option>
+                                    <option>Encrypt</option>
+                                </select>
                             </div>
-                        </div>
 
-
-                        <div class="input-group mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text input-group-mediumWith" id="basic-addon1">Target:</span>
-                            </div>
-                            <div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button" id="DDMB_anon_target"
-                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    Choose Target
-                                    <span class="caret"></span>
-                                </button>
-                                <div class="dropdown-menu" aria-labelledby="DDMB_anon_target">
-                                    <a class="dropdown-item" href="#">Case</a>
-                                    <a class="dropdown-item" href="#">Event</a>
-                                    <a class="dropdown-item" href="#">Case.Attribute</a>
-                                    <a class="dropdown-item" href="#">Event.Attribute</a>
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                    <input type="checkbox" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Cryptography-MatchAttr', '#anonOpConfig-Cryptography-MatchVal'])">
+                                    </div>
+                                    <span class="input-group-text input-group-mediumWith">Match Attribute &nbsp;<span data-toggle="tooltip" title="Attribute which's value needs to match the entered one on case/event level to apply the operation">&#x1F6C8;</span>:</span>
                                 </div>
-                                <input type="hidden" id="DDMB_anon_target_DATA" name="DDMB_anon_target_DATA" />
+                                <select class="selectpicker" title="Choose Match-Attribute..." id="anonOpConfig-Cryptography-MatchAttr" disabled>
+                                    <option>Addition</option>
+                                </select>
+                                <input type="text" class="form-control" placeholder="Match-Attribute-Value" id="anonOpConfig-Cryptography-MatchVal" disabled>
                             </div>
-                        </div>
 
-                        <div class="input-group mb-3 d-none" id="DDMB_anon_target_attribute_div">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text input-group-mediumWith"
-                                    id="basic-addon1">Attribute:</span>
-                            </div>
-                            <div class="dropdown">
-                                <button class="btn btn-secondary dropdown-toggle" type="button"
-                                    id="DDMB_anon_target_attribute" data-toggle="dropdown" aria-haspopup="true"
-                                    aria-expanded="false">
-                                    Choose Attribute
-                                    <span class="caret"></span>
-                                </button>
-                                <div class="dropdown-menu" aria-labelledby="DDMB_anon_target_attribute">
-                                    <a class="dropdown-item" href="#">Case</a>
-                                    <a class="dropdown-item" href="#">Event</a>
-                                    <a class="dropdown-item" href="#">Case.Attribute</a>
-                                    <a class="dropdown-item" href="#">Event.Attribute</a>
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text input-group-mediumWith">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
                                 </div>
-                                <input type="hidden" id="DDMB_anon_target_attribute_DATA"
-                                    name="DDMB_anon_target_attribute_DATA" />
+                                <select class="selectpicker" title="Choose Operation..." id="anonOpConfig-Cryptography-Target">
+                                    <option>Addition</option>
+                                </select>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-2">
+                                    <button class="btn btn-success mb-2" type="button" onclick="saveAnonOpConfig()">Save</button>
+                                </div>
+                                <div class="col-8">
+                                </div>
+                                <div class="col-2">
+                                    <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
+                                </div>
                             </div>
                         </div>
 
+                        <div class="tab-pane fade" id="anonOpConfig-Generalization" role="tabpanel">Generalization</div>
+                        <div class="tab-pane fade" id="anonOpConfig-Substitution" role="tabpanel">Substitution</div>
+                        <div class="tab-pane fade" id="anonOpConfig-Supression" role="tabpanel">Supression</div>
+                        <div class="tab-pane fade" id="anonOpConfig-Swapping" role="tabpanel">Swapping</div>
+                    </div>
+                </div>
+            </div>
 
-                        <div class="pt-4">
-                            <button type="submit" class="btn btn-primary mb-2" id='applyButton' name="applyButton">
-                                Apply </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header" id="headingTwo">
-                    <h2 class="mb-0">
-                        <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
-                            data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                            Condition
-                        </button>
-                    </h2>
-                </div>
-                <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#acc_anon_op">
-                    <div class="card-body">
-                        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid.
-                        3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt
-                        laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin
-                        coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes
-                        anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings
-                        occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard
-                        of them accusamus labore sustainable VHS.
-                    </div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header" id="headingThree">
-                    <h2 class="mb-0">
-                        <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
-                            data-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                            Overview
-                        </button>
-                    </h2>
-                </div>
-                <div id="collapseThree" class="collapse" aria-labelledby="headingThree" data-parent="#acc_anon_op">
-                    <div class="card-body">
-                        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid.
-                        3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt
-                        laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin
-                        coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes
-                        anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings
-                        occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard
-                        of them accusamus labore sustainable VHS.
-                    </div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header" id="headingFour">
-                    <h2 class="mb-0">
-                        <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
-                            data-target="#collapseFour" aria-expanded="false" aria-controls="collapseFour">
-                            General statistics
-                        </button>
-                    </h2>
-                </div>
-                <div id="collapseFour" class="collapse" aria-labelledby="headingFour" data-parent="#acc_anon_op">
-                    <div class="card-body">
-                        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid.
-                        3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt
-                        laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin
-                        coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes
-                        anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings
-                        occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard
-                        of them accusamus labore sustainable VHS.
-                    </div>
-                </div>
-            </div>
-            <div class="card">
-                <div class="card-header" id="headingFive">
-                    <h2 class="mb-0">
-                        <button class="btn btn-link btn-block text-left collapsed" type="button" data-toggle="collapse"
-                            data-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
-                            Output
-                        </button>
-                    </h2>
-                </div>
-                <div id="collapseFive" class="collapse" aria-labelledby="headingFive" data-parent="#acc_anon_op">
-                    <div class="card-body">
-                        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid.
-                        3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt
-                        laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin
-                        coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes
-                        anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings
-                        occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard
-                        of them accusamus labore sustainable VHS.
-                    </div>
-                </div>
-            </div>
-        </div>
+        </form>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         <input style="margin-top: 10px;" data-toggle="tooltip" data-placement="top" title="Test" type="submit"
             class="btn btn-warning" value="Test" name="testButton" id='testButton' />
 
         {{outputs}}
+        {{result}}
+
 
         <!-- End (log_name != ':notset:') -->
         {% endif %}
-    </form>
 </div>
-
 {% endblock %}
 
+
 {% block script %}
+<script src="/static/plugins/bootstrap-select/js/bootstrap-select.min.js"></script>
 
 <script>
     var token = '{{csrf_token}}';
-
-    var conditionStructure = [//Index of the conditions is the order of application to the log
-        {
-            'Operation': 'Addition',
-            'Level': '',
-            'Target': ''
-        },
-        {
-            'Operation': 'Supression',
-            'Level': '',
-            'Target': '',
-            'Supression_Attribute': '',
-            'Supression_Attribute_Value': '',
-        },
-        {
-            'Operation': 'Cryptography',
-            'Level': '',
-            'Target': ''
-        }
-    ];
+    var operationState = JSON.parse(new DOMParser().parseFromString('{{appState}}', "text/html").documentElement.textContent);
 
     $(document).ready(function () {
         $('[data-toggle="tooltip"]').tooltip();
 
-        //Enable dropdowns to show selected element as button-text (Bootstrap v4 specific)
-        $(".dropdown-menu a").click(function () {
-            $(this).parents(".dropdown").find('.btn').html($(this).text() + ' <span class="caret"></span>');
-            $(this).parents(".dropdown").find('.btn').val($(this).data('value'));
 
-            let id = $(this).parents(".dropdown").find('.btn')[0].id;
-            $('#' + id + '_DATA')
-                .val($(this).text())
-                .trigger('change');
+
+
+        'use strict';
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        var forms = document.getElementsByClassName('needs-validation');
+        // Loop over them and prevent submission
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+
+                form.classList.add('was-validated');
+            }, false);
         });
+
+
+
+
+
+
+        refreshDropDownMenus();
 
         $("#DDMB_anon_operation_DATA").change(function () {
             var selectedlog = $(this).val();
@@ -297,18 +253,89 @@
                 $("#DDMB_anon_target_attribute_div").removeClass("d-none");
                 let attributes = [];
 
-                let ddm = $("#DDMB_anon_target_attribute_div").find(".dropdown-menu");
-                ddm.empty();
+                let ddm = $("#DDMB_anon_target_attribute");
+                ddm.find("option").remove();
 
                 if (selectedTarget.startsWith("Event")) {
-                    attributes = getEventAttributes(attr => attr.forEach(a => ddm.append("<a class=\"dropdown-item\" href=\"#\">" + a + "</a>")));
+                    attributes = getEventAttributes(attr => {
+                        attr.forEach(a => ddm.append("<option>" + a + "</option>"));
+                        ddm.selectpicker('refresh');
+                    });
                 }
                 else if (selectedTarget.startsWith("Case")) {
-                    attributes = getCaseAttributes(attr => attr.forEach(a => ddm.append("<a class=\"dropdown-item\" href=\"#\">" + a + "</a>")));
+                    attributes = getCaseAttributes(attr => {
+                        attr.forEach(a => ddm.append("<option>" + a + "</option>"));
+                        ddm.selectpicker('refresh');
+                    });
                 }
             }
         });
     });
+
+
+    /* AnonOps - Config */
+    function checkboxToggleEnable(checkbox, inputList) {
+        inputList.forEach(id => {
+            $(id).prop( "disabled", !checkbox.checked );
+
+            //Refresh Bootstrap-Select DropDowns
+            if( $(id).prop("tagName") == "SELECT") {
+                $(id).selectpicker('refresh');
+            }
+        });
+    }
+
+    function setActiveOp(id)
+    {
+        operationState['ActiveId'] = id;
+    }
+
+    function addOperation() {
+        let operation = $('#DDMB_anon_level').val();
+        let customID = ((Math.random() * 10000000) + "").substring(0,7);
+        $("#operationsList").append("<a class='list-group-item list-group-item-action' id='anonOp-" + customID + "' data-toggle='list' href='#anonOpConfig-" + operation + "' role='tab' aria-controls='" + operation + "' onclick='setActiveOp(" + customID + ")'>" + operation + "</a>");
+
+        operationState['Operations'].push({Id: customID, Operation: operation});
+    }
+
+    function saveAnonOpConfig() {}
+    function deleteOperation() {
+        if(operationState['ActiveId'] !== null) {
+            operationState['Operations'] = removeItemFromArray(operationState['Operations'], (x => x.Id == operationState['ActiveId']));
+            $("#anonOp-" + operationState['ActiveId']).remove();
+            operationState['ActiveId'] = null;
+
+            $('#operationsList a[href="#anonOpConfig-default"]').tab('show');
+        }
+    }
+
+
+    function removeItemFromArray(arr, lambda) {
+        let index = -1;
+        for (let i = 0; i < arr.length; i++) {
+            if(lambda( arr[i])) {
+                index = i;
+                break;
+            }
+        }
+
+        if (index > -1) {
+            arr.splice(index, 1);
+        }
+        return arr;
+    }
+
+    function refreshDropDownMenus() {
+        $(".dropdown-menu a").one("click", function () {
+            $(this).parents(".dropdown").find('.btn').html($(this).text() + ' <span class="caret"></span>');
+            $(this).parents(".dropdown").find('.btn').val($(this).data('value'));
+
+            let id = $(this).parents(".dropdown").find('.btn')[0].id;
+            $('#' + id + '_DATA')
+                .val($(this).text())
+                .trigger('change');
+        });
+    }
 
     function getCaseAttributes(callback) {
         $.ajax({

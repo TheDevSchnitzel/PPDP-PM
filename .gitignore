@@ -2,7 +2,7 @@
 
 *.pyc
 *.pickle
-
+__pycache__/
 
 .vscode/
 .vs/
