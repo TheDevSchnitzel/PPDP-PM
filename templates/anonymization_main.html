@@ -187,7 +187,49 @@
                     </div>
                     <div class="tab-pane fade" id="anonOpConfig-Substitution" role="tabpanel">Substitution</div>
                     <div class="tab-pane fade" id="anonOpConfig-Supression" role="tabpanel">Supression</div>
-                    <div class="tab-pane fade" id="anonOpConfig-Swapping" role="tabpanel">Swapping</div>
+
+
+                    <div class="tab-pane fade" id="anonOpConfig-Swapping" role="tabpanel">
+                        <form class="needs-validation" action="javascript:saveAnonOpConfig('Swapping')" novalidate>
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text input-group-mediumWith">Clusterizer:</span>
+                                </div>
+                                <select class="selectpicker" id="anonOpConfig-Swapping-Operation" required>
+                                    <option selected>kMeans</option>
+                                </select>
+                            </div>
+
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text input-group-mediumWith">k for kMeans:</span>
+                                </div>
+                                <input type="number" class="form-control" placeholder="kMeans-k" min="2" value="2" id="anonOpConfig-Swapping-kMeans-k">
+                            </div>
+
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text input-group-mediumWith">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
+                                </div>
+                                <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Swapping-Target" required>
+                                    {% for attr in appState.LogAttributes.EventAttributes %}
+                                        <option value="{{attr}}">{{attr}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-2">
+                                    <button class="btn btn-success mb-2" type="submit">Save</button>
+                                </div>
+                                <div class="col-8">
+                                </div>
+                                <div class="col-2">
+                                    <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </div>
@@ -250,12 +292,6 @@
 
 
         {{result}}
-        <hr/>
-        {{ appState }}
-        <hr/>
-        {{ appState.LogAttributes }}
-        <hr/>
-        {{ appState.LogAttributes.EventAttributes }}
 
         <!-- End (log_name != ':notset:') -->
         {% endif %}
@@ -276,6 +312,7 @@
     $(document).ready(function () {
         //Initialize all tooltips
         $('[data-toggle="tooltip"]').tooltip();
+
 
         //Initialize the Generalization Taxonomy-Tree
         $('#anonOpConfig-Generalization-TaxonomyTree')
@@ -448,57 +485,6 @@
             }, false);
         });
 
-
-
-
-
-
-        refreshDropDownMenus();
-
-        $("#DDMB_anon_operation_DATA").change(function () {
-            var selectedlog = $(this).val();
-            $.ajax({
-                headers: { "X-CSRFToken": token },
-                type: "POST",
-                url: "anonymization_main",
-                data: { log_name: selectedlog },
-                dataType: 'json',
-            }).done(function (result) {
-                no_trace = result.log_attributes.no_traces;
-                $('#no_trace').text("No of traces: " + no_trace);
-
-                no_event = result.log_attributes.no_events;
-                $('#no_event').text("No of events: " + no_event);
-            });
-        });
-
-        $("#DDMB_anon_target_DATA").change(function () {
-            let selectedTarget = $(this).val();
-
-            if (selectedTarget === "Event" || selectedTarget === "Case") {
-                $("#DDMB_anon_target_attribute_div").addClass("d-none");
-            }
-            else {
-                $("#DDMB_anon_target_attribute_div").removeClass("d-none");
-                let attributes = [];
-
-                let ddm = $("#DDMB_anon_target_attribute");
-                ddm.find("option").remove();
-
-                if (selectedTarget.startsWith("Event")) {
-                    attributes = getEventAttributes(attr => {
-                        attr.forEach(a => ddm.append("<option>" + a + "</option>"));
-                        ddm.selectpicker('refresh');
-                    });
-                }
-                else if (selectedTarget.startsWith("Case")) {
-                    attributes = getCaseAttributes(attr => {
-                        attr.forEach(a => ddm.append("<option>" + a + "</option>"));
-                        ddm.selectpicker('refresh');
-                    });
-                }
-            }
-        });
     });
 
 
@@ -526,11 +512,19 @@
 
         if(operation != null && operation != "") {
             let customID = ((Math.random() * 10000000) + "").substring(0,7);
-            $("#operationsList").append("<a class='list-group-item list-group-item-action' id='anonOp-" + customID + "' data-toggle='list' href='#anonOpConfig-" + operation + "' role='tab' aria-controls='" + operation + "' onclick='setActiveOp(" + customID + ")'>" + operation + "</a>");
+            $("#operationsList").append("<a class='list-group-item list-group-item-action cstDraggable' id='anonOp-" + customID + "' draggable='true' data-toggle='list' href='#anonOpConfig-" + operation + "' role='tab' aria-controls='" + operation + "' onclick='setActiveOp(" + customID + ")'>" + operation + "</a>");
+
+
+
+            //Initialize the DragDrop_Feature of the AnonOps list
+            addDnDHandlers(document.querySelector("#anonOp-" + customID));
+            //$("#anonOp-" + customID)
+
 
             appState['Operations'].push({Id: customID, Operation: operation, Level: level});
             setActiveOp(customID);
 
+            //Activating the config tab for the new operation
             $('#operationsList a[href="#anonOpConfig-' + operation + '"]').tab('show');
         }
     }
@@ -562,6 +556,11 @@
             cfg['Cryptography-MatchVal'] = $("#anonOpConfig-Cryptography-MatchVal").val();
             cfg['Cryptography-Target'] = $("#anonOpConfig-Cryptography-Target").val();
         }
+        else if(opType === "Swapping") {
+            cfg['Swapping-Operation'] = $("#anonOpConfig-Swapping-Operation").val();
+            cfg['Swapping-Target'] = $("#anonOpConfig-Swapping-Target").val();
+            cfg['Swapping-kMeans-k'] = $("#anonOpConfig-Swapping-kMeans-k").val();
+        }
     }
 
     function deleteOperation() {
@@ -588,37 +587,6 @@
             arr.splice(index, 1);
         }
         return arr;
-    }
-
-    function refreshDropDownMenus() {
-        $(".dropdown-menu a").one("click", function () {
-            $(this).parents(".dropdown").find('.btn').html($(this).text() + ' <span class="caret"></span>');
-            $(this).parents(".dropdown").find('.btn').val($(this).data('value'));
-
-            let id = $(this).parents(".dropdown").find('.btn')[0].id;
-            $('#' + id + '_DATA')
-                .val($(this).text())
-                .trigger('change');
-        });
-    }
-
-    function getCaseAttributes(callback) {
-        $.ajax({
-            headers: { "X-CSRFToken": token },
-            type: "GET",
-            url: "anonymization_main",
-            data: { 'action': 'getLogCaseAttributes' },
-            dataType: 'json',
-        }).done(result => callback(result['attributes']));
-    }
-    function getEventAttributes(callback) {
-        $.ajax({
-            headers: { "X-CSRFToken": token },
-            type: "GET",
-            url: "anonymization_main",
-            data: { 'action': 'getLogEventAttributes' },
-            dataType: 'json',
-        }).done(result => callback(result['attributes']));
     }
 
     function startAnonymization() {
@@ -664,5 +632,76 @@
         if(!sel.length) { return false; }
         ref.delete_node(sel);
     };
+
+
+
+    /* DragDrop of AnonOpsList*/
+    var dragSrcEl = null;
+    function handleDragStart(e) {
+        // Target (this) element is the source node.
+        dragSrcEl = this;
+
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/html', this.outerHTML);
+
+        this.classList.add('dragElem');
+    }
+    function handleDragOver(e) {
+        if (e.preventDefault) {
+            e.preventDefault(); // Necessary. Allows us to drop.
+        }
+        this.classList.add('over');
+
+        e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
+
+        return false;
+    }
+    function handleDragEnter(e) {
+        // this / e.target is the current hover target.
+    }
+    function handleDragLeave(e) {
+        this.classList.remove('over');  // this / e.target is previous target element.
+    }
+    function handleDrop(e) {
+        // this/e.target is current target element.
+
+        if (e.stopPropagation) {
+            e.stopPropagation(); // Stops some browsers from redirecting.
+        }
+
+        // Don't do anything if dropping the same column we're dragging.
+        if (dragSrcEl != this) {
+            // Set the source column's HTML to the HTML of the column we dropped on.
+            //alert(this.outerHTML);
+            //dragSrcEl.innerHTML = this.innerHTML;
+            //this.innerHTML = e.dataTransfer.getData('text/html');
+            this.parentNode.removeChild(dragSrcEl);
+            var dropHTML = e.dataTransfer.getData('text/html');
+            this.insertAdjacentHTML('beforebegin',dropHTML);
+            var dropElem = this.previousSibling;
+            addDnDHandlers(dropElem);
+
+        }
+        this.classList.remove('over');
+        return false;
+    }
+    function handleDragEnd(e) {
+        // this/e.target is the source node.
+        this.classList.remove('over');
+
+        /*[].forEach.call(cols, function (col) {
+            col.classList.remove('over');
+        });*/
+    }
+    function addDnDHandlers(elem) {
+        elem.addEventListener('dragstart', handleDragStart, false);
+        elem.addEventListener('dragenter', handleDragEnter, false)
+        elem.addEventListener('dragover', handleDragOver, false);
+        elem.addEventListener('dragleave', handleDragLeave, false);
+        elem.addEventListener('drop', handleDrop, false);
+        elem.addEventListener('dragend', handleDragEnd, false);
+    }
+
+
 </script>
 {% endblock %}

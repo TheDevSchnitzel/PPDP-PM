@@ -151,7 +151,17 @@ def handleAnonOps(operations):
         elif(name == 'Supression'):
             return Supression()
         elif(name == 'Swapping'):
-            return Swapping()
+            s = Swapping()
+            swapOp = op['Swapping-Operation']
+            swapTarget = op['Swapping-Target']
+            k = int(op['Swapping-kMeans-k'])
+
+            if(swapOp == "kMeans"):
+                if(level == "Case"):
+                    log = s.SwapCaseAttributeValuesBykMeanCluster(log, swapTarget, k)
+                elif(level == "Event"):
+                    log = s.SwapEventAttributeValuesBykMeanCluster(log, swapTarget, k)
+
         # else:
             #raise NotImplementedError
         pass

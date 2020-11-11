@@ -32,3 +32,30 @@ overflow:scroll;
     min-width:125px;
     text-align:left;
 }
+
+[draggable] {
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+    /* Required to make elements draggable in old WebKit */
+    -khtml-user-drag: element;
+    -webkit-user-drag: element;
+  }
+
+.cstDraggable.dragElem {
+    opacity: 0.4;
+}
+.cstDraggable.over {
+    border-top: 4px solid black;
+}
+.cstDraggable header {
+  height: 20px;
+  width: 150px;
+  color: black;
+  background-color: #ccc;
+  padding: 5px;
+  border-bottom: 1px solid #ddd;
+  border-radius: 10px;
+  border: 2px solid #666666;
+}
