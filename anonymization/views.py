@@ -1,5 +1,5 @@
 import shutil
-
+import sys
 from django.shortcuts import render
 from django.conf import settings
 import os
@@ -16,34 +16,23 @@ from pm4py.objects.log.exporter.xes import factory as xes_exporter
 
 
 def anonymization_main(request):
-    event_logs_path = os.path.join(settings.MEDIA_ROOT, "event_logs")
-    temp_path = os.path.join(settings.MEDIA_ROOT, "temp")
-    event_log = os.path.join(event_logs_path, settings.EVENT_LOG_NAME)
+    event_log = getXesLogPath()
 
     appState = extractStateFromHttpRequestValues(request)
+    print(appState)
 
     if request.method == 'POST':
-        reqValues = extractHttpRequestValues(request)
+        #reqValues = extractHttpRequestValues(request)
         result = {'State': 'Empty'}
 
         if request.is_ajax():
-            xes_log = xes_importer.apply(event_log)
-            case_attribs = []
-            for case_index, case in enumerate(xes_log):
-                for key in case.attributes.keys():
-                    if key not in case_attribs:
-                        case_attribs.append(key)
-            event_attribs = []
-            for case_index, case in enumerate(xes_log):
-                for event_index, event in enumerate(case):
-                    for key in event.keys():
-                        if key not in event_attribs:
-                            event_attribs.append(key)
+            # Do something here
+            if(len(appState['Operations']) > 0 and appState['Action'] == "Process"):
+                handleAnonOps(appState["Operations"])
+            #json_respone = {'case_attributes': case_attribs, 'event_attributes': event_attribs}
+            # return HttpResponse(json.dumps(json_respone), content_type='application/json')
 
-            json_respone = {'case_attributes': case_attribs, 'event_attributes': event_attribs}
-            return HttpResponse(json.dumps(json_respone), content_type='application/json')
-
-        # Handling of output buttons
+            # Handling of output buttons
         elif 'downloadButton' in request.POST:
             return handleXesLogDownloadButtonClick(request)
         elif 'addButton' in request.POST:
@@ -82,58 +71,100 @@ def anonymization_main(request):
             json_respone = {'attributes': attributes}
             return HttpResponse(json.dumps(json_respone), content_type='application/json')
         else:
-            return render(request, 'anonymization_main.html', {'log_name': settings.EVENT_LOG_NAME, 'values': '', 'outputs': getOutputFileList("anonymization"), 'appState': json.dumps(appState, ensure_ascii=True)})
+            return render(request, 'anonymization_main.html', {'log_name': settings.EVENT_LOG_NAME, 'values': '', 'outputs': getOutputFileList("anonymization"), 'appState': appState})
+
+
+def getXesLogPath():
+    if(settings.EVENT_LOG_NAME == ':notset:'):
+        return settings.EVENT_LOG_NAME
+
+    event_logs_path = os.path.join(settings.MEDIA_ROOT, "event_logs")
+    event_log = os.path.join(event_logs_path, settings.EVENT_LOG_NAME)
+    return event_log
 
 
 def extractStateFromHttpRequestValues(request):
-    appState = {}
+    appState = json.loads(getRequestParameter(request.POST, 'appState', '{}'))
 
-    appState["Operations"] = getRequestParameter(request.POST, 'Operations')
-    if(appState["Operations"] is None):
+    if("Operations" not in appState.keys() or appState["Operations"] is None):
         appState["Operations"] = []
+
+    if("Action" not in appState.keys() or appState["Action"] is None):
+        appState["Action"] = "Nothing"
+
+    if(("LogAttributes" not in appState.keys() or appState["LogAttributes"] is None) and getXesLogPath() != ':notset:'):
+        xes_log = xes_importer.apply(getXesLogPath())
+
+        appState["LogAttributes"] = {
+            "Log": settings.EVENT_LOG_NAME,
+            "CaseAttributes": getLogCaseAttributes(xes_log),
+            "EventAttributes": getLogEventAttributes(xes_log)
+        }
 
     return appState
 
 
-def extractHttpRequestValues(request):
-    values = {}
-
-    values['OP_Operation'] = getAnonymizer(getRequestParameter(request.POST, 'DDMB_anon_operation_DATA'))
-    values['OP_Level'] = getRequestParameter(request.POST, 'DDMB_anon_applLevel_DATA')
-    values['OP_Target'] = getRequestParameter(request.POST, 'DDMB_anon_target_DATA')
-
-    return values
-
-
-def getRequestParameter(requestData, parameter):
+def getRequestParameter(requestData, parameter, default=None):
     if parameter in requestData:
         return requestData[parameter]
     else:
-        return None
+        return default
 
 
-def getAnonymizer(name):
-    if(name == 'Addition'):
-        return Addition()
-    elif(name == 'Condensation'):
-        return Condensation()
-    elif(name == 'Cryptography'):
-        return Cryptography()
-    elif(name == 'Generalization'):
-        return Generalization()
-    elif(name == 'Substitution'):
-        return Substitution()
-    elif(name == 'Supression'):
-        return Supression()
-    elif(name == 'Swapping'):
-        return Swapping()
-    # else:
-        #raise NotImplementedError
-    pass
+def handleAnonOps(operations):
+    log = xes_importer.apply(getXesLogPath())
+
+    for op in operations:
+        name = op["Operation"]
+        level = op['Level']
+
+        print(name + " - " + level)
+
+        if(name == 'Addition'):
+            return Addition()
+
+        elif(name == 'Condensation'):
+            return Condensation()
+
+        elif(name == 'Cryptography'):
+            c = Cryptography()
+            cryptoOp = op['Cryptography-Operation']
+            cryptTarget = op['Cryptography-Target']
+            cryptMatchAttr = op['Cryptography-MatchAttr']
+            cryptMatchVal = op['Cryptography-MatchVal']
+
+            if(cryptoOp == "Hash"):
+                if(level == "Case"):
+                    log = c.HashCaseAttribute(log, cryptTarget, cryptMatchAttr, cryptMatchVal)
+                elif(level == "Event"):
+                    log = c.HashEventAttribute(log, cryptTarget, cryptMatchAttr, cryptMatchVal)
+            elif(cryptoOp == "Encrypt"):
+                if(level == "Case"):
+                    log = c.EncryptCaseAttribute(log, cryptTarget, cryptMatchAttr, cryptMatchVal)
+                elif(level == "Event"):
+                    log = c.EncryptEventAttribute(log, cryptTarget, cryptMatchAttr, cryptMatchVal)
+
+        elif(name == 'Generalization'):
+            return Generalization()
+        elif(name == 'Substitution'):
+            return Substitution()
+        elif(name == 'Supression'):
+            return Supression()
+        elif(name == 'Swapping'):
+            return Swapping()
+        # else:
+            #raise NotImplementedError
+        pass
+
+    now = datetime.now()
+    dateTime = now.strftime(" %m-%d-%y %H-%M-%S ")
+    newName = "anon" + dateTime + settings.EVENT_LOG_NAME[:-3] + "xes"
+    tmpPath = os.path.join(settings.MEDIA_ROOT, "temp")
+    newFile = os.path.join(tmpPath, "anonymization", newName)
+    xes_exporter.export_log(log, newFile)
 
 
-def getLogCaseAttributes(event_log):
-    xes_log = xes_importer.apply(event_log)
+def getLogCaseAttributes(xes_log):
     case_attribs = []
     for case_index, case in enumerate(xes_log):
         for key in case.attributes.keys():
@@ -143,8 +174,7 @@ def getLogCaseAttributes(event_log):
     pass
 
 
-def getLogEventAttributes(event_log):
-    xes_log = xes_importer.apply(event_log)
+def getLogEventAttributes(xes_log):
     event_attribs = []
     for case_index, case in enumerate(xes_log):
         for event_index, event in enumerate(case):
