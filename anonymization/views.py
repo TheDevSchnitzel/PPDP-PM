@@ -89,6 +89,9 @@ def extractStateFromHttpRequestValues(request):
     if("Operations" not in appState.keys() or appState["Operations"] is None):
         appState["Operations"] = []
 
+    if("AdditionEvents" not in appState.keys() or appState["AdditionEvents"] is None):
+        appState["AdditionEvents"] = []
+
     if("Action" not in appState.keys() or appState["Action"] is None):
         appState["Action"] = "Nothing"
 

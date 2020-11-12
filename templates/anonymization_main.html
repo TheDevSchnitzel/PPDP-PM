@@ -9,6 +9,38 @@
         max-height: 100% !important;
         overflow-y: auto !important;
     }
+
+
+ .table-responsive {
+     display: block;
+     width: 100%;
+     overflow-x: auto;
+     -webkit-overflow-scrolling: touch;
+     -ms-overflow-style: -ms-autohiding-scrollbar
+ }
+
+ .table,
+ .jsgrid .jsgrid-table {
+     width: 100%;
+     max-width: 100%;
+     margin-bottom: 1rem;
+     background-color: transparent
+ }
+
+ .table thead th,
+ .jsgrid .jsgrid-table thead th {
+     border-top: 0;
+     border-bottom-width: 1px;
+     font-weight: 500;
+     font-size: .875rem;
+     text-transform: uppercase
+ }
+
+ .table td,
+ .jsgrid .jsgrid-table td {
+     font-size: 0.875rem;
+     padding: .475rem 0.4375rem
+ }
 </style>
 {% endblock %}
 
@@ -93,7 +125,85 @@
                 <div class="tab-content border rounded" id="anonOpConfig" style="padding: 10px;">
                     <div class="tab-pane fade show active" id="anonOpConfig-default" role="tabpanel">No operation currently selected</div>
 
-                    <div class="tab-pane fade" id="anonOpConfig-Addition" role="tabpanel">Addition</div>
+                    <div class="tab-pane fade" id="anonOpConfig-Addition" role="tabpanel">
+                        <form class="needs-validation" action="javascript:saveAnonOpConfig('Addition')" novalidate>
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text input-group-mediumWith">Edit Events:</span>
+                                </div>
+                                <select class="selectpicker" title="Choose event..." id="anonOpConfig-Addition-NewEvent" onchange="changeSelectedAdditionEventEdit();">
+                                    <option>Test</option>
+                                </select>
+                                <button type="button" class="btn btn-primary" id="anonOpConfig-Addition-NewEvent-editButton" onclick="loadAdditionEventData();" data-toggle="modal" data-target="#anonOpConfig-Addition-NewEvent-Modal" style="margin: 0px 0px 0px 10px;" disabled> Open event designer</button>
+                                <button type="button" class="btn btn-success btn-sm" id="anonOpConfig-Addition-NewEvent-addButton" onclick="createNewAdditionEvent();" style="margin: 0px 10px 0px 10px;"><i class="glyphicon glyphicon-asterisk"></i> Create new</button>
+                                <button type="button" class="btn btn-danger btn-sm" id="anonOpConfig-Addition-NewEvent-deleteButton" onclick="deleteAdditionEvent();" disabled><i class="glyphicon glyphicon-remove"></i> Delete selected</button>
+                            </div>
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text input-group-mediumWith">Events to add<span data-toggle="tooltip" title="The events that will be added to the log by applying the configured operation">&#x1F6C8;</span>:</span>
+                                </div>
+                                <select class="selectpicker" title="Choose events..." id="anonOpConfig-Addition-EventSelectionList" multiple>
+                                    <option>Test</option>
+                                </select>
+                            </div>
+
+                            <!-- Modal -->
+                            <div class="modal fade" id="anonOpConfig-Addition-NewEvent-Modal" tabindex="-1" role="dialog" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="anonOpConfig-Addition-NewEvent-ModalLongTitle">Event Designer</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="table-responsive">
+                                                <table id="anonOpConfig-Addition-NewEvent-Modal-Table" class="table table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Attribute</th>
+                                                            <th>Value</th>
+                                                            <th></th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="text-center"><button onclick="createNewAdditionEventAttributeRow('New Attribute', 'Value');" class="btn btn-success"><i class="fa fa-plus"></i> ADD NEW</button></div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <div class="container">
+                                                <div class="row">
+                                                    <div class="col-auto mr-auto">
+                                                        <button class="btn btn-success mb-2" type="button" onclick="saveNewAdditionEventAttribute();" data-dismiss="modal">Save</button>
+                                                    </div>
+                                                    <div class="col-auto">
+                                                        <button class="btn btn-danger mb-2" type="button" data-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-auto mr-auto">
+                                    <button class="btn btn-success mb-2" type="submit">Save</button>
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+
+
+
+
                     <div class="tab-pane fade" id="anonOpConfig-Condensation" role="tabpanel">Condensation</div>
 
                     <div class="tab-pane fade" id="anonOpConfig-Cryptography" role="tabpanel">
@@ -135,12 +245,10 @@
                             </div>
 
                             <div class="row">
-                                <div class="col-2">
+                                <div class="col-auto mr-auto">
                                     <button class="btn btn-success mb-2" type="submit">Save</button>
                                 </div>
-                                <div class="col-8">
-                                </div>
-                                <div class="col-2">
+                                <div class="col-auto">
                                     <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
                                 </div>
                             </div>
@@ -174,12 +282,10 @@
                             </div>
 
                             <div class="row">
-                                <div class="col-2">
+                                <div class="col-auto mr-auto">
                                     <button class="btn btn-success mb-2" type="submit">Save</button>
                                 </div>
-                                <div class="col-8">
-                                </div>
-                                <div class="col-2">
+                                <div class="col-auto">
                                     <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
                                 </div>
                             </div>
@@ -219,12 +325,10 @@
                             </div>
 
                             <div class="row">
-                                <div class="col-2">
+                                <div class="col-auto mr-auto">
                                     <button class="btn btn-success mb-2" type="submit">Save</button>
                                 </div>
-                                <div class="col-8">
-                                </div>
-                                <div class="col-2">
+                                <div class="col-auto">
                                     <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
                                 </div>
                             </div>
@@ -511,15 +615,11 @@
         let level = $('#DDMB_anon_level').val();
 
         if(operation != null && operation != "") {
-            let customID = ((Math.random() * 10000000) + "").substring(0,7);
+            let customID = generateID();
             $("#operationsList").append("<a class='list-group-item list-group-item-action cstDraggable' id='anonOp-" + customID + "' draggable='true' data-toggle='list' href='#anonOpConfig-" + operation + "' role='tab' aria-controls='" + operation + "' onclick='setActiveOp(" + customID + ")'>" + operation + "</a>");
-
-
 
             //Initialize the DragDrop_Feature of the AnonOps list
             addDnDHandlers(document.querySelector("#anonOp-" + customID));
-            //$("#anonOp-" + customID)
-
 
             appState['Operations'].push({Id: customID, Operation: operation, Level: level});
             setActiveOp(customID);
@@ -588,6 +688,20 @@
         }
         return arr;
     }
+    function getFirstMatch(arr, lambda) {
+        let index = -1;
+        for (let i = 0; i < arr.length; i++) {
+            if(lambda( arr[i])) {
+                index = i;
+                break;
+            }
+        }
+        if(index > -1){
+            return arr[index];
+        } else {
+            return undefined;
+        }
+    }
 
     function startAnonymization() {
         appState["Action"] = "Process";
@@ -605,6 +719,82 @@
         {
             appState["Action"] = "Nothing";
         });
+    }
+
+
+
+
+
+
+    /* AnonOp - Addition */
+    function createNewAdditionEvent() {
+        let id = generateID();
+
+        appState['AdditionEvents'].push({ Id: id, Name: "NewEvent", Attributes: {}});
+
+        $("#anonOpConfig-Addition-NewEvent").append('<option id="anonOpConfig-Addition-NewEvents-eventOption-' + id + '">NewEvent</option>');
+        $('#anonOpConfig-Addition-NewEvent').selectpicker('refresh');
+    }
+    function deleteAdditionEvent() {
+        let idSplit = $("#anonOpConfig-Addition-NewEvent option:selected").prop('id').split("-");
+        let id = idSplit[idSplit.length - 1];
+
+        $("#anonOpConfig-Addition-NewEvent option:selected").remove();
+        $('#anonOpConfig-Addition-NewEvent').prop('selectedIndex',0);
+        $('#anonOpConfig-Addition-NewEvent').selectpicker('refresh');
+
+        appState['AdditionEvents'] = removeItemFromArray(appState['AdditionEvents'], (x => x.Id == id));
+
+        changeSelectedAdditionEventEdit();
+    }
+    function loadAdditionEventData(){
+        let idSplit = $("#anonOpConfig-Addition-NewEvent option:selected").prop("id").split("-");
+        let id = idSplit[idSplit.length - 1];
+
+        //Clear table from old entries
+        $('#anonOpConfig-Addition-NewEvent-Modal-Table tbody tr').remove();
+
+        let event = getFirstMatch(appState['AdditionEvents'], (x => x.Id == id));
+        for(let i = 0; i < event.Attributes.length; i++) {
+            let x = event.Attributes[i];
+            createNewAdditionEventAttributeRow(x.Name, x.Value);
+        }
+    }
+    function changeSelectedAdditionEventEdit() {
+        let val = $('#anonOpConfig-Addition-NewEvent').val();
+        let disable = !(val != undefined && val != '');
+
+        $('#anonOpConfig-Addition-NewEvent-editButton').prop( "disabled", disable);
+        $('#anonOpConfig-Addition-NewEvent-deleteButton').prop( "disabled", disable);
+    }
+
+    function deleteNewAdditionEventAttributeRow(elemId) {
+        $(elemId).remove();
+    }
+
+    function createNewAdditionEventAttributeRow(attribute, val) {
+        let id = generateID();
+        html = '<tr id="anonOpConfig-Addition-NewEvents-ModalRow-' + id + '">';
+        html += '<td><input type="text" class="form-control" placeholder="Attribute name" value="' + attribute + '"></td>';
+        html += '<td><input type="text" class="form-control" placeholder="Value" value="' + val + '"></td>';
+        html += '<td class="mt-10"><button class="btn btn-danger" onclick="deleteNewAdditionEventAttributeRow(\'#anonOpConfig-Addition-NewEvents-ModalRow-' + id + '\');"><i class="fa fa-trash"></i> Delete</button></td>';
+        html += '</tr>';
+
+        $('#anonOpConfig-Addition-NewEvent-Modal-Table tbody').append(html);
+    }
+
+    function saveNewAdditionEventAttribute() {
+        let idSplit = $("#anonOpConfig-Addition-NewEvent option:selected").prop("id").split("-");
+        let id = idSplit[idSplit.length - 1];
+        let event = getFirstMatch(appState['AdditionEvents'], (x => x.Id == id));
+        event.Attributes = [];
+
+        let rows = $('#anonOpConfig-Addition-NewEvent-Modal-Table tbody').find('tr');
+        for(let i = 0; i < rows.length; i++) {
+            let row = rows[i];
+            let inputs = $(row).find("input");
+            event.Attributes.push({Name: $(inputs[0]).val(), Value: $(inputs[1]).val()});
+        }
     }
 
 
@@ -702,6 +892,8 @@
         elem.addEventListener('dragend', handleDragEnd, false);
     }
 
-
+    function generateID() {
+        return ((Math.random() * 10000000) + "").substring(0,7);
+    }
 </script>
 {% endblock %}
