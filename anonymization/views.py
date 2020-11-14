@@ -28,33 +28,17 @@ def anonymization_main(request):
         if request.is_ajax():
             # Do something here
             if(len(appState['Operations']) > 0 and appState['Action'] == "Process"):
-                handleAnonOps(appState["Operations"])
-            #json_respone = {'case_attributes': case_attribs, 'event_attributes': event_attribs}
-            # return HttpResponse(json.dumps(json_respone), content_type='application/json')
+                handleAnonOps(appState)
+
+            # Handle button calls incoming via ajax
+            elif getRequestParameter(request.POST, 'outputHandleButton', None) == "addButton":
+                return handleXesLogAddButtonClick(request)
+            elif getRequestParameter(request.POST, 'outputHandleButton', None) == "deleteButton":
+                return handleXesLogDeleteButtonClick(request)
 
             # Handling of output buttons
         elif 'downloadButton' in request.POST:
             return handleXesLogDownloadButtonClick(request)
-        elif 'addButton' in request.POST:
-            return handleXesLogAddButtonClick(request)
-        elif "deleteButton" in request.POST:
-            return handleXesLogDeleteButtonClick(request)
-
-        elif 'testButton' in request.POST:
-            result['OP'] = Supression(event_log).Process(event_log, {'OP_Level': 'Case', 'OP_Target': 'Case'})
-
-            # Apparently needed so pm4py export won't crash
-            result['OP']['extensions'] = {'value': None, 'children': []}
-
-            xes_exporter.export_log(result['OP'], os.path.join(event_logs_path, "exportedLog.xes"))
-            #xes_exporter.export_log(xes_log, os.path.join(event_logs_path, "exportedLog.xes"))
-            #result['OP'] = reqValues['OP_Operation'].Process(event_log, reqValues)
-
-            if(settings.DEBUG):
-                result['Log'] = event_log
-
-        elif 'applyButton' in request.POST:
-            result['OP'] = reqValues['OP_Operation'].Process(event_log, reqValues)
 
         return render(request, 'anonymization_main.html', {'log_name': settings.EVENT_LOG_NAME, 'values': '', 'outputs': getOutputFileList("anonymization"), 'result': result, 'appState': json.dumps(appState)})
 
@@ -101,6 +85,7 @@ def extractStateFromHttpRequestValues(request):
         appState["LogAttributes"] = {
             "Log": settings.EVENT_LOG_NAME,
             "CaseAttributes": getLogCaseAttributes(xes_log),
+            "FirstEventUniqueAttributes": getLogFirstEventUniqueAttributes(xes_log),
             "EventAttributes": getLogEventAttributes(xes_log)
         }
 
@@ -114,7 +99,8 @@ def getRequestParameter(requestData, parameter, default=None):
         return default
 
 
-def handleAnonOps(operations):
+def handleAnonOps(appState):
+    operations = appState["Operations"]
     log = xes_importer.apply(getXesLogPath())
 
     for op in operations:
@@ -124,10 +110,18 @@ def handleAnonOps(operations):
         print(name + " - " + level)
 
         if(name == 'Addition'):
-            return Addition()
+            a = Addition()
+            additionEvents = appState['AdditionEvents']
+            log = a.AddEvent(log)
 
         elif(name == 'Condensation'):
-            return Condensation()
+            c = Condensation()
+            condenseOp = op['Condensation-Operation']
+            condenseTarget = op['Condensation-Target']
+            k = int(op['Condensation-kMeans-k'])
+
+            if(condenseOp == 'kMeans'):
+                log = c.CondenseEventAttributeBykMeanClusterMode(log, condenseTarget, k)
 
         elif(name == 'Cryptography'):
             c = Cryptography()
@@ -150,7 +144,11 @@ def handleAnonOps(operations):
         elif(name == 'Generalization'):
             return Generalization()
         elif(name == 'Substitution'):
-            return Substitution()
+            s = Substitution()
+            subTarget = op['Substitution-Target']
+            subSensitiveVal = op['Substitution-SensitiveVal']
+            log = s.SubstituteEventAttributeValue(log, subTarget, subSensitiveVal)
+
         elif(name == 'Supression'):
             return Supression()
         elif(name == 'Swapping'):
@@ -177,24 +175,39 @@ def handleAnonOps(operations):
     xes_exporter.export_log(log, newFile)
 
 
-def getLogCaseAttributes(xes_log):
+def getLogCaseAttributes(xesLog):
     case_attribs = []
-    for case_index, case in enumerate(xes_log):
+    for case_index, case in enumerate(xesLog):
         for key in case.attributes.keys():
             if key not in case_attribs:
                 case_attribs.append(key)
-    return case_attribs
+    return sorted(case_attribs)
     pass
 
 
-def getLogEventAttributes(xes_log):
+def getLogFirstEventUniqueAttributes(xesLog):
+    uniqueAttr = []
+    for cIndex, case in enumerate(xesLog):
+        for eIndex, event in enumerate(case):
+            if(eIndex == 0 and cIndex == 0):
+                uniqueAttr = list(event.keys())
+            elif(eIndex > 0):
+                for key in event.keys():
+                    if(key in uniqueAttr):
+                        uniqueAttr.remove(key)
+
+    return sorted(uniqueAttr)
+    pass
+
+
+def getLogEventAttributes(xesLog):
     event_attribs = []
-    for case_index, case in enumerate(xes_log):
+    for case_index, case in enumerate(xesLog):
         for event_index, event in enumerate(case):
             for key in event.keys():
                 if key not in event_attribs:
                     event_attribs.append(key)
-    return event_attribs
+    return sorted(event_attribs)
     pass
 
 
@@ -227,40 +240,29 @@ def handleXesLogDownloadButtonClick(request):
 
 
 def handleXesLogAddButtonClick(request):
-    if "output_list" not in request.POST:
-        return HttpResponseRedirect(request.path_info)
+    filename = getRequestParameter(request.POST, 'selectedFile', None)
+    if filename is not None:
+        temp_path = os.path.join(settings.MEDIA_ROOT, "temp", "anonymization", filename)
+        event_logs_path = os.path.join(settings.MEDIA_ROOT, "event_logs", filename)
+        shutil.move(temp_path, event_logs_path)
 
-    filename = request.POST["output_list"]
+        if temp_path == settings.ROLE_FILE:
+            settings.ROLE_FILE = ""
+            settings.ROLE_APPLIED = False
 
-    temp_path = os.path.join(settings.MEDIA_ROOT, "temp", "anonymization", filename)
-    event_logs_path = os.path.join(settings.MEDIA_ROOT, "event_logs", filename)
-    shutil.move(temp_path, event_logs_path)
-
-    if temp_path == settings.ROLE_FILE:
-        settings.ROLE_FILE = ""
-        settings.ROLE_APPLIED = False
-
-    outputs = getOutputFileList("anonymization")
-
-    values = {}  # setValues(request)
-    return render(request, 'anonymization_main.html', {'log_name': settings.EVENT_LOG_NAME, 'values': values, 'outputs': outputs})
+    return HttpResponse(status=204)
 
 
 def handleXesLogDeleteButtonClick(request):
-    if "output_list" not in request.POST:
-        return HttpResponseRedirect(request.path_info)
+    filename = getRequestParameter(request.POST, 'selectedFile', None)
+    if filename is not None:
+        temp_path = os.path.join(settings.MEDIA_ROOT, "temp")
 
-    filename = request.POST["output_list"]
-    temp_path = os.path.join(settings.MEDIA_ROOT, "temp")
+        file_dir = os.path.join(temp_path, "anonymization", filename)
+        os.remove(file_dir)
 
-    file_dir = os.path.join(temp_path, "anonymization", filename)
-    os.remove(file_dir)
+        if file_dir == settings.ROLE_FILE:
+            settings.ROLE_FILE = ""
+            settings.ROLE_APPLIED = False
 
-    if file_dir == settings.ROLE_FILE:
-        settings.ROLE_FILE = ""
-        settings.ROLE_APPLIED = False
-
-    outputs = getOutputFileList("anonymization")
-    values = {}  # setValues(request)
-
-    return render(request, 'anonymization_main.html', {'log_name': settings.EVENT_LOG_NAME, 'values': values, 'outputs': outputs})
+    return HttpResponse(status=204)
