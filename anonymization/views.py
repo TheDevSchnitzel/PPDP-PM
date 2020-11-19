@@ -22,7 +22,7 @@ def anonymization_main(request):
     print(appState)
 
     if request.method == 'POST':
-        #reqValues = extractHttpRequestValues(request)
+        # reqValues = extractHttpRequestValues(request)
         result = {'State': 'Empty'}
 
         if request.is_ajax():
@@ -36,6 +36,17 @@ def anonymization_main(request):
             elif getRequestParameter(request.POST, 'outputHandleButton', None) == "deleteButton":
                 return handleXesLogDeleteButtonClick(request)
 
+            # Handle further ajax posts
+            elif 'SaveTaxonomyTree' == getRequestParameter(request.POST, 'action', None):
+                treeName = getRequestParameter(request.POST, 'treeName', None)
+                treeID = getRequestParameter(request.POST, 'treeID', None)
+                treeData = getRequestParameter(request.POST, 'treeData', None)
+                return saveTaxonomyTree(treeID, treeName, treeData)
+            elif 'DeleteTaxonomyTree' == getRequestParameter(request.POST, 'action', None):
+                treeName = getRequestParameter(request.POST, 'treeName', None)
+                treeID = getRequestParameter(request.POST, 'treeID', None)
+                return deleteTaxonomyTree(treeID, treeName)
+
             # Handling of output buttons
         elif 'downloadButton' in request.POST:
             return handleXesLogDownloadButtonClick(request)
@@ -44,16 +55,17 @@ def anonymization_main(request):
 
     else:
         if request.is_ajax():
-            attributes = []
             action = getRequestParameter(request.GET, 'action')
 
-            if 'getLogCaseAttributes' == action:
-                attributes = getLogCaseAttributes(event_log)
-            elif 'getLogEventAttributes' == action:
-                attributes = getLogEventAttributes(event_log)
+            if 'GetTaxonomyTreeList' == action:
+                json_respone = {'taxTrees': getTaxonomyTrees("anonymization")}
+                return HttpResponse(json.dumps(json_respone), content_type='application/json')
+            elif 'GetTaxonomyTree' == action:
+                id = getRequestParameter(request.GET, 'treeID')
+                json_respone = {'taxTree': getTaxonomyTree("anonymization", id)}
+                return HttpResponse(json.dumps(json_respone), content_type='application/json')
 
-            json_respone = {'attributes': attributes}
-            return HttpResponse(json.dumps(json_respone), content_type='application/json')
+            return HttpResponse(status=204)
         else:
             return render(request, 'anonymization_main.html', {'log_name': settings.EVENT_LOG_NAME, 'values': '', 'outputs': getOutputFileList("anonymization"), 'appState': appState})
 
@@ -111,8 +123,22 @@ def handleAnonOps(appState):
 
         if(name == 'Addition'):
             a = Addition()
-            additionEvents = appState['AdditionEvents']
-            log = a.AddEvent(log)
+            additionEvents = {e['Id']: e for e in appState['AdditionEvents']}
+
+            additionOp = op['Addition-Operation']
+            isMatchActive = op['Addition-MatchActive']
+            additionMatchAttr = op['Addition-MatchAttr'] if isMatchActive else None
+            additionMatchVal = op['Addition-MatchVal'] if isMatchActive else None
+
+            for event in additionEvents:
+                eventTemplate = additionEvents[event]['Attributes']
+
+                if(additionOp == 'Add new event as first in trace'):
+                    log = a.AddEventFirstInTrace(log, eventTemplate, additionMatchAttr, additionMatchVal)
+                elif(additionOp == 'Add new event as last in trace'):
+                    log = a.AddEventLastInTrace(log, eventTemplate, additionMatchAttr, additionMatchVal)
+                elif(additionOp == 'Add new event at random position'):
+                    log = a.AddEventAtRandomPlaceInTrace(log, eventTemplate, additionMatchAttr, additionMatchVal)
 
         elif(name == 'Condensation'):
             c = Condensation()
@@ -164,7 +190,7 @@ def handleAnonOps(appState):
                     log = s.SwapEventAttributeValuesBykMeanCluster(log, swapTarget, k)
 
         # else:
-            #raise NotImplementedError
+            # raise NotImplementedError
         pass
 
     now = datetime.now()
@@ -212,14 +238,49 @@ def getLogEventAttributes(xesLog):
 
 
 def getOutputFileList(directory):
-    temp_path = os.path.join(settings.MEDIA_ROOT, "temp")
-    output_path = os.path.join(temp_path, directory)
+    return getFileList(os.path.join(settings.MEDIA_ROOT, "temp"), directory)
+
+
+def getTaxonomyTrees(directory):
+    return getFileList(os.path.join(settings.MEDIA_ROOT, "none_event_logs", "taxonomyTrees"), directory)
+
+
+def getTaxonomyTree(directory, id):
+    files = getFileList(os.path.join(settings.MEDIA_ROOT, "none_event_logs", "taxonomyTrees"), directory)
+    for name in files:
+        if name.startswith(id):
+            filePath = os.path.join(os.path.join(settings.MEDIA_ROOT, "none_event_logs", "taxonomyTrees"), directory, name)
+            f = open(filePath, "r")
+            data = f.read()
+            f.close()
+            return data
+    return None
+
+
+def getFileList(path, directory):
+    output_path = os.path.join(path, directory)
 
     if(not os.path.exists(output_path)):
         os.mkdir(output_path)
 
     return [f for f in os.listdir(output_path) if os.path.isfile(os.path.join(output_path, f))]
-    pass
+
+
+def saveTaxonomyTree(treeID, treeName, treeData):
+    filePath = os.path.join(os.path.join(settings.MEDIA_ROOT, "none_event_logs", "taxonomyTrees"), "anonymization", treeID + " - " + treeName + ".json")
+
+    os.makedirs(os.path.dirname(filePath), exist_ok=True)
+
+    f = open(filePath, "w")
+    f.write(treeData)
+    f.close()
+    return HttpResponse(status=204)
+
+
+def deleteTaxonomyTree(treeID, treeName):
+    filePath = os.path.join(os.path.join(settings.MEDIA_ROOT, "none_event_logs", "taxonomyTrees"), "anonymization", treeID + " - " + treeName + ".json")
+    os.remove(filePath)
+    return HttpResponse(status=204)
 
 
 def handleXesLogDownloadButtonClick(request):

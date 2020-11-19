@@ -183,6 +183,13 @@
                                             </button>
                                         </div>
                                         <div class="modal-body">
+                                            <div class="input-group mb-3">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text input-group-mediumWith">Event-Name:</span>
+                                                </div>
+                                                <input type="text" class="form-control" placeholder="Name" id="anonOpConfig-Addition-NewEvent-Modal-EventName"/>
+                                            </div>
+
                                             <div class="table-responsive">
                                                 <div class="alert alert-warning" role="alert">
                                                 Attention: Currently there is no support for a custom timestamp attribute. The timestamp of the new event will be automatically generated according to its new position in the trace.
@@ -314,17 +321,14 @@
                                 </div>
                                 <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Generalization-Target" required></select>
                             </div>
-                            <div class="row">
-                                <div class="col-4">
-                                    <div id="anonOpConfig-Generalization-TaxonomyTree"></div>
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text input-group-mediumWith">Taxonomy-Tree &nbsp;<span data-toggle="tooltip" title="Choose the taxonomy tree used for generalization">&#x1F6C8;</span>:</span>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-4 col-sm-8 col-xs-8">
-                                    <button type="button" class="btn btn-success btn-sm" onclick="taxonomyTreeCreateNode();"><i class="glyphicon glyphicon-asterisk"></i> Create</button>
-                                    <button type="button" class="btn btn-warning btn-sm" onclick="taxonomyTreeRenameNode();"><i class="glyphicon glyphicon-pencil"></i> Rename</button>
-                                    <button type="button" class="btn btn-danger btn-sm" onclick="taxonomyTreeDeleteNode();"><i class="glyphicon glyphicon-remove"></i> Delete</button>
-                                </div>
+                                <select class="selectpicker" title="Choose TaxonomyTree..." id="anonOpConfig-Generalization-TaxTree" required onchange="generalizationTaxTreeSelectionChanged()"></select>
+                                <button type="button" class="btn btn-primary" id="anonOpConfig-Generalization-TaxTree-editButton" onclick="generalizationLoadTaxTreeData();" data-toggle="modal" data-target="#anonOpConfig-Generalization-Taxonomy-Modal" style="margin: 0px 0px 0px 10px;" disabled> Open taxonomy tree designer</button>
+                                <button type="button" class="btn btn-success btn-sm" id="anonOpConfig-Generalization-TaxTree-addButton" onclick="generalizationCreateNewTaxTree();" style="margin: 0px 10px 0px 10px;"><i class="glyphicon glyphicon-asterisk"></i> Create new</button>
+                                <button type="button" class="btn btn-danger btn-sm" id="anonOpConfig-Generalization-TaxTree-deleteButton" onclick="generalizationDeleteTaxTree();" disabled><i class="glyphicon glyphicon-remove"></i> Delete selected</button>
                             </div>
 
                             <div class="row">
@@ -333,6 +337,47 @@
                                 </div>
                                 <div class="col-auto">
                                     <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
+                                </div>
+                            </div>
+
+
+                            <!-- Modal -->
+                            <div class="modal fade" id="anonOpConfig-Generalization-Taxonomy-Modal" tabindex="-1" role="dialog" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="anonOpConfig-Generalization-Taxonomy-ModalLongTitle">Taxonomy-Tree Designer</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="input-group mb-3">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text input-group-mediumWith">Tree-Name:</span>
+                                                </div>
+                                                <input type="text" class="form-control" placeholder="Name" id="anonOpConfig-Generalization-Taxonomy-Modal-TaxTreeName"/>
+                                            </div>
+
+                                            <div id="anonOpConfig-Generalization-TaxonomyTree"></div>
+
+                                            <button type="button" class="btn btn-success btn-sm" onclick="taxonomyTreeCreateNode();"><i class="glyphicon glyphicon-asterisk"></i> Create</button>
+                                            <button type="button" class="btn btn-warning btn-sm" onclick="taxonomyTreeRenameNode();"><i class="glyphicon glyphicon-pencil"></i> Rename</button>
+                                            <button type="button" class="btn btn-danger btn-sm" onclick="taxonomyTreeDeleteNode();"><i class="glyphicon glyphicon-remove"></i> Delete</button>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <div class="container">
+                                                <div class="row">
+                                                    <div class="col-auto mr-auto">
+                                                        <button class="btn btn-success mb-2" type="button" onclick="generalizationSaveTaxonomyTree();" data-dismiss="modal">Save</button>
+                                                    </div>
+                                                    <div class="col-auto">
+                                                        <button class="btn btn-danger mb-2" type="button" data-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </form>
@@ -488,17 +533,60 @@
 
 
         //Initialize the Generalization Taxonomy-Tree
-        $('#anonOpConfig-Generalization-TaxonomyTree')
+        initializeGeneralizationTaxTreeList();
+        initializeGeneralizationTaxonomyTree('', true);
+
+
+        /* VALIDATE FORMS */
+        'use strict';
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        var forms = document.getElementsByClassName('needs-validation');
+        // Loop over them and prevent submission
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+
+                form.classList.add('was-validated');
+            }, false);
+        });
+
+    });
+
+    function initializeGeneralizationTaxTreeList() {
+        $.ajax({
+            headers: { "X-CSRFToken": token },
+            type: "GET",
+            url: "anonymization_main",
+            data: {'action': 'GetTaxonomyTreeList'}
+            //dataType: 'json', //causes readystate 4 error if result is not json
+        }).done(result => {
+            //Clear old entries
+            $('#anonOpConfig-Generalization-TaxTree').find('option').remove();
+
+            result.taxTrees.forEach(x=>
+            {
+                let split = x.split(" - ");
+                let id = split[0];
+                let idx = split[1].lastIndexOf('.');
+                let name = split[1].substring(0, idx);
+
+                $('#anonOpConfig-Generalization-TaxTree').append('<option id="anonOpConfig-Generalization-TaxTree-option-' + id + '" value="' + name + '">' + name + '</option>');
+            });
+
+            //Update drop down
+            $('#anonOpConfig-Generalization-TaxTree').selectpicker('refresh');
+        })
+        .fail(result => console.log('handleOutput-Ajax failed'));
+    }
+    function initializeGeneralizationTaxonomyTree(data)
+    {
+        let tree = $('#anonOpConfig-Generalization-TaxonomyTree')
 				.jstree({
 					'core' : {
-						'data' :
-                        [
-                            {
-                                'text' : 'Root node 2',
-                                'state' : { 'opened' : true },
-                                'children' : [ { 'text' : 'Child 1' }, 'Child 2' ]
-                            }
-                        ],
+						'data' : data,
 						'check_callback' : function(o, n, p, i, m) {
 							if(m && m.dnd && m.pos !== 'i') { return false; }
 							if(o === "move_node" || o === "copy_node") {
@@ -555,52 +643,54 @@
 						}
 					},
 					'plugins' : ['state','dnd','sort','types','contextmenu','unique']
-				})
-				.on('delete_node.jstree', function (e, data) {
-					$.get('?operation=delete_node', { 'id' : data.node.id })
-						.fail(function () {
-							data.instance.refresh();
-						});
-				})
-				.on('create_node.jstree', function (e, data) {
-					$.get('?operation=create_node', { 'type' : data.node.type, 'id' : data.node.parent, 'text' : data.node.text })
-						.done(function (d) {
-							data.instance.set_id(data.node, d.id);
-						})
-						.fail(function () {
-							data.instance.refresh();
-						});
-				})
-				.on('rename_node.jstree', function (e, data) {
-					$.get('?operation=rename_node', { 'id' : data.node.id, 'text' : data.text })
-						.done(function (d) {
-							data.instance.set_id(data.node, d.id);
-						})
-						.fail(function () {
-							data.instance.refresh();
-						});
-				})
-				.on('move_node.jstree', function (e, data) {
-					$.get('?operation=move_node', { 'id' : data.node.id, 'parent' : data.parent })
-						.done(function (d) {
-							//data.instance.load_node(data.parent);
-							data.instance.refresh();
-						})
-						.fail(function () {
-							data.instance.refresh();
-						});
-				})
-				.on('copy_node.jstree', function (e, data) {
-					$.get('?operation=copy_node', { 'id' : data.original.id, 'parent' : data.parent })
-						.done(function (d) {
-							//data.instance.load_node(data.parent);
-							data.instance.refresh();
-						})
-						.fail(function () {
-							data.instance.refresh();
-						});
-				})
-				.on('changed.jstree', function (e, data) {
+				});
+
+        tree
+            .on('delete_node.jstree', function (e, data) {
+                $.get('?operation=delete_node', { 'id' : data.node.id })
+                    .fail(function () {
+                        data.instance.refresh();
+                    });
+            })
+            .on('create_node.jstree', function (e, data) {
+                $.get('?operation=create_node', { 'type' : data.node.type, 'id' : data.node.parent, 'text' : data.node.text })
+                    .done(function (d) {
+                        data.instance.set_id(data.node, d.id);
+                    })
+                    .fail(function () {
+                        data.instance.refresh();
+                    });
+            })
+            .on('rename_node.jstree', function (e, data) {
+                $.get('?operation=rename_node', { 'id' : data.node.id, 'text' : data.text })
+                    .done(function (d) {
+                        data.instance.set_id(data.node, d.id);
+                    })
+                    .fail(function () {
+                        data.instance.refresh();
+                    });
+            })
+            .on('move_node.jstree', function (e, data) {
+                $.get('?operation=move_node', { 'id' : data.node.id, 'parent' : data.parent })
+                    .done(function (d) {
+                        //data.instance.load_node(data.parent);
+                        data.instance.refresh();
+                    })
+                    .fail(function () {
+                        data.instance.refresh();
+                    });
+            })
+            .on('copy_node.jstree', function (e, data) {
+                $.get('?operation=copy_node', { 'id' : data.original.id, 'parent' : data.parent })
+                    .done(function (d) {
+                        //data.instance.load_node(data.parent);
+                        data.instance.refresh();
+                    })
+                    .fail(function () {
+                        data.instance.refresh();
+                    });
+            })
+            .on('changed.jstree', function (e, data) {
 					if(data && data.selected && data.selected.length) {
 						$.get('?operation=get_content&id=' + data.selected.join(':'), function (d) {
 							if(d && typeof d.type !== 'undefined') {
@@ -639,27 +729,14 @@
 						$('#data .content').hide();
 						$('#data .default').html('Select a file from the tree.').show();
 					}
-				});
-
-
-        /* VALIDATE FORMS */
-        'use strict';
-        // Fetch all the forms we want to apply custom Bootstrap validation styles to
-        var forms = document.getElementsByClassName('needs-validation');
-        // Loop over them and prevent submission
-        var validation = Array.prototype.filter.call(forms, function(form) {
-            form.addEventListener('submit', function(event) {
-                if (form.checkValidity() === false) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-
-                form.classList.add('was-validated');
-            }, false);
-        });
-
-    });
-
+				})
+            .on('ready.jstree', function(e, data) {
+                data.instance.open_all();
+            })
+            .on('loaded.jstree', function(e, data) {
+                data.instance.open_all();
+            });
+    }
 
     /* AnonOps - Config */
     function checkboxToggleEnable(checkbox, inputList) {
@@ -754,6 +831,13 @@
             cfg['Addition-MatchActive'] = checked;
             cfg['Addition-MatchAttr'] = (checked ? $("#anonOpConfig-Addition-MatchAttr").val() : '');
             cfg['Addition-MatchVal'] = (checked ? $("#anonOpConfig-Addition-MatchVal").val() : '');
+
+            cfg['Addition-Events'] = [];
+            $("#anonOpConfig-Addition-EventSelectionList option:selected").each((i, e) => {
+                let idSplit = $(e).prop('id').split("-");
+                let id = idSplit[idSplit.length - 1];
+                cfg['Addition-Events'].push(id);
+            });
         }
         else if(opType === "Condensation") {
             cfg['Condensation-Operation'] = $("#anonOpConfig-Condensation-Operation").val();
@@ -863,8 +947,11 @@
 
         appState['AdditionEvents'].push({ Id: id, Name: "NewEvent", Attributes: []});
 
-        $("#anonOpConfig-Addition-NewEvent").append('<option id="anonOpConfig-Addition-NewEvents-eventOption-' + id + '">NewEvent</option>');
+        let newEventOption = $("#anonOpConfig-Addition-NewEvent").append('<option id="anonOpConfig-Addition-NewEvents-eventOption-' + id + '">NewEvent</option>');
+        $("#anonOpConfig-Addition-EventSelectionList").append('<option id="anonOpConfig-Addition-EventSelectionList-eventOption-' + id + '">NewEvent</option>');
+
         $('#anonOpConfig-Addition-NewEvent').selectpicker('refresh');
+        $('#anonOpConfig-Addition-EventSelectionList').selectpicker('refresh');
     }
     function deleteAdditionEvent() {
         let idSplit = $("#anonOpConfig-Addition-NewEvent option:selected").prop('id').split("-");
@@ -873,6 +960,9 @@
         $("#anonOpConfig-Addition-NewEvent option:selected").remove();
         $('#anonOpConfig-Addition-NewEvent').prop('selectedIndex',0);
         $('#anonOpConfig-Addition-NewEvent').selectpicker('refresh');
+
+        $("#anonOpConfig-Addition-EventSelectionList-eventOption-" + id).remove();
+        $('#anonOpConfig-Addition-EventSelectionList').selectpicker('refresh');
 
         appState['AdditionEvents'] = removeItemFromArray(appState['AdditionEvents'], (x => x.Id == id));
 
@@ -899,6 +989,8 @@
                 createNewAdditionEventAttributeRow(x.Name, x.Value);
             }
         }
+
+        $('#anonOpConfig-Addition-NewEvent-Modal-EventName').val(event.Name);
     }
     function changeSelectedAdditionEventEdit() {
         let val = $('#anonOpConfig-Addition-NewEvent').val();
@@ -924,6 +1016,7 @@
         let idSplit = $("#anonOpConfig-Addition-NewEvent option:selected").prop("id").split("-");
         let id = idSplit[idSplit.length - 1];
         let event = getFirstMatch(appState['AdditionEvents'], (x => x.Id == id));
+        event.Name = $('#anonOpConfig-Addition-NewEvent-Modal-EventName').val();
         event.Attributes = [];
 
         let rows = $('#anonOpConfig-Addition-NewEvent-Modal-Table tbody').find('tr');
@@ -932,6 +1025,89 @@
             let inputs = $(row).find("input");
             event.Attributes.push({Name: $(inputs[0]).val(), Value: $(inputs[1]).val()});
         }
+
+        //Update dropdowns with possibly new name
+        $("#anonOpConfig-Addition-EventSelectionList-eventOption-" + id).text(event.Name);
+        $('#anonOpConfig-Addition-EventSelectionList').selectpicker('refresh');
+
+        $("#anonOpConfig-Addition-NewEvents-eventOption-" + id).text(event.Name);
+        $('#anonOpConfig-Addition-NewEvent').selectpicker('refresh');
+    }
+
+    /* AnonOp - Generalization */
+    function generalizationTaxTreeSelectionChanged() {
+        let val = $('#anonOpConfig-Generalization-TaxTree').val();
+        let disable = !(val != undefined && val != '');
+
+        $('#anonOpConfig-Generalization-TaxTree-editButton').prop( "disabled", disable);
+        $('#anonOpConfig-Generalization-TaxTree-deleteButton').prop( "disabled", disable);
+    }
+    function generalizationLoadTaxTreeData() {
+        let id = $('#anonOpConfig-Generalization-TaxTree option:selected').prop('id').split('-').pop();
+
+        //Set the name
+        $('#anonOpConfig-Generalization-Taxonomy-Modal-TaxTreeName').val($('#anonOpConfig-Generalization-TaxTree option:selected').val());
+
+        //Set the tree
+        $.ajax({
+            headers: { "X-CSRFToken": token },
+            type: "GET",
+            url: "anonymization_main",
+            data: {'action': 'GetTaxonomyTree', 'treeID': id}
+            //dataType: 'json', //causes readystate 4 error if result is not json
+        }).done(result => {
+            //Update the Taxonomy-jsTree with new data
+            $('#anonOpConfig-Generalization-TaxonomyTree').jstree(true).settings.core.data = JSON.parse(result.taxTree);
+            $('#anonOpConfig-Generalization-TaxonomyTree').jstree(true).refresh();
+            $('#anonOpConfig-Generalization-TaxonomyTree').jstree(true).open_all();
+        })
+        .fail(result => console.log('handleOutput-Ajax failed'));
+    }
+    function generalizationCreateNewTaxTree() {
+        let id = generateID();
+
+        $("#anonOpConfig-Generalization-TaxTree").append('<option id="anonOpConfig-Generalization-Generalization-treeOption-' + id + '">New Tree</option>');
+        $('#anonOpConfig-Generalization-TaxTree').selectpicker('refresh');
+    }
+    function generalizationDeleteTaxTree() {
+        let id = $('#anonOpConfig-Generalization-TaxTree option:selected').prop('id').split('-').pop();
+        let name = $('#anonOpConfig-Generalization-TaxTree option:selected').val();
+
+        $.ajax({
+            headers: { "X-CSRFToken": token },
+            type: "POST",
+            url: "anonymization_main",
+            data: {'action': 'DeleteTaxonomyTree', 'treeID': id, 'treeName': name}
+            //dataType: 'json', //causes readystate 4 error if result is not json
+        }).done(result => {
+            $('#anonOpConfig-Generalization-TaxTree option:selected').remove();
+            $('#anonOpConfig-Generalization-TaxTree').selectpicker('refresh');
+        })
+        .fail(result => console.log('handleOutput-Ajax failed'));
+    }
+    function generalizationSaveTaxonomyTree() {
+        let id = $('#anonOpConfig-Generalization-TaxTree option:selected').prop('id').split('-').pop();
+        let name = $('#anonOpConfig-Generalization-Taxonomy-Modal-TaxTreeName').val();
+        var v = $('#anonOpConfig-Generalization-TaxonomyTree').jstree(true).get_json('#',
+            {
+                no_state: true, //do not return state information
+                no_data:true, // do not include node data
+                no_li_attr:true, // do not include LI attributes
+                no_a_attr:true, // do not include A attributes
+                no_id:true, // do not return ID
+                flat: false //return nested JSON instead of flat (node list, parent only by reference)
+            });
+        $.ajax({
+            headers: { "X-CSRFToken": token },
+            type: "POST",
+            url: "anonymization_main",
+            data: {'action': 'SaveTaxonomyTree', 'treeData': JSON.stringify(v), 'treeID': id, 'treeName': name}
+            //dataType: 'json', //causes readystate 4 error if result is not json
+        }).done(result => {})
+        .fail(result => console.log('handleOutput-Ajax failed'));
+
+        $('#anonOpConfig-Generalization-TaxTree option:selected').prop('text', name);
+        $('#anonOpConfig-Generalization-TaxTree').selectpicker('refresh');
     }
 
 
@@ -1031,15 +1207,15 @@
     }
 
 
-function handleOutput(button) {
-    $.ajax({
-            headers: { "X-CSRFToken": token },
-            type: "POST",
-            url: "anonymization_main",
-            data: {'outputHandleButton': button, 'selectedFile': $('#outputFileList option:selected').val()}
-            //dataType: 'json', //causes readystate 4 error if result is not json
-        }).done(result => $('#outputFileList option:selected').remove())
-        .fail(result => console.log('handleOutput-Ajax failed'));
+    function handleOutput(button) {
+        $.ajax({
+                headers: { "X-CSRFToken": token },
+                type: "POST",
+                url: "anonymization_main",
+                data: {'outputHandleButton': button, 'selectedFile': $('#outputFileList option:selected').val()}
+                //dataType: 'json', //causes readystate 4 error if result is not json
+            }).done(result => $('#outputFileList option:selected').remove())
+            .fail(result => console.log('handleOutput-Ajax failed'));
     }
 
 
