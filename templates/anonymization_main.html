@@ -416,7 +416,54 @@
                         </form>
                     </div>
 
-                    <div class="tab-pane fade" id="anonOpConfig-Supression" role="tabpanel">Supression</div>
+                    <div class="tab-pane fade" id="anonOpConfig-Supression" role="tabpanel">
+                        <form class="needs-validation" action="javascript:saveAnonOpConfig('Supression')" novalidate>
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text input-group-mediumWith">Supression-Operation:</span>
+                                </div>
+                                <select class="selectpicker" id="anonOpConfig-Supression-Operation" required onchange="supressionOperationChanged();">
+                                    <option value="SuppressEvent" selected>Suppress event entirely</option>
+                                    <option value="SuppressEventAttribute">Suppress event attribute</option>
+                                    <option value="SuppressCaseByTraceLength">Suppress whole case by trace length</option>
+                                </select>
+                            </div>
+
+                            <div class="input-group mb-3" id="anonOpConfig-Supression-INPUT-Match">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">
+                                    <input type="checkbox" id="anonOpConfig-Supression-MatchActive" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Supression-MatchAttr', '#anonOpConfig-Supression-MatchVal'])">
+                                    </div>
+                                    <span class="input-group-text input-group-mediumWith">Match Attribute &nbsp;<span data-toggle="tooltip" title="Attribute which's value needs to match the entered one on case/event level to apply the operation">&#x1F6C8;</span>:</span>
+                                </div>
+                                <select class="selectpicker" title="Choose Match-Attribute..." id="anonOpConfig-Supression-MatchAttr" disabled></select>
+                                <input type="text" class="form-control" placeholder="Match-Attribute-Value" id="anonOpConfig-Supression-MatchVal" disabled>
+                            </div>
+
+                            <div class="input-group mb-3 d-none" id="anonOpConfig-Supression-INPUT-Target">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text input-group-mediumWith">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
+                                </div>
+                                <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Supression-Target" required></select>
+                            </div>
+
+                            <div class="input-group mb-3 d-none" id="anonOpConfig-Supression-INPUT-TraceLength">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text input-group-mediumWith">Max. Trace Length:</span>
+                                </div>
+                                <input type="number" class="form-control" placeholder="TraceLength" min="1" value="6" id="anonOpConfig-Supression-TraceLength">
+                            </div>
+
+                            <div class="row">
+                                <div class="col-auto mr-auto">
+                                    <button class="btn btn-success mb-2" type="submit">Save</button>
+                                </div>
+                                <div class="col-auto">
+                                    <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
 
                     <div class="tab-pane fade" id="anonOpConfig-Swapping" role="tabpanel">
                         <form class="needs-validation" action="javascript:saveAnonOpConfig('Swapping')" novalidate>
@@ -809,6 +856,15 @@
 
             restoreDropDownMenu('#anonOpConfig-Substitution-Target', logAttributes, cfg['Substitution-Target']);
         }
+        else if(cfg.Operation === "Supression") {
+            restoreDropDownMenuSelect("#anonOpConfig-Supression-Operation", cfg['Supression-Operation']);
+            restoreDropDownMenu('#anonOpConfig-Supression-MatchAttr', logAttributes, cfg['Supression-MatchAttr']);
+            restoreDropDownMenu('#anonOpConfig-Supression-Target', logAttributes, cfg['Supression-Target']);
+
+            $("#anonOpConfig-Supression-MatchActive").prop("checked", cfg['Supression-MatchActive']);
+            $("#anonOpConfig-Supression-MatchVal").val(cfg['Supression-MatchVal']);
+            $("#anonOpConfig-Supression-TraceLength").val(cfg['Supression-TraceLength']);
+        }
         else if(cfg.Operation === 'Swapping') {
             restoreDropDownMenu('#anonOpConfig-Swapping-Target', logAttributes, cfg['Swapping-Target']);
 
@@ -880,6 +936,17 @@
         else if(opType === "Substitution") {
             cfg['Substitution-SensitiveVal'] = $("#anonOpConfig-Substitution-SensitiveVal").val();
             cfg['Substitution-Target'] = $("#anonOpConfig-Substitution-Target").val();
+        }
+        else if(opType === "Supression") {
+            cfg['Supression-Operation'] = $("#anonOpConfig-Supression-Operation").val();
+
+            let checked = $("#anonOpConfig-Supression-MatchActive").prop("checked");
+            cfg['Supression-MatchActive'] = checked;
+            cfg['Supression-MatchAttr'] = (checked ? $("#anonOpConfig-Supression-MatchAttr").val() : '');
+            cfg['Supression-MatchVal'] = (checked ? $("#anonOpConfig-Supression-MatchVal").val() : '');
+
+            cfg['Supression-Target'] = $("#anonOpConfig-Supression-Target").val();
+            cfg['Supression-TraceLength'] = $("#anonOpConfig-Supression-TraceLength").val();
         }
         else if(opType === "Swapping") {
             cfg['Swapping-Operation'] = $("#anonOpConfig-Swapping-Operation").val();
@@ -1120,6 +1187,26 @@
         $('#anonOpConfig-Generalization-TaxTree').selectpicker('refresh');
     }
 
+
+    /* AnonOp - Supression */
+    function supressionOperationChanged() {
+        let action = $('#anonOpConfig-Supression-Operation').val();
+
+        $('#anonOpConfig-Supression-INPUT-Match').addClass('d-none');
+        $('#anonOpConfig-Supression-INPUT-Target').addClass('d-none');
+        $('#anonOpConfig-Supression-INPUT-TraceLength').addClass('d-none');
+
+        if (action === "SuppressEvent") {
+            $('#anonOpConfig-Supression-INPUT-Match').removeClass('d-none');
+        }
+        else if (action === "SuppressEventAttribute") {
+            $('#anonOpConfig-Supression-INPUT-Match').removeClass('d-none');
+            $('#anonOpConfig-Supression-INPUT-Target').removeClass('d-none');
+        }
+        else if (action === "SuppressCaseByTraceLength") {
+            $('#anonOpConfig-Supression-INPUT-TraceLength').removeClass('d-none');
+        }
+    }
 
     /* TaxonomyTree */
     function taxonomyTreeCreateNode() {

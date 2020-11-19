@@ -189,12 +189,20 @@ def handleAnonOps(appState):
 
         elif(name == 'Supression'):
             s = Supression()
+            supressionOP = op['Supression-Operation']
+            isMatchActive = op['Supression-MatchActive']
+            supressionMatchAttr = op['Supression-MatchAttr'] if isMatchActive else None
+            supressionMatchVal = op['Supression-MatchVal'] if isMatchActive else None
+            supressionTarget = op['Supression-Target']
+            supressionTraceLength = op['Supression-TraceLength']
 
-            log = s.SuppressCaseByTraceLength(log, maxLength)
-
-            log = s.SuppressEvent(log, matchAttribute, matchAttributeValue)
-
-            log = s.SuppressEventAttribute(log, supressedAttribute, matchAttribute=None, matchAttributeValue=None)
+            # TODO: CASE / EVENT?? DIFFERENCE?
+            if(supressionOP == "SuppressCaseByTraceLength"):
+                log = s.SuppressCaseByTraceLength(log, supressionTraceLength)
+            elif(supressionOP == "SuppressEvent"):
+                log = s.SuppressEvent(log, supressionMatchAttr, supressionMatchVal)
+            elif(supressionOP == "SuppressEventAttribute"):
+                log = s.SuppressEventAttribute(log, supressionTarget, supressionMatchAttr, supressionMatchVal)
 
         elif(name == 'Swapping'):
             s = Swapping()
