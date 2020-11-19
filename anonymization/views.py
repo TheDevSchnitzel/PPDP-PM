@@ -9,7 +9,9 @@ from pp_role_mining.privacyPreserving import privacyPreserving
 from django.http import HttpResponseRedirect, HttpResponse
 from wsgiref.util import FileWrapper
 import json
+
 from ppdp_anonops import *
+from ppdp_anonops.utils import *
 
 from pm4py.objects.log.importer.xes import factory as xes_importer
 from pm4py.objects.log.exporter.xes import factory as xes_exporter
@@ -129,7 +131,7 @@ def handleAnonOps(appState):
             isMatchActive = op['Addition-MatchActive']
             additionMatchAttr = op['Addition-MatchAttr'] if isMatchActive else None
             additionMatchVal = op['Addition-MatchVal'] if isMatchActive else None
-
+            # TODO: Select Match Mode (Last/First/X-Event has to match, maybe as lambda)
             for event in additionEvents:
                 eventTemplate = additionEvents[event]['Attributes']
 
@@ -168,7 +170,16 @@ def handleAnonOps(appState):
                     log = c.EncryptEventAttribute(log, cryptTarget, cryptMatchAttr, cryptMatchVal)
 
         elif(name == 'Generalization'):
-            return Generalization()
+            g = Generalization()
+
+            tree = TaxonomyTree.CreateFromJSON(getTaxonomyTree("anonymization", op['Generalization-TaxTreeSelection']))
+            generalizationTarget = op['Generalization-Target']
+            generalizationDepth = op['Generalization-Depth']
+            # TODO: Generalization of Time-Attributes
+            if(level == "Case"):
+                log = g.GeneralizeCaseAttributeByTaxonomyTreeDepth(log, generalizationTarget, tree, generalizationDepth)
+            elif(level == "Event"):
+                log = g.GeneralizeEventAttributeByTaxonomyTreeDepth(log, generalizationTarget, tree, generalizationDepth)
 
         elif(name == 'Substitution'):
             s = Substitution()
@@ -177,7 +188,13 @@ def handleAnonOps(appState):
             log = s.SubstituteEventAttributeValue(log, subTarget, subSensitiveVal)
 
         elif(name == 'Supression'):
-            return Supression()
+            s = Supression()
+
+            log = s.SuppressCaseByTraceLength(log, maxLength)
+
+            log = s.SuppressEvent(log, matchAttribute, matchAttributeValue)
+
+            log = s.SuppressEventAttribute(log, supressedAttribute, matchAttribute=None, matchAttributeValue=None)
 
         elif(name == 'Swapping'):
             s = Swapping()

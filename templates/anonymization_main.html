@@ -331,6 +331,13 @@
                                 <button type="button" class="btn btn-danger btn-sm" id="anonOpConfig-Generalization-TaxTree-deleteButton" onclick="generalizationDeleteTaxTree();" disabled><i class="glyphicon glyphicon-remove"></i> Delete selected</button>
                             </div>
 
+                            <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text input-group-mediumWith">Generalization-Depth:</span>
+                                </div>
+                                <input type="number" class="form-control" placeholder="kMeans-k" min="0" value="2" id="anonOpConfig-Generalization-Depth">
+                            </div>
+
                             <div class="row">
                                 <div class="col-auto mr-auto">
                                     <button class="btn btn-success mb-2" type="submit">Save</button>
@@ -794,6 +801,8 @@
 
             //Only restore selection, as list should not change
             restoreDropDownMenuSelect('#anonOpConfig-Generalization-TaxTree', cfg['Generalization-TaxTreeSelection']);
+
+            $('#anonOpConfig-Generalization-Depth').val(cfg['Generalization-Depth']);
         }
         else if(cfg.Operation === "Substitution") {
             $("#anonOpConfig-Substitution-SensitiveVal").val(cfg['Substitution-SensitiveVal']);
@@ -830,7 +839,6 @@
 
     function saveAnonOpConfig(opType) {
         let cfg = getFirstMatch(appState['Operations'], (x => x.Id == appState['ActiveId']));
-        console.log("Object old: " + JSON.stringify(cfg));
 
         if(opType === "Addition") {
             cfg['Addition-Operation'] = $("#anonOpConfig-Addition-Operation").val();
@@ -863,8 +871,11 @@
             cfg['Cryptography-MatchVal'] = (checked ? $("#anonOpConfig-Cryptography-MatchVal").val() : '');
         }
         else if(opType === "Generalization") {
+            let id = $('#anonOpConfig-Generalization-TaxTree option:selected').prop('id').split('-').pop();
+            cfg['Generalization-TaxTreeSelectionId'] = id;
             cfg['Generalization-TaxTreeSelection'] = $('#anonOpConfig-Generalization-TaxTree').val();
             cfg['Generalization-Target'] = $('#anonOpConfig-Generalization-Target').val();
+            cfg['Generalization-Depth'] = $('#anonOpConfig-Generalization-Depth').val();
         }
         else if(opType === "Substitution") {
             cfg['Substitution-SensitiveVal'] = $("#anonOpConfig-Substitution-SensitiveVal").val();
@@ -875,7 +886,6 @@
             cfg['Swapping-Target'] = $("#anonOpConfig-Swapping-Target").val();
             cfg['Swapping-kMeans-k'] = $("#anonOpConfig-Swapping-kMeans-k").val();
         }
-        console.log("Object new: " + JSON.stringify(cfg));
     }
 
     function deleteOperation() {
