@@ -769,6 +769,13 @@
 
         if(cfg.Operation === 'Addition') {
             restoreDropDownMenu('#anonOpConfig-Addition-MatchAttr', logAttributes, cfg['Addition-MatchAttr']);
+            restoreDropDownMenuSelect('#anonOpConfig-Addition-Operation', cfg['Addition-Operation']);
+
+            $("#anonOpConfig-Addition-MatchActive").prop("checked", cfg['Addition-MatchActive']);
+            $("#anonOpConfig-Addition-MatchVal").val(cfg['Addition-MatchVal']);
+
+            restoreDropDownMenuFromDictList('#anonOpConfig-Addition-NewEvent',           appState['AdditionEvents'], 'anonOpConfig-Addition-NewEvents-eventOption-',          'Id', 'Name');
+            restoreDropDownMenuFromDictList('#anonOpConfig-Addition-EventSelectionList', appState['AdditionEvents'], 'anonOpConfig-Addition-EventSelectionList-eventOption-', 'Id', 'Name', appState['AdditionEvents'].map( x => (cfg['Addition-Events'].indexOf(x.Id) >= 0) ? x.Name : undefined ));
         }
         else if(cfg.Operation === 'Condensation') {
             restoreDropDownMenu('#anonOpConfig-Condensation-Target', logAttributes, cfg['Condensation-Target']);
@@ -1240,7 +1247,21 @@
 
         restoreDropDownMenuSelect(id, selectedElement);
     }
+    function restoreDropDownMenuFromDictList(id, dictList, idPrefix, idKey, nameKey, selectedElement = undefined)
+    {
+        //Clear old entries
+        $(id).find('option').remove();
 
+        //Create new entries and select one
+        for(let i = 0; i < dictList.length; i++) {
+            $(id).append('<option id="' + idPrefix + dictList[i][idKey] + '" value="' + dictList[i][nameKey] + '">' + dictList[i][nameKey] + '</option>')
+        }
+
+        //Update drop down
+        $(id).selectpicker('refresh');
+
+        if(selectedElement !== undefined) restoreDropDownMenuSelect(id, selectedElement);
+    }
     function restoreDropDownMenuSelect(id, selectedElement)
     {
         //Set Selected Element
