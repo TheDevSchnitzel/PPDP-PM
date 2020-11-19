@@ -169,6 +169,7 @@ def handleAnonOps(appState):
 
         elif(name == 'Generalization'):
             return Generalization()
+
         elif(name == 'Substitution'):
             s = Substitution()
             subTarget = op['Substitution-Target']
@@ -177,6 +178,7 @@ def handleAnonOps(appState):
 
         elif(name == 'Supression'):
             return Supression()
+
         elif(name == 'Swapping'):
             s = Swapping()
             swapOp = op['Swapping-Operation']

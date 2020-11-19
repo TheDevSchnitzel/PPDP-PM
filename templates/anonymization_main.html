@@ -765,8 +765,6 @@
             logAttributes = appState['LogAttributes']['EventAttributes'];
         }
 
-
-
         if(cfg.Operation === 'Addition') {
             restoreDropDownMenu('#anonOpConfig-Addition-MatchAttr', logAttributes, cfg['Addition-MatchAttr']);
             restoreDropDownMenuSelect('#anonOpConfig-Addition-Operation', cfg['Addition-Operation']);
@@ -793,6 +791,9 @@
         }
         else if(cfg.Operation === 'Generalization') {
             restoreDropDownMenu('#anonOpConfig-Generalization-Target', logAttributes, cfg['Generalization-Target']);
+
+            //Only restore selection, as list should not change
+            restoreDropDownMenuSelect('#anonOpConfig-Generalization-TaxTree', cfg['Generalization-TaxTreeSelection']);
         }
         else if(cfg.Operation === "Substitution") {
             $("#anonOpConfig-Substitution-SensitiveVal").val(cfg['Substitution-SensitiveVal']);
@@ -862,16 +863,8 @@
             cfg['Cryptography-MatchVal'] = (checked ? $("#anonOpConfig-Cryptography-MatchVal").val() : '');
         }
         else if(opType === "Generalization") {
-            var v = $('#anonOpConfig-Generalization-TaxonomyTree').jstree(true).get_json('#',
-            {
-                no_state: true, //do not return state information
-                no_data:true, // do not include node data
-                no_li_attr:true, // do not include LI attributes
-                no_a_attr:true, // do not include A attributes
-                no_id:true, // do not return ID
-                flat: false //return nested JSON instead of flat (node list, parent only by reference)
-            });
-            cfg['Generalization-TaxonomyTree'] = JSON.stringify(v);
+            cfg['Generalization-TaxTreeSelection'] = $('#anonOpConfig-Generalization-TaxTree').val();
+            cfg['Generalization-Target'] = $('#anonOpConfig-Generalization-Target').val();
         }
         else if(opType === "Substitution") {
             cfg['Substitution-SensitiveVal'] = $("#anonOpConfig-Substitution-SensitiveVal").val();
