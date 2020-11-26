@@ -129,7 +129,7 @@
                         <form class="needs-validation" action="javascript:saveAnonOpConfig('Addition')" novalidate>
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">Edit Events:</span>
+                                    <span class="input-group-text input-group-Configure">Edit Events:</span>
                                 </div>
                                 <select class="selectpicker" title="Choose event..." id="anonOpConfig-Addition-NewEvent" onchange="changeSelectedAdditionEventEdit();">
 
@@ -142,7 +142,7 @@
 
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">Addition-Operation:</span>
+                                    <span class="input-group-text input-group-Configure">Addition-Operation:</span>
                                 </div>
                                 <select class="selectpicker" id="anonOpConfig-Addition-Operation" required>
                                     <option selected>Add new event as first in trace</option>
@@ -154,10 +154,18 @@
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
                                     <div class="input-group-text">
-                                    <input type="checkbox" id="anonOpConfig-Addition-MatchActive" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Addition-MatchAttr', '#anonOpConfig-Addition-MatchVal'])">
+                                    <input type="checkbox" id="anonOpConfig-Addition-MatchActive" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Addition-MatchAttr', '#anonOpConfig-Addition-MatchVal', '#anonOpConfig-Addition-MatchOperation'])">
                                     </div>
-                                    <span class="input-group-text input-group-mediumWith">Match Attribute &nbsp;<span data-toggle="tooltip" title="Add event to trace if any event's attribute in a trace matched the entered value">&#x1F6C8;</span>:</span>
+                                    <span class="input-group-text input-group-ConfigureWithPrefixedBox">Match Attribute &nbsp;<span data-toggle="tooltip" title="Add event to trace if any event's attribute in a trace matched the entered value">&#x1F6C8;</span>:</span>
                                 </div>
+
+                                <select class="selectpicker" id="anonOpConfig-Addition-MatchOperation" disabled>
+                                    <option value="matchFirstEvent" selected>Match on first event in trace needed</option>
+                                    <option value="matchLastEvent">Match on last event in trace needed</option>
+                                    <option value="matchAnyEvent">Match on any event in trace needed</option>
+                                    <option value="matchAllEvent">Match on all events in trace needed</option>
+                                </select>
+
                                 <select class="selectpicker" title="Choose Match-Attribute..." id="anonOpConfig-Addition-MatchAttr" disabled>
                                 </select>
                                 <input type="text" class="form-control" placeholder="Match-Attribute-Value" id="anonOpConfig-Addition-MatchVal" disabled>
@@ -165,7 +173,7 @@
 
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">Events to add<span data-toggle="tooltip" title="The events that will be added to the log by applying the configured operation">&#x1F6C8;</span>:</span>
+                                    <span class="input-group-text input-group-Configure">Events to add<span data-toggle="tooltip" title="The events that will be added to the log by applying the configured operation">&#x1F6C8;</span>:</span>
                                 </div>
                                 <select class="selectpicker" title="Choose events..." id="anonOpConfig-Addition-EventSelectionList" multiple>
 
@@ -185,7 +193,7 @@
                                         <div class="modal-body">
                                             <div class="input-group mb-3">
                                                 <div class="input-group-prepend">
-                                                    <span class="input-group-text input-group-mediumWith">Event-Name:</span>
+                                                    <span class="input-group-text input-group-Configure">Event-Name:</span>
                                                 </div>
                                                 <input type="text" class="form-control" placeholder="Name" id="anonOpConfig-Addition-NewEvent-Modal-EventName"/>
                                             </div>
@@ -239,7 +247,7 @@
                         <form class="needs-validation" action="javascript:saveAnonOpConfig('Condensation')" novalidate>
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">Clusterizer:</span>
+                                    <span class="input-group-text input-group-Configure">Clusterizer:</span>
                                 </div>
                                 <select class="selectpicker" id="anonOpConfig-Condensation-Operation" required>
                                     <option selected>kMeans</option>
@@ -248,14 +256,14 @@
 
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">k for kMeans:</span>
+                                    <span class="input-group-text input-group-Configure">k for kMeans:</span>
                                 </div>
                                 <input type="number" class="form-control" placeholder="kMeans-k" min="2" value="2" id="anonOpConfig-Condensation-kMeans-k">
                             </div>
 
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
+                                    <span class="input-group-text input-group-Configure">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
                                 </div>
                                 <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Condensation-Target" required>
                                 </select>
@@ -276,7 +284,7 @@
                         <form class="needs-validation" action="javascript:saveAnonOpConfig('Cryptography')" novalidate>
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">Cryptography-Operation:</span>
+                                    <span class="input-group-text input-group-Configure">Cryptography-Operation:</span>
                                 </div>
                                 <select class="selectpicker" id="anonOpConfig-Cryptography-Operation" required>
                                     <option selected>Hash</option>
@@ -289,7 +297,7 @@
                                     <div class="input-group-text">
                                     <input type="checkbox" id="anonOpConfig-Cryptography-MatchActive" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Cryptography-MatchAttr', '#anonOpConfig-Cryptography-MatchVal'])">
                                     </div>
-                                    <span class="input-group-text input-group-mediumWith">Match Attribute &nbsp;<span data-toggle="tooltip" title="Attribute which's value needs to match the entered one on case/event level to apply the operation">&#x1F6C8;</span>:</span>
+                                    <span class="input-group-text input-group-ConfigureWithPrefixedBox">Match Attribute &nbsp;<span data-toggle="tooltip" title="Attribute which's value needs to match the entered one on case/event level to apply the operation">&#x1F6C8;</span>:</span>
                                 </div>
                                 <select class="selectpicker" title="Choose Match-Attribute..." id="anonOpConfig-Cryptography-MatchAttr" disabled></select>
                                 <input type="text" class="form-control" placeholder="Match-Attribute-Value" id="anonOpConfig-Cryptography-MatchVal" disabled>
@@ -297,7 +305,7 @@
 
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
+                                    <span class="input-group-text input-group-Configure">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
                                 </div>
                                 <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Cryptography-Target" required></select>
                             </div>
@@ -317,13 +325,13 @@
                         <form class="needs-validation" action="javascript:saveAnonOpConfig('Generalization')" novalidate>
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
+                                    <span class="input-group-text input-group-Configure">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
                                 </div>
                                 <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Generalization-Target" required></select>
                             </div>
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">Taxonomy-Tree &nbsp;<span data-toggle="tooltip" title="Choose the taxonomy tree used for generalization">&#x1F6C8;</span>:</span>
+                                    <span class="input-group-text input-group-Configure">Taxonomy-Tree &nbsp;<span data-toggle="tooltip" title="Choose the taxonomy tree used for generalization">&#x1F6C8;</span>:</span>
                                 </div>
                                 <select class="selectpicker" title="Choose TaxonomyTree..." id="anonOpConfig-Generalization-TaxTree" required onchange="generalizationTaxTreeSelectionChanged()"></select>
                                 <button type="button" class="btn btn-primary" id="anonOpConfig-Generalization-TaxTree-editButton" onclick="generalizationLoadTaxTreeData();" data-toggle="modal" data-target="#anonOpConfig-Generalization-Taxonomy-Modal" style="margin: 0px 0px 0px 10px;" disabled> Open taxonomy tree designer</button>
@@ -333,9 +341,9 @@
 
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">Generalization-Depth:</span>
+                                    <span class="input-group-text input-group-Configure">Generalization-Depth &nbsp;<span data-toggle="tooltip" title="Top-Level Parent node id depth 1 - Each child generation below is a + 1">&#x1F6C8;</span>:</span>
                                 </div>
-                                <input type="number" class="form-control" placeholder="kMeans-k" min="0" value="2" id="anonOpConfig-Generalization-Depth">
+                                <input type="number" class="form-control" placeholder="Depth" min="0" value="2" id="anonOpConfig-Generalization-Depth">
                             </div>
 
                             <div class="row">
@@ -361,7 +369,7 @@
                                         <div class="modal-body">
                                             <div class="input-group mb-3">
                                                 <div class="input-group-prepend">
-                                                    <span class="input-group-text input-group-mediumWith">Tree-Name:</span>
+                                                    <span class="input-group-text input-group-Configure">Tree-Name:</span>
                                                 </div>
                                                 <input type="text" class="form-control" placeholder="Name" id="anonOpConfig-Generalization-Taxonomy-Modal-TaxTreeName"/>
                                             </div>
@@ -394,15 +402,15 @@
                         <form class="needs-validation" action="javascript:saveAnonOpConfig('Substitution')" novalidate>
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
+                                    <span class="input-group-text input-group-Configure">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
                                 </div>
                                 <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Substitution-Target" required></select>
                             </div>
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">Match Attribute &nbsp;<span data-toggle="tooltip" title="Attribute which's value needs to match the entered one on case/event level to apply the operation">&#x1F6C8;</span>:</span>
+                                    <span class="input-group-text input-group-Configure">Sensitive Attribute Value&nbsp;<span data-toggle="tooltip" title="Value of the target attribute which will be substituted">&#x1F6C8;</span>:</span>
                                 </div>
-                                <input type="text" class="form-control" placeholder="Match-Attribute-Value" id="anonOpConfig-Substitution-SensitiveVal"/>
+                                <input type="text" class="form-control" placeholder="Value" id="anonOpConfig-Substitution-SensitiveVal"/>
                             </div>
 
                             <div class="row">
@@ -420,7 +428,7 @@
                         <form class="needs-validation" action="javascript:saveAnonOpConfig('Supression')" novalidate>
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">Supression-Operation:</span>
+                                    <span class="input-group-text input-group-Configure">Supression-Operation:</span>
                                 </div>
                                 <select class="selectpicker" id="anonOpConfig-Supression-Operation" required onchange="supressionOperationChanged();">
                                     <option value="SuppressEvent" selected>Suppress event entirely</option>
@@ -434,7 +442,7 @@
                                     <div class="input-group-text">
                                     <input type="checkbox" id="anonOpConfig-Supression-MatchActive" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Supression-MatchAttr', '#anonOpConfig-Supression-MatchVal'])">
                                     </div>
-                                    <span class="input-group-text input-group-mediumWith">Match Attribute &nbsp;<span data-toggle="tooltip" title="Attribute which's value needs to match the entered one on case/event level to apply the operation">&#x1F6C8;</span>:</span>
+                                    <span class="input-group-text input-group-ConfigureWithPrefixedBox">Match Attribute &nbsp;<span data-toggle="tooltip" title="Attribute which's value needs to match the entered one on case/event level to apply the operation">&#x1F6C8;</span>:</span>
                                 </div>
                                 <select class="selectpicker" title="Choose Match-Attribute..." id="anonOpConfig-Supression-MatchAttr" disabled></select>
                                 <input type="text" class="form-control" placeholder="Match-Attribute-Value" id="anonOpConfig-Supression-MatchVal" disabled>
@@ -442,14 +450,14 @@
 
                             <div class="input-group mb-3 d-none" id="anonOpConfig-Supression-INPUT-Target">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
+                                    <span class="input-group-text input-group-Configure">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
                                 </div>
                                 <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Supression-Target" required></select>
                             </div>
 
                             <div class="input-group mb-3 d-none" id="anonOpConfig-Supression-INPUT-TraceLength">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">Max. Trace Length:</span>
+                                    <span class="input-group-text input-group-Configure">Max. Trace Length:</span>
                                 </div>
                                 <input type="number" class="form-control" placeholder="TraceLength" min="1" value="6" id="anonOpConfig-Supression-TraceLength">
                             </div>
@@ -469,7 +477,7 @@
                         <form class="needs-validation" action="javascript:saveAnonOpConfig('Swapping')" novalidate>
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">Clusterizer:</span>
+                                    <span class="input-group-text input-group-Configure">Clusterizer:</span>
                                 </div>
                                 <select class="selectpicker" id="anonOpConfig-Swapping-Operation" required>
                                     <option selected>kMeans</option>
@@ -478,14 +486,14 @@
 
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">k for kMeans:</span>
+                                    <span class="input-group-text input-group-Configure">k for kMeans:</span>
                                 </div>
                                 <input type="number" class="form-control" placeholder="kMeans-k" min="2" value="2" id="anonOpConfig-Swapping-kMeans-k">
                             </div>
 
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-mediumWith">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
+                                    <span class="input-group-text input-group-Configure">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
                                 </div>
                                 <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Swapping-Target" required></select>
                             </div>
@@ -828,6 +836,16 @@
 
             restoreDropDownMenuFromDictList('#anonOpConfig-Addition-NewEvent',           appState['AdditionEvents'], 'anonOpConfig-Addition-NewEvents-eventOption-',          'Id', 'Name');
             restoreDropDownMenuFromDictList('#anonOpConfig-Addition-EventSelectionList', appState['AdditionEvents'], 'anonOpConfig-Addition-EventSelectionList-eventOption-', 'Id', 'Name', appState['AdditionEvents'].map( x => (cfg['Addition-Events'].indexOf(x.Id) >= 0) ? x.Name : undefined ));
+
+            //Restore match operation based on level
+            if(cfg['Level'] === 'Case') {
+                $('#anonOpConfig-Addition-MatchOperation').addClass('d-none');
+                $('#anonOpConfig-Addition-MatchOperation').parent().addClass('d-none'); //Workaround -> DropDown container not refreshed with newly added class
+            } else if (cfg['Level'] === 'Event') {
+                $('#anonOpConfig-Addition-MatchOperation').removeClass('d-none');
+                $('#anonOpConfig-Addition-MatchOperation').parent().removeClass('d-none');
+            }
+            restoreDropDownMenuSelect('#anonOpConfig-Addition-MatchOperation', cfg['Addition-MatchOp']);
         }
         else if(cfg.Operation === 'Condensation') {
             restoreDropDownMenu('#anonOpConfig-Condensation-Target', logAttributes, cfg['Condensation-Target']);
@@ -903,6 +921,7 @@
             cfg['Addition-MatchActive'] = checked;
             cfg['Addition-MatchAttr'] = (checked ? $("#anonOpConfig-Addition-MatchAttr").val() : '');
             cfg['Addition-MatchVal'] = (checked ? $("#anonOpConfig-Addition-MatchVal").val() : '');
+            cfg['Addition-MatchOp'] = (checked ? $("#anonOpConfig-Addition-MatchOperation").val() : '');
 
             cfg['Addition-Events'] = [];
             $("#anonOpConfig-Addition-EventSelectionList option:selected").each((i, e) => {
@@ -1006,6 +1025,7 @@
             //dataType: 'json', //causes readystate 4 error if result is not json
         }).done(result =>
         {
+            $('#outputFileList').append('<option value="' + result.log + '">' + result.log + '</option>');
             appState["Action"] = "Nothing";
         }).fail(result =>
         {
@@ -1029,6 +1049,11 @@
 
         $('#anonOpConfig-Addition-NewEvent').selectpicker('refresh');
         $('#anonOpConfig-Addition-EventSelectionList').selectpicker('refresh');
+
+        //Set new event as selected, activate the buttons and open the modal panel for the designer
+        restoreDropDownMenuSelect('#anonOpConfig-Addition-NewEvent', "NewEvent");
+        changeSelectedAdditionEventEdit();
+        $('#anonOpConfig-Addition-NewEvent-editButton').click();
     }
     function deleteAdditionEvent() {
         let idSplit = $("#anonOpConfig-Addition-NewEvent option:selected").prop('id').split("-");
@@ -1133,8 +1158,13 @@
             data: {'action': 'GetTaxonomyTree', 'treeID': id}
             //dataType: 'json', //causes readystate 4 error if result is not json
         }).done(result => {
+            let jsonTree = result.taxTree;
+            if(jsonTree == undefined || jsonTree == null || jsonTree == '') {
+                jsonTree = '[{"text":"Parent","icon":true,"data":false,"children":[{"id":"j1_3","text":"Child 1","icon":true,"data":false,"children":[],"type":"default"},{"id":"j1_2","text":"Child 2","icon":true,"data":false,"children":[{"id":"j1_5","text":"Child 1_1","icon":true,"data":false,"children":[],"type":"default"},{"id":"j1_4","text":"Child 1_2","icon":true,"data":false,"children":[],"type":"default"}],"type":"default"}],"type":"default"}]';
+            }
+
             //Update the Taxonomy-jsTree with new data
-            $('#anonOpConfig-Generalization-TaxonomyTree').jstree(true).settings.core.data = JSON.parse(result.taxTree);
+            $('#anonOpConfig-Generalization-TaxonomyTree').jstree(true).settings.core.data = JSON.parse(jsonTree);
             $('#anonOpConfig-Generalization-TaxonomyTree').jstree(true).refresh();
             $('#anonOpConfig-Generalization-TaxonomyTree').jstree(true).open_all();
         })
@@ -1145,6 +1175,11 @@
 
         $("#anonOpConfig-Generalization-TaxTree").append('<option id="anonOpConfig-Generalization-Generalization-treeOption-' + id + '">New Tree</option>');
         $('#anonOpConfig-Generalization-TaxTree').selectpicker('refresh');
+
+        //Set new event as selected, activate the buttons and open the modal panel for the designer
+        restoreDropDownMenuSelect('#anonOpConfig-Generalization-TaxTree', "New Tree");
+        generalizationTaxTreeSelectionChanged();
+        $('#anonOpConfig-Generalization-TaxTree-editButton').click();
     }
     function generalizationDeleteTaxTree() {
         let id = $('#anonOpConfig-Generalization-TaxTree option:selected').prop('id').split('-').pop();
@@ -1354,6 +1389,8 @@
     }
     function restoreDropDownMenuSelect(id, selectedElement)
     {
+        if(selectedElement == undefined || selectedElement == '') return;
+
         //Set Selected Element
         $(id).selectpicker('val', selectedElement);
 

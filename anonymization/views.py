@@ -9,9 +9,12 @@ from pp_role_mining.privacyPreserving import privacyPreserving
 from django.http import HttpResponseRedirect, HttpResponse
 from wsgiref.util import FileWrapper
 import json
-
+import time
 from ppdp_anonops import *
 from ppdp_anonops.utils import *
+
+from p_privacy_qt.SMS import SMS
+from p_privacy_qt.EMD import EMD
 
 from pm4py.objects.log.importer.xes import factory as xes_importer
 from pm4py.objects.log.exporter.xes import factory as xes_exporter
@@ -30,7 +33,7 @@ def anonymization_main(request):
         if request.is_ajax():
             # Do something here
             if(len(appState['Operations']) > 0 and appState['Action'] == "Process"):
-                handleAnonOps(appState)
+                return handleAnonOps(appState)
 
             # Handle button calls incoming via ajax
             elif getRequestParameter(request.POST, 'outputHandleButton', None) == "addButton":
@@ -115,13 +118,20 @@ def getRequestParameter(requestData, parameter, default=None):
 
 def handleAnonOps(appState):
     operations = appState["Operations"]
+
+    start_time = time.time()
     log = xes_importer.apply(getXesLogPath())
+    print("IMPORTING TOOK: --- %s seconds ---" % (time.time() - start_time))
+    getRiskValue(log)
+
+    # Statistic data
+    origNoTraces = len(log)
+    origNoEvents = sum([len(trace) for trace in log])
 
     for op in operations:
+        start_time = time.time()
         name = op["Operation"]
         level = op['Level']
-
-        print(name + " - " + level)
 
         if(name == 'Addition'):
             a = Addition()
@@ -131,16 +141,29 @@ def handleAnonOps(appState):
             isMatchActive = op['Addition-MatchActive']
             additionMatchAttr = op['Addition-MatchAttr'] if isMatchActive else None
             additionMatchVal = op['Addition-MatchVal'] if isMatchActive else None
-            # TODO: Select Match Mode (Last/First/X-Event has to match, maybe as lambda)
+            additionMatchOp = op['Addition-MatchOp'] if isMatchActive else None
+
+            # Select Match Mode (Trace, Attribute, Value => MATCH-PATTERN)
+            if(additionMatchOp == "matchFirstEvent"):
+                additionMatchOp = (lambda t, a, v: len(t) > 0 and a in t[0].keys() and t[0][a] == v)
+            elif(additionMatchOp == "matchLastEvent"):
+                additionMatchOp = (lambda t, a, v: len(t) > 0 and a in t[-1].keys() and t[-1][a] == v)
+            elif(additionMatchOp == "matchAnyEvent"):
+                additionMatchOp = (lambda t, a, v: len(t) > 0 and len([x for x in t if a in x.keys() and x[a] == v]) > 0)
+            elif(additionMatchOp == "matchAllEvent"):
+                additionMatchOp = (lambda t, a, v: len(t) > 0 and len([x for x in t if a in x.keys() and x[a] == v]) == len(t))
+            else:
+                additionMatchOp = None
+
             for event in additionEvents:
                 eventTemplate = additionEvents[event]['Attributes']
 
                 if(additionOp == 'Add new event as first in trace'):
-                    log = a.AddEventFirstInTrace(log, eventTemplate, additionMatchAttr, additionMatchVal)
+                    log = a.AddEventFirstInTrace(log, eventTemplate, additionMatchAttr, additionMatchVal, additionMatchOp)
                 elif(additionOp == 'Add new event as last in trace'):
-                    log = a.AddEventLastInTrace(log, eventTemplate, additionMatchAttr, additionMatchVal)
+                    log = a.AddEventLastInTrace(log, eventTemplate, additionMatchAttr, additionMatchVal, additionMatchOp)
                 elif(additionOp == 'Add new event at random position'):
-                    log = a.AddEventAtRandomPlaceInTrace(log, eventTemplate, additionMatchAttr, additionMatchVal)
+                    log = a.AddEventAtRandomPlaceInTrace(log, eventTemplate, additionMatchAttr, additionMatchVal, additionMatchOp)
 
         elif(name == 'Condensation'):
             c = Condensation()
@@ -218,21 +241,28 @@ def handleAnonOps(appState):
 
         # else:
             # raise NotImplementedError
-        pass
 
-    now = datetime.now()
-    dateTime = now.strftime(" %m-%d-%y %H-%M-%S ")
-    newName = "anon" + dateTime + settings.EVENT_LOG_NAME[:-3] + "xes"
-    tmpPath = os.path.join(settings.MEDIA_ROOT, "temp")
-    newFile = os.path.join(tmpPath, "anonymization", newName)
-    xes_exporter.export_log(log, newFile)
+        print(name[0:3].upper() + " - " + level[0:1].upper() + " TOOK: --- %s seconds ---" % (time.time() - start_time))
+
+    # Total data utility
+    utility = getDataUtilityValue(xes_importer.apply(getXesLogPath()), log)
+    print("TOTAL-DATA-UTILITY---%0.3f" % (utility))
+    getRiskValue(log)
+
+    # Statistics
+    print("Diff. No. of traces %0f" % (origNoTraces - len(log)))
+    print("Diff. No. of events %0f" % (origNoEvents - sum([len(trace) for trace in log])))
+
+    newName = exportLog(log)
+
+    return HttpResponse(json.dumps({'log': newName}), content_type='application/json')
 
 
 def getLogCaseAttributes(xesLog):
     case_attribs = []
     for case_index, case in enumerate(xesLog):
         for key in case.attributes.keys():
-            if key not in case_attribs:
+            if key not in case_attribs and not key.startswith("@"):
                 case_attribs.append(key)
     return sorted(case_attribs)
     pass
@@ -258,7 +288,7 @@ def getLogEventAttributes(xesLog):
     for case_index, case in enumerate(xesLog):
         for event_index, event in enumerate(case):
             for key in event.keys():
-                if key not in event_attribs:
+                if key not in event_attribs and not key.startswith("@"):
                     event_attribs.append(key)
     return sorted(event_attribs)
     pass
@@ -354,3 +384,98 @@ def handleXesLogDeleteButtonClick(request):
             settings.ROLE_APPLIED = False
 
     return HttpResponse(status=204)
+
+
+def exportLog(log):
+    now = datetime.now()
+    dateTime = now.strftime(" %m-%d-%y %H-%M-%S ")
+    newName = "anon" + dateTime + settings.EVENT_LOG_NAME[:-3] + "xes"
+    tmpPath = os.path.join(settings.MEDIA_ROOT, "temp")
+    newFile = os.path.join(tmpPath, "anonymization", newName)
+
+    start_time = time.time()
+    xes_exporter.export_log(log, newFile)
+    print("EXPORTING TOOK: --- %s seconds ---" % (time.time() - start_time))
+    return newName
+
+
+def getDataUtilityValue(original_log, privacy_log):
+    sys.stdout = open(os.devnull, 'w')
+
+    sensitive = []
+    time_accuracy = "minutes"
+    time_info = False
+    trace_attributes = ['concept:name']
+    # these life cycles are applied only when all_lif_cycle = False
+    life_cycle = ['complete', '', 'COMPLETE']
+    # when life cycle is in trace attributes then all_life_cycle has to be True
+    all_life_cycle = True  # True will ignore the transitions specified in life_cycle
+
+    sms = SMS()
+    logsimple, traces, sensitives = sms.create_simple_log_adv(original_log, trace_attributes, life_cycle, all_life_cycle, sensitive, time_info, time_accuracy)
+    logsimple_2, traces_2, sensitives_2 = sms.create_simple_log_adv(privacy_log, trace_attributes, life_cycle, all_life_cycle, sensitive, time_info, time_accuracy)
+
+    # log 1 convert to char
+    map_dict_act_chr, map_dict_chr_act = sms.map_act_char(traces)
+    simple_log_char_1 = sms.convert_simple_log_act_to_char(traces, map_dict_act_chr)
+
+    # log 2 convert to char
+    # map_dict_act_chr_2,map_dict_chr_act_2 = sms.map_act_char(traces_2)
+    simple_log_char_2 = sms.convert_simple_log_act_to_char(traces_2, map_dict_act_chr)
+
+    start_time = time.time()
+
+    my_emd = EMD()
+    # log_freq_1, log_only_freq_1 = my_emd.log_freq(traces)
+    # log_freq_2 , log_only_freq_2 = my_emd.log_freq(traces_2)
+
+    log_freq_1, log_only_freq_1 = my_emd.log_freq(simple_log_char_1)
+    log_freq_2, log_only_freq_2 = my_emd.log_freq(simple_log_char_2)
+
+    cost_lp = my_emd.emd_distance_pyemd(log_only_freq_1, log_only_freq_2, log_freq_1, log_freq_2)
+    # cost_lp = my_emd.emd_distance(log_freq_1,log_freq_2)
+
+    data_utility = 1 - cost_lp
+
+    sys.stdout = sys.__stdout__
+    return data_utility
+
+
+def getRiskValue(log):
+    existence_based = True  # it is faster when there is no super long traces in the event log
+    measurement_type = "average"  # average or worst_case
+    sensitive = []
+    time_accuracy = "minutes"
+    time_info = False
+    trace_attributes = ['concept:name']
+    # these life cycles are applied only when all_lif_cycle = False
+    life_cycle = ['complete', '', 'COMPLETE']
+    # when life cycle is in trace attributes then all_life_cycle has to be True
+    all_life_cycle = True
+
+    bk_type = 'set'  # set,mult,seq
+    bk_length = 2  # int
+
+    sms = SMS()
+    # simple_log = sms.create_simple_log(log,["concept:name", "lifecycle:transition"])
+    logsimple, traces, sensitives = sms.create_simple_log_adv(log, trace_attributes, life_cycle, all_life_cycle, sensitive, time_info, time_accuracy)
+
+    map_dict_act_chr, map_dict_chr_act = sms.map_act_char(traces)
+    simple_log_char_1 = sms.convert_simple_log_act_to_char(traces, map_dict_act_chr)
+
+    sms.set_simple_log(simple_log_char_1)
+
+    multiset_log = sms.get_multiset_log_n(simple_log_char_1)
+
+    # multiset_log1 = sms.get_multiset_log(simple_log)
+
+    uniq_act = sms.get_unique_elem(simple_log_char_1)
+
+    start_time = time.time()
+    results_file_name = "testName.csv"
+
+    # min_len = min(len(uniq_act),3)
+
+    cd, td = sms.disclosure_calc(bk_type, uniq_act, measurement_type, results_file_name, bk_length, existence_based, simple_log_char_1, multiset_log)
+
+    print("Set ---len %d---cd %0.3f---td %0.3f" % (bk_length, cd, td))

@@ -32,6 +32,15 @@ overflow:scroll;
     min-width:125px;
     text-align:left;
 }
+.input-group-Configure {
+    min-width:200px;
+    text-align:left;
+}
+.input-group-ConfigureWithPrefixedBox {
+    min-width:162px;
+    max-width:162px;
+    text-align:left;
+}
 
 [draggable] {
     -moz-user-select: none;
