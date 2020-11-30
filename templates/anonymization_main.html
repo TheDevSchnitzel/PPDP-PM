@@ -543,6 +543,14 @@
             <input style="margin-top: 10px;" data-toggle="tooltip" data-placement="top" title="Test" type="button"
                 class="btn btn-warning" value="Test" name="testButton" id='testButton'  onclick="startAnonymization()" />
 
+            <div id="anonStatistics" class="d-none">
+                <table>
+                    <tr><td>Risk-Analysis:</td><td></td><td style="width: 40px;"></td><td>Data Utility: </td><td><span id="anonStatistics-DataUtil"></span></td></tr>
+                    <tr><td> - BK:</td><td><span id="anonStatistics-Risk-bk"></span></td><td></td><td>Trace-Difference: </td><td><span id="anonStatistics-TraceDiff"></span></td></tr>
+                    <tr><td> - CD:</td><td><span id="anonStatistics-Risk-cd"></span></td><td></td><td>Event-Difference: </td><td><span id="anonStatistics-EventDiff"></span></td></tr>
+                    <tr><td> - TD:</td><td><span id="anonStatistics-Risk-td"></span></td><td></td><td></td><td></td></tr>
+                </table>
+            </div>
         <hr />
 
         <form name="outputHandling" action="anonymization_main" method="POST">
@@ -572,6 +580,58 @@
 
 
         {{result}}
+
+
+
+
+
+
+        <!-- Processing-Error-Modal -->
+        <div class="modal fade" id="anonOp-Processing-Error-Modal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="anonOp-Processing-Error-ModalLongTitle">We are sorry, but an error occured!</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="alert alert-danger" role="alert" id="anonOp-Processing-Error-Modal-Text">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <div class="container">
+                            <div class="row">
+                                <div class="col-auto">
+                                    <button class="btn btn-danger mb-2" type="button" data-dismiss="modal">Close</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal shown during processing -->
+        <div class="modal fade" id="anonOp-Processing-Wait-Modal" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-body">
+                        <div class="d-flex justify-content-center align-items-center">
+                            <span>Processing your request - Please wait...</span>
+                            <div class="spinner-border" role="status" style="margin-left: 25px;">
+                                <span class="sr-only">Loading...</span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-center align-items-center">
+                            <span style="font-size: 8pt;">Please note that processing files &gt;500MB may take a few minutes!</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- End (log_name != ':notset:') -->
         {% endif %}
@@ -1017,20 +1077,43 @@
     function startAnonymization() {
         appState["Action"] = "Process";
 
-        $.ajax({
-            headers: { "X-CSRFToken": token },
-            type: "POST",
-            url: "anonymization_main",
-            data: {'appState': JSON.stringify(appState)}
-            //dataType: 'json', //causes readystate 4 error if result is not json
-        }).done(result =>
-        {
-            $('#outputFileList').append('<option value="' + result.log + '">' + result.log + '</option>');
-            appState["Action"] = "Nothing";
-        }).fail(result =>
-        {
-            appState["Action"] = "Nothing";
-        });
+        //Show a processing modal, that can not be clicked away
+        $("#anonOp-Processing-Wait-Modal").modal({backdrop: 'static', keyboard: false});
+
+        //At least two seconds processing time (Psych. impact on user)
+        sleep(2000)
+            .then(()=>
+            {
+                $.ajax({
+                    headers: { "X-CSRFToken": token },
+                    type: "POST",
+                    url: "anonymization_main",
+                    data: {'appState': JSON.stringify(appState)}
+                    //dataType: 'json', //causes readystate 4 error if result is not json
+                }).done(result =>
+                {
+                    $('#outputFileList').append('<option value="' + result.log + '">' + result.log + '</option>');
+
+
+                    $("#anonStatistics-Risk-bk").text(result.Statistics["Risk"]["bkLength"]);
+                    $("#anonStatistics-Risk-cd").text(result.Statistics["Risk"]["cd"]);
+                    $("#anonStatistics-Risk-td").text(result.Statistics["Risk"]["td"]);
+                    $("#anonStatistics-DataUtil").text(result.Statistics["Utility"]);
+                    $("#anonStatistics-TraceDiff").text(result.Statistics["TraceDiff"]);
+                    $("#anonStatistics-EventDiff").text(result.Statistics["EventDiff"]);
+                    $("#anonStatistics").removeClass("d-none");
+
+                    appState["Action"] = "Nothing";
+                    $("#anonOp-Processing-Wait-Modal").modal('hide');
+                }).fail(result =>
+                {
+                    $("#anonOp-Processing-Wait-Modal").modal('hide');
+
+                    appState["Action"] = "Nothing";
+                    $('#anonOp-Processing-Error-Modal-Text').text(result.responseJSON.error);
+                    $('#anonOp-Processing-Error-Modal').modal();
+                });
+            });
     }
 
 
@@ -1346,8 +1429,10 @@
                 url: "anonymization_main",
                 data: {'outputHandleButton': button, 'selectedFile': $('#outputFileList option:selected').val()}
                 //dataType: 'json', //causes readystate 4 error if result is not json
-            }).done(result => $('#outputFileList option:selected').remove())
-            .fail(result => console.log('handleOutput-Ajax failed'));
+            }).done(result => {
+                $('#outputFileList option:selected').remove();
+                $('#outputFileList :nth-child(0)').prop('selected', true);
+            }).fail(result => console.log('handleOutput-Ajax failed'));
     }
 
 
@@ -1355,6 +1440,9 @@
         let min = 10000000;
         let max = 99999999;
         return ((Math.floor(Math.random() * (max - min +1)) + min) + "").substring(0,7);
+    }
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     function restoreDropDownMenu(id, optionList, selectedElement)

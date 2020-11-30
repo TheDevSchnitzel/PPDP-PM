@@ -10,6 +10,8 @@ from django.http import HttpResponseRedirect, HttpResponse
 from wsgiref.util import FileWrapper
 import json
 import time
+import traceback
+
 from ppdp_anonops import *
 from ppdp_anonops.utils import *
 
@@ -33,7 +35,10 @@ def anonymization_main(request):
         if request.is_ajax():
             # Do something here
             if(len(appState['Operations']) > 0 and appState['Action'] == "Process"):
-                return handleAnonOps(appState)
+                try:
+                    return handleAnonOps(appState)
+                except:
+                    return HttpResponse(json.dumps({'error': str(traceback.format_exc())}), content_type='application/json', status=500)
 
             # Handle button calls incoming via ajax
             elif getRequestParameter(request.POST, 'outputHandleButton', None) == "addButton":
@@ -195,7 +200,7 @@ def handleAnonOps(appState):
         elif(name == 'Generalization'):
             g = Generalization()
 
-            tree = TaxonomyTree.CreateFromJSON(getTaxonomyTree("anonymization", op['Generalization-TaxTreeSelection']))
+            tree = TaxonomyTree.CreateFromJSON(getTaxonomyTree("anonymization", op['Generalization-TaxTreeSelectionId']), "text", "children")
             generalizationTarget = op['Generalization-Target']
             generalizationDepth = op['Generalization-Depth']
             # TODO: Generalization of Time-Attributes
@@ -247,7 +252,7 @@ def handleAnonOps(appState):
     # Total data utility
     utility = getDataUtilityValue(xes_importer.apply(getXesLogPath()), log)
     print("TOTAL-DATA-UTILITY---%0.3f" % (utility))
-    getRiskValue(log)
+    rv_bkLength, rv_cd, rv_td = getRiskValue(log)
 
     # Statistics
     print("Diff. No. of traces %0f" % (origNoTraces - len(log)))
@@ -255,7 +260,12 @@ def handleAnonOps(appState):
 
     newName = exportLog(log)
 
-    return HttpResponse(json.dumps({'log': newName}), content_type='application/json')
+    return HttpResponse(json.dumps({'log': newName, "Statistics": {
+        "Risk": {"bkLength": rv_bkLength, "cd": rv_cd, "td": rv_td},
+        "Utility": utility,
+        "TraceDiff": (origNoTraces - len(log)),
+        "EventDiff": (origNoEvents - sum([len(trace) for trace in log])),
+    }}), content_type='application/json')
 
 
 def getLogCaseAttributes(xesLog):
@@ -478,4 +488,4 @@ def getRiskValue(log):
 
     cd, td = sms.disclosure_calc(bk_type, uniq_act, measurement_type, results_file_name, bk_length, existence_based, simple_log_char_1, multiset_log)
 
-    print("Set ---len %d---cd %0.3f---td %0.3f" % (bk_length, cd, td))
+    return bk_length, cd, td
