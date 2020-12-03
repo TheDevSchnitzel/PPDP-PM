@@ -74,7 +74,7 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text input-group-mediumWith" id="basic-addon1">Operation:</span>
                             </div>
-                            <select class="selectpicker" title="Choose Operation..." id="DDMB_anon_op" required>
+                            <select class="selectpicker" title="Choose Operation..." id="DDMB_anon_op" onchange="chooseOperationChanged();" required>
                                 <option>Addition</option>
                                 <option>Condensation</option>
                                 <option>Cryptography</option>
@@ -118,6 +118,12 @@
                 <label for="operationsList">Operations to apply (in order):</label>
                 <div class="list-group" id="operationsList" role="tablist" style="max-height: 250px; overflow-y: auto;">
                     <a class="list-group-item list-group-item-action active d-none" data-toggle="list" href="#anonOpConfig-default" role="tab">Default</a>
+                </div>
+
+                <div id="operationsListSorter" class="d-none">
+                    <input style="margin-top: 10px;" data-toggle="tooltip" data-placement="top" title="Change execution order" type="button" class="btn btn-primary" value="Up &#x21D1;" onclick="moveOperationExecOrder('Up');" />
+
+                    <input style="margin-top: 10px; float: right;" data-toggle="tooltip" data-placement="top" title="Change execution order" type="button" class="btn btn-primary" value="Down &#x21D3;" onclick="moveOperationExecOrder('Down');" />
                 </div>
             </div>
             <div class="col-10">
@@ -323,13 +329,24 @@
 
                     <div class="tab-pane fade" id="anonOpConfig-Generalization" role="tabpanel">
                         <form class="needs-validation" action="javascript:saveAnonOpConfig('Generalization')" novalidate>
-                            <div class="input-group mb-3">
+                            <div class="input-group mb-3" id="anonOpConfig-Generalization-INPUT-Target">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text input-group-Configure">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
                                 </div>
                                 <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Generalization-Target" required></select>
                             </div>
+
                             <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text input-group-Configure">Generalization-Method:</span>
+                                </div>
+                                <select class="selectpicker" id="anonOpConfig-Generalization-Operation" required onchange="generalizationOperationChanged();">
+                                    <option value="GenTaxonomyTree" selected>Taxonomy Tree</option>
+                                    <option value="GenTimestamp">Timestamp</option>
+                                </select>
+                            </div>
+
+                            <div class="input-group mb-3" id="anonOpConfig-Generalization-INPUT-TaxTree">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text input-group-Configure">Taxonomy-Tree &nbsp;<span data-toggle="tooltip" title="Choose the taxonomy tree used for generalization">&#x1F6C8;</span>:</span>
                                 </div>
@@ -339,11 +356,25 @@
                                 <button type="button" class="btn btn-danger btn-sm" id="anonOpConfig-Generalization-TaxTree-deleteButton" onclick="generalizationDeleteTaxTree();" disabled><i class="glyphicon glyphicon-remove"></i> Delete selected</button>
                             </div>
 
-                            <div class="input-group mb-3">
+                            <div class="input-group mb-3" id="anonOpConfig-Generalization-INPUT-Depth">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Generalization-Depth &nbsp;<span data-toggle="tooltip" title="Top-Level Parent node id depth 1 - Each child generation below is a + 1">&#x1F6C8;</span>:</span>
+                                    <span class="input-group-text input-group-Configure">Generalization-Depth &nbsp;<span data-toggle="tooltip" title="Leaf-Node has depth 0 - Each step up in the tree is a +1">&#x1F6C8;</span>:</span>
                                 </div>
                                 <input type="number" class="form-control" placeholder="Depth" min="0" value="2" id="anonOpConfig-Generalization-Depth">
+                            </div>
+
+                            <div class="input-group mb-3 d-none" id="anonOpConfig-Generalization-INPUT-TimeDepth">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text input-group-Configure">Generalization-Level &nbsp;<span data-toggle="tooltip" title="Prunes all timing values below the given unit - e.g. you choose 'Days' and all time values will be dropped, so only date values remain.">&#x1F6C8;</span>:</span>
+                                </div>
+                                <select class="selectpicker" id="anonOpConfig-Generalization-TimeDepth">
+                                    <option value="Seconds" >Seconds</option>
+                                    <option value="Minutes" >Minutes</option>
+                                    <option value="Hours" >Hours</option>
+                                    <option value="Days" selected>Days</option>
+                                    <option value="Months" >Months</option>
+                                    <option value="Years" >Years</option>
+                                </select>
                             </div>
 
                             <div class="row">
@@ -540,17 +571,17 @@
 
 
 
-            <input style="margin-top: 10px;" data-toggle="tooltip" data-placement="top" title="Test" type="button"
-                class="btn btn-warning" value="Test" name="testButton" id='testButton'  onclick="startAnonymization()" />
+        <input style="margin-top: 10px;" data-toggle="tooltip" data-placement="top" title="Test" type="button"
+            class="btn btn-warning" value="Test" name="testButton" id='testButton'  onclick="startAnonymization()" />
 
-            <div id="anonStatistics" class="d-none">
-                <table>
-                    <tr><td>Risk-Analysis:</td><td></td><td style="width: 40px;"></td><td>Data Utility: </td><td><span id="anonStatistics-DataUtil"></span></td></tr>
-                    <tr><td> - BK:</td><td><span id="anonStatistics-Risk-bk"></span></td><td></td><td>Trace-Difference: </td><td><span id="anonStatistics-TraceDiff"></span></td></tr>
-                    <tr><td> - CD:</td><td><span id="anonStatistics-Risk-cd"></span></td><td></td><td>Event-Difference: </td><td><span id="anonStatistics-EventDiff"></span></td></tr>
-                    <tr><td> - TD:</td><td><span id="anonStatistics-Risk-td"></span></td><td></td><td></td><td></td></tr>
-                </table>
-            </div>
+        <div id="anonStatistics" class="d-none">
+            <table>
+                <tr><td>Risk-Analysis:</td><td></td><td style="width: 40px;"></td><td>Data Utility: </td><td><span id="anonStatistics-DataUtil"></span></td></tr>
+                <tr><td> - BK:</td><td><span id="anonStatistics-Risk-bk"></span></td><td></td><td>Trace-Difference: </td><td><span id="anonStatistics-TraceDiff"></span></td></tr>
+                <tr><td> - CD:</td><td><span id="anonStatistics-Risk-cd"></span></td><td></td><td>Event-Difference: </td><td><span id="anonStatistics-EventDiff"></span></td></tr>
+                <tr><td> - TD:</td><td><span id="anonStatistics-Risk-td"></span></td><td></td><td></td><td></td></tr>
+            </table>
+        </div>
         <hr />
 
         <form name="outputHandling" action="anonymization_main" method="POST">
@@ -657,7 +688,6 @@
         //Initialize the Generalization Taxonomy-Tree
         initializeGeneralizationTaxTreeList();
         initializeGeneralizationTaxonomyTree('', true);
-
 
         /* VALIDATE FORMS */
         'use strict';
@@ -876,7 +906,6 @@
     function setActiveOp(id)
     {
         appState['ActiveId'] = id;
-        console.log("New active id: " + id);
 
         let cfg = getFirstMatch(appState['Operations'], (x => x.Id == appState['ActiveId']));
 
@@ -926,6 +955,8 @@
 
             //Only restore selection, as list should not change
             restoreDropDownMenuSelect('#anonOpConfig-Generalization-TaxTree', cfg['Generalization-TaxTreeSelection']);
+            restoreDropDownMenuSelect('#anonOpConfig-Generalization-Operation', cfg['Generalization-Operation']);
+            restoreDropDownMenuSelect('#anonOpConfig-Generalization-TimeDepth', cfg['Generalization-TimeDepth']);
 
             $('#anonOpConfig-Generalization-Depth').val(cfg['Generalization-Depth']);
         }
@@ -958,16 +989,29 @@
 
         if(operation != null && operation != "") {
             let customID = generateID();
-            $("#operationsList").append("<a class='list-group-item list-group-item-action cstDraggable' id='anonOp-" + customID + "' draggable='true' data-toggle='list' href='#anonOpConfig-" + operation + "' role='tab' aria-controls='" + operation + "' onclick='setActiveOp(" + customID + ")'>" + operation + "</a>");
-
-            //Initialize the DragDrop_Feature of the AnonOps list
-            addDnDHandlers("#anonOp-" + customID);
+            $("#operationsList").append("<a class='list-group-item list-group-item-action' id='anonOp-" + customID + "' data-toggle='list' href='#anonOpConfig-" + operation + "' role='tab' aria-controls='" + operation + "' onclick='setActiveOp(" + customID + ")'>" + operation + "</a>");
 
             appState['Operations'].push({Id: customID, Operation: operation, Level: level});
             setActiveOp(customID);
 
             //Activating the config tab for the new operation
             $('#operationsList a[href="#anonOpConfig-' + operation + '"]').tab('show');
+
+            //Make sorting buttons visible
+            $("#operationsListSorter").removeClass("d-none");
+        }
+    }
+    function chooseOperationChanged() {
+        let operation = $('#DDMB_anon_op').val();
+
+        if(["Addition"].includes(operation)) {
+            restoreDropDownMenu('#DDMB_anon_level', ['Case']);
+        }
+        else if(["Substitution"].includes(operation)) {
+            restoreDropDownMenu('#DDMB_anon_level', ['Event']);
+        }
+        else if(["Condensation", "Cryptography", "Generalization", "Supression", "Swapping"].includes(operation)) {
+            restoreDropDownMenu('#DDMB_anon_level', ['Case', 'Event']);
         }
     }
 
@@ -1011,6 +1055,8 @@
             cfg['Generalization-TaxTreeSelection'] = $('#anonOpConfig-Generalization-TaxTree').val();
             cfg['Generalization-Target'] = $('#anonOpConfig-Generalization-Target').val();
             cfg['Generalization-Depth'] = $('#anonOpConfig-Generalization-Depth').val();
+            cfg['Generalization-TimeDepth'] = $('#anonOpConfig-Generalization-TimeDepth').val();
+            cfg['Generalization-Operation'] = $('#anonOpConfig-Generalization-Operation').val();
         }
         else if(opType === "Substitution") {
             cfg['Substitution-SensitiveVal'] = $("#anonOpConfig-Substitution-SensitiveVal").val();
@@ -1041,9 +1087,29 @@
             appState['ActiveId'] = null;
 
             $('#operationsList a[href="#anonOpConfig-default"]').tab('show');
+
+            if(appState['Operations'].length === 0) {
+                $("#operationsListSorter").addClass("d-none");
+            }
         }
     }
-
+    function moveOperationExecOrder(direction) {
+        //jQuery is a bit inconsistent for indexing - nth-child is 1based, index() is 0based
+        if(direction === 'Up') {
+            let idx = $("#anonOp-" + appState['ActiveId']).index();
+            if(idx - 1 > 0)
+            {
+                $("#anonOp-" + appState['ActiveId']).insertAfter("#operationsList :nth-child(" + (idx - 1) + ")");
+            }
+        }
+        else if(direction === 'Down') {
+            let idx = $("#anonOp-" + appState['ActiveId']).index();
+            if(idx + 2 <= $('#operationsList').children().length)
+            {
+                $("#anonOp-" + appState['ActiveId']).insertAfter("#operationsList :nth-child(" + (idx + 2) + ")");
+            }
+        }
+    }
 
     function removeItemFromArray(arr, lambda) {
         let index = -1;
@@ -1304,7 +1370,23 @@
         $('#anonOpConfig-Generalization-TaxTree option:selected').prop('text', name);
         $('#anonOpConfig-Generalization-TaxTree').selectpicker('refresh');
     }
+    function generalizationOperationChanged() {
+        let action = $('#anonOpConfig-Generalization-Operation').val();
 
+        $("#anonOpConfig-Generalization-INPUT-TaxTree").addClass('d-none');
+        $("#anonOpConfig-Generalization-INPUT-Depth").addClass('d-none');
+        $("#anonOpConfig-Generalization-INPUT-TimeDepth").addClass('d-none');
+        $("#anonOpConfig-Generalization-INPUT-Target").addClass('d-none');
+
+        if (action === "GenTaxonomyTree") {
+            $("#anonOpConfig-Generalization-INPUT-TaxTree").removeClass('d-none');
+            $("#anonOpConfig-Generalization-INPUT-Depth").removeClass('d-none');
+            $("#anonOpConfig-Generalization-INPUT-Target").removeClass('d-none');
+        }
+        else if (action === "GenTimestamp") {
+            $("#anonOpConfig-Generalization-INPUT-TimeDepth").removeClass('d-none');
+        }
+    }
 
     /* AnonOp - Supression */
     function supressionOperationChanged() {
@@ -1351,88 +1433,17 @@
         ref.delete_node(sel);
     };
 
-
-
-    /* DragDrop of AnonOpsList*/
-    var dragSrcEl = null;
-    function handleDragStart(e) {
-        // Target (this) element is the source node.
-        dragSrcEl = this;
-
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/html', this.outerHTML);
-
-        this.classList.add('dragElem');
-    }
-    function handleDragOver(e) {
-        if (e.preventDefault) {
-            e.preventDefault(); // Necessary. Allows us to drop.
-        }
-        this.classList.add('over');
-
-        e.dataTransfer.dropEffect = 'move';  // See the section on the DataTransfer object.
-
-        return false;
-    }
-    function handleDragEnter(e) {
-        // this / e.target is the current hover target.
-    }
-    function handleDragLeave(e) {
-        this.classList.remove('over');  // this / e.target is previous target element.
-    }
-    function handleDrop(e) {
-        // this/e.target is current target element.
-
-        if (e.stopPropagation) {
-            e.stopPropagation(); // Stops some browsers from redirecting.
-        }
-
-        // Don't do anything if dropping the same column we're dragging.
-        if (dragSrcEl != this) {
-            // Set the source column's HTML to the HTML of the column we dropped on.
-            //alert(this.outerHTML);
-            //dragSrcEl.innerHTML = this.innerHTML;
-            //this.innerHTML = e.dataTransfer.getData('text/html');
-            this.parentNode.removeChild(dragSrcEl);
-            var dropHTML = e.dataTransfer.getData('text/html');
-            this.insertAdjacentHTML('beforebegin',dropHTML);
-            var dropElem = this.previousSibling;
-            addDnDHandlers(dropElem);
-
-        }
-        this.classList.remove('over');
-        return false;
-    }
-    function handleDragEnd(e) {
-        // this/e.target is the source node.
-        this.classList.remove('over');
-
-        /*[].forEach.call(cols, function (col) {
-            col.classList.remove('over');
-        });*/
-    }
-    function addDnDHandlers(id) {
-        let elem = $(id);
-        elem.on('dragstart', handleDragStart, false);
-        elem.on('dragenter', handleDragEnter, false)
-        elem.on('dragover', handleDragOver, false);
-        elem.on('dragleave', handleDragLeave, false);
-        elem.on('drop', handleDrop, false);
-        elem.on('dragend', handleDragEnd, false);
-    }
-
-
     function handleOutput(button) {
         $.ajax({
-                headers: { "X-CSRFToken": token },
-                type: "POST",
-                url: "anonymization_main",
-                data: {'outputHandleButton': button, 'selectedFile': $('#outputFileList option:selected').val()}
-                //dataType: 'json', //causes readystate 4 error if result is not json
-            }).done(result => {
-                $('#outputFileList option:selected').remove();
-                $('#outputFileList :nth-child(0)').prop('selected', true);
-            }).fail(result => console.log('handleOutput-Ajax failed'));
+            headers: { "X-CSRFToken": token },
+            type: "POST",
+            url: "anonymization_main",
+            data: {'outputHandleButton': button, 'selectedFile': $('#outputFileList option:selected').val()}
+            //dataType: 'json', //causes readystate 4 error if result is not json
+        }).done(result => {
+            $('#outputFileList option:selected').remove();
+            $('#outputFileList :nth-child(1)').prop('selected', true);
+        }).fail(result => console.log('handleOutput-Ajax failed'));
     }
 
 
@@ -1477,7 +1488,7 @@
     }
     function restoreDropDownMenuSelect(id, selectedElement)
     {
-        if(selectedElement == undefined || selectedElement == '') return;
+        if([undefined, null, "", " "].includes(selectedElement)) return;
 
         //Set Selected Element
         $(id).selectpicker('val', selectedElement);

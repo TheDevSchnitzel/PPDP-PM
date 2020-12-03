@@ -176,8 +176,11 @@ def handleAnonOps(appState):
             condenseTarget = op['Condensation-Target']
             k = int(op['Condensation-kMeans-k'])
 
-            if(condenseOp == 'kMeans'):
-                log = c.CondenseEventAttributeBykMeanClusterMode(log, condenseTarget, k)
+            if(level == "Event"):
+                if(condenseOp == 'kMeans'):
+                    log = c.CondenseEventAttributeBykMeanClusterMode(log, condenseTarget, k)
+            elif(level == "Case"):
+                log = c.CondenseCaseAttributeUsingMode(log, condenseTarget, k)
 
         elif(name == 'Cryptography'):
             c = Cryptography()
@@ -203,11 +206,17 @@ def handleAnonOps(appState):
             tree = TaxonomyTree.CreateFromJSON(getTaxonomyTree("anonymization", op['Generalization-TaxTreeSelectionId']), "text", "children")
             generalizationTarget = op['Generalization-Target']
             generalizationDepth = op['Generalization-Depth']
-            # TODO: Generalization of Time-Attributes
-            if(level == "Case"):
-                log = g.GeneralizeCaseAttributeByTaxonomyTreeDepth(log, generalizationTarget, tree, generalizationDepth)
-            elif(level == "Event"):
-                log = g.GeneralizeEventAttributeByTaxonomyTreeDepth(log, generalizationTarget, tree, generalizationDepth)
+
+            generalizationOperation = op['Generalization-Operation']
+            generalizationTimeDepth = op['Generalization-TimeDepth']
+
+            if(generalizationOperation == "GenTaxonomyTree"):
+                if(level == "Case"):
+                    log = g.GeneralizeCaseAttributeByTaxonomyTreeDepth(log, generalizationTarget, tree, generalizationDepth)
+                elif(level == "Event"):
+                    log = g.GeneralizeEventAttributeByTaxonomyTreeDepth(log, generalizationTarget, tree, generalizationDepth)
+            elif(generalizationOperation == "GenTimestamp"):
+                log = g.GeneralizeEventTimeAttribute(log, "time:timestamp", generalizationTimeDepth)
 
         elif(name == 'Substitution'):
             s = Substitution()
@@ -415,7 +424,7 @@ def getDataUtilityValue(original_log, privacy_log):
     sensitive = []
     time_accuracy = "minutes"
     time_info = False
-    trace_attributes = ['concept:name']
+    trace_attributes = ['concept:name', 'org:resource', 'time:timestamp']
     # these life cycles are applied only when all_lif_cycle = False
     life_cycle = ['complete', '', 'COMPLETE']
     # when life cycle is in trace attributes then all_life_cycle has to be True
@@ -457,7 +466,7 @@ def getRiskValue(log):
     sensitive = []
     time_accuracy = "minutes"
     time_info = False
-    trace_attributes = ['concept:name']
+    trace_attributes = ['concept:name', 'org:resource', 'time:timestamp']
     # these life cycles are applied only when all_lif_cycle = False
     life_cycle = ['complete', '', 'COMPLETE']
     # when life cycle is in trace attributes then all_life_cycle has to be True
