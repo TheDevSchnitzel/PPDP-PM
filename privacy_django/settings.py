@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'connector.apps.ConnectorConfig',
     'tlkc_privacy.apps.TlkcPrivacyConfig',
     'anonymization.apps.AnonymizationConfig',
+    'privacy_analysis.apps.PrivacyAnalysisConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -59,7 +60,7 @@ ROOT_URLCONF = 'privacy_django.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR,'templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -126,13 +127,14 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
-STATIC_ROOT = os.path.join(BASE_DIR, 'assets') #where to store all the statics of your project
+STATIC_ROOT = os.path.join(BASE_DIR, 'assets')  # where to store all the statics of your project
 
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR,'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 EVENT_LOG_NAME = ':notset:'
+BACKUP_EVENT_LOG_NAME = ':notset:'
 
 ROLE_APPLIED = False
 ROLE_FILE = ''
@@ -142,7 +144,7 @@ CONNECTOR_FILE = ''
 
 TLKC_APPLIED = False
 TLKC_FILE = ''
-#for uploading large files > 2.5 Mb
+# for uploading large files > 2.5 Mb
 # FILE_UPLOAD_HANDLERS = [
 #     'django.core.files.uploadhandler.TemporaryFileUploadHandler',
 # ]

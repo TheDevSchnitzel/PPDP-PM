@@ -15,8 +15,6 @@ import traceback
 from ppdp_anonops import *
 from ppdp_anonops.utils import *
 
-from p_privacy_qt.SMS import SMS
-from p_privacy_qt.EMD import EMD
 
 from pm4py.objects.log.importer.xes import factory as xes_importer
 from pm4py.objects.log.exporter.xes import factory as xes_exporter
@@ -127,7 +125,6 @@ def handleAnonOps(appState):
     start_time = time.time()
     log = xes_importer.apply(getXesLogPath())
     print("IMPORTING TOOK: --- %s seconds ---" % (time.time() - start_time))
-    getRiskValue(log)
 
     # Statistic data
     origNoTraces = len(log)
@@ -264,23 +261,13 @@ def handleAnonOps(appState):
 
         print(name[0:3].upper() + " - " + level[0:1].upper() + " TOOK: --- %s seconds ---" % (time.time() - start_time))
 
-    # Total data utility
-    utility = getDataUtilityValue(xes_importer.apply(getXesLogPath()), log)
-    print("TOTAL-DATA-UTILITY---%0.3f" % (utility))
-    rv_bkLength, rv_cd, rv_td = getRiskValue(log)
-
     # Statistics
     print("Diff. No. of traces %0f" % (len(log) - origNoTraces))
     print("Diff. No. of events %0f" % (sum([len(trace) for trace in log]) - origNoEvents))
 
     newName = exportLog(log)
 
-    return HttpResponse(json.dumps({'log': newName, "Statistics": {
-        "Risk": {"bkLength": rv_bkLength, "cd": rv_cd, "td": rv_td},
-        "Utility": utility,
-        "TraceDiff": (len(log) - origNoTraces),
-        "EventDiff": (sum([len(trace) for trace in log]) - origNoEvents),
-    }}), content_type='application/json')
+    return HttpResponse(json.dumps({'log': newName}), content_type='application/json')
 
 
 def getLogCaseAttributes(xesLog):
@@ -422,85 +409,3 @@ def exportLog(log):
     xes_exporter.export_log(log, newFile)
     print("EXPORTING TOOK: --- %s seconds ---" % (time.time() - start_time))
     return newName
-
-
-def getDataUtilityValue(original_log, privacy_log):
-    sys.stdout = open(os.devnull, 'w')
-
-    sensitive = []
-    time_accuracy = "minutes"
-    time_info = False
-    trace_attributes = ['concept:name', 'org:resource', 'time:timestamp']
-    # these life cycles are applied only when all_lif_cycle = False
-    life_cycle = ['complete', '', 'COMPLETE']
-    # when life cycle is in trace attributes then all_life_cycle has to be True
-    all_life_cycle = True  # True will ignore the transitions specified in life_cycle
-
-    sms = SMS()
-    logsimple, traces, sensitives = sms.create_simple_log_adv(original_log, trace_attributes, life_cycle, all_life_cycle, sensitive, time_info, time_accuracy)
-    logsimple_2, traces_2, sensitives_2 = sms.create_simple_log_adv(privacy_log, trace_attributes, life_cycle, all_life_cycle, sensitive, time_info, time_accuracy)
-
-    # log 1 convert to char
-    map_dict_act_chr, map_dict_chr_act = sms.map_act_char(traces)
-    simple_log_char_1 = sms.convert_simple_log_act_to_char(traces, map_dict_act_chr)
-
-    # log 2 convert to char
-    # map_dict_act_chr_2,map_dict_chr_act_2 = sms.map_act_char(traces_2)
-    simple_log_char_2 = sms.convert_simple_log_act_to_char(traces_2, map_dict_act_chr)
-
-    start_time = time.time()
-
-    my_emd = EMD()
-    # log_freq_1, log_only_freq_1 = my_emd.log_freq(traces)
-    # log_freq_2 , log_only_freq_2 = my_emd.log_freq(traces_2)
-
-    log_freq_1, log_only_freq_1 = my_emd.log_freq(simple_log_char_1)
-    log_freq_2, log_only_freq_2 = my_emd.log_freq(simple_log_char_2)
-
-    cost_lp = my_emd.emd_distance_pyemd(log_only_freq_1, log_only_freq_2, log_freq_1, log_freq_2)
-    # cost_lp = my_emd.emd_distance(log_freq_1,log_freq_2)
-
-    data_utility = 1 - cost_lp
-
-    sys.stdout = sys.__stdout__
-    return data_utility
-
-
-def getRiskValue(log):
-    existence_based = True  # it is faster when there is no super long traces in the event log
-    measurement_type = "average"  # average or worst_case
-    sensitive = []
-    time_accuracy = "minutes"
-    time_info = False
-    trace_attributes = ['concept:name', 'org:resource', 'time:timestamp']
-    # these life cycles are applied only when all_lif_cycle = False
-    life_cycle = ['complete', '', 'COMPLETE']
-    # when life cycle is in trace attributes then all_life_cycle has to be True
-    all_life_cycle = True
-
-    bk_type = 'set'  # set,mult,seq
-    bk_length = 2  # int
-
-    sms = SMS()
-    # simple_log = sms.create_simple_log(log,["concept:name", "lifecycle:transition"])
-    logsimple, traces, sensitives = sms.create_simple_log_adv(log, trace_attributes, life_cycle, all_life_cycle, sensitive, time_info, time_accuracy)
-
-    map_dict_act_chr, map_dict_chr_act = sms.map_act_char(traces)
-    simple_log_char_1 = sms.convert_simple_log_act_to_char(traces, map_dict_act_chr)
-
-    sms.set_simple_log(simple_log_char_1)
-
-    multiset_log = sms.get_multiset_log_n(simple_log_char_1)
-
-    # multiset_log1 = sms.get_multiset_log(simple_log)
-
-    uniq_act = sms.get_unique_elem(simple_log_char_1)
-
-    start_time = time.time()
-    results_file_name = "testName.csv"
-
-    # min_len = min(len(uniq_act),3)
-
-    cd, td = sms.disclosure_calc(bk_type, uniq_act, measurement_type, results_file_name, bk_length, existence_based, simple_log_char_1, multiset_log)
-
-    return bk_length, cd, td

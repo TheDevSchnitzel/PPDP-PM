@@ -20,15 +20,16 @@ from django.conf.urls.static import static
 from privacy_django import settings
 from . import views
 urlpatterns = [
-    path('',views.initial, name= 'initial'),
+    path('', views.initial, name='initial'),
     path('admin/', admin.site.urls),
     path('upload/', include('upload_eventlog.urls')),
     path('role_mining/', include('role_mining.urls')),
     path('connector/', include('connector.urls')),
     path('tlkc_privacy/', include('tlkc_privacy.urls')),
     path('anonymization/', include('anonymization.urls')),
+    path('privacy_analysis/', include('privacy_analysis.urls')),
     path('analyses_main/', views.analyses_main, name='analyses_main'),
     path('comming_main/', views.comming_main, name='comming_main')
 ]
 
-urlpatterns = urlpatterns + static(settings.MEDIA_URL,document_root = settings.MEDIA_ROOT)
+urlpatterns = urlpatterns + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

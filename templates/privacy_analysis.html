@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block content  %}
+
+<ul class="nav nav-tabs" id="myTab" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" id="disclosurerisk-tab" data-toggle="tab" href="#disclosurerisk" role="tab" aria-controls="disclosurerisk" aria-selected="true">Disclosure-Risk Analysis</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="datautility-tab" data-toggle="tab" href="#datautility" role="tab" aria-controls="datautility" aria-selected="false">Data-Utility Analysis</a>
+    </li>
+</ul>
+<div class="tab-content" id="myTabContent">
+    <div class="tab-pane fade show {{ disclosureRiskActive }}" id="disclosurerisk" role="tabpanel" aria-labelledby="disclosurerisk-tab">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-6">
+                    <!-- Event Logs Container -->
+                    <h3 class="mt-4" style="color:#00529F;">Event Logs</h3>
+                    <div class="row">
+                        <div class=" col-sm-6 col-md-7 col-lg-8">
+                            <form  name="load" action="privacy_analysis_main" method = "POST" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                Event log:
+                                    <input type = "file" value="fileupload" name="event_log" />
+                                    <input type = "submit" class="btn btn-primary mb-2" value = "Upload" name = "uploadButton" id ='submitEL1' />
+                                    <input type = "hidden" name="actionDisclosureRisk" />
+                            </form>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class=" col-sm-6 col-md-7 col-lg-8">
+                            <form  name="choice" action="privacy_analysis_main" method = "POST">
+                                {% csrf_token %}
+                                <select name="log_list" class="custom-select" size="10">
+                                    {% for eventlog in eventlog_list %}
+                                        <option value="{{eventlog}}">{{eventlog}}</option>
+                                    {% endfor %}
+                                </select>
+                                <input style="margin-top: 10px;" data-toggle="tooltip" data-placement="top" title="Set as the input" type = "submit" class="btn btn-success" value = "Set" name= "setButton" id ='setButton' />
+                                <input style="margin-top: 10px;" type = "submit" class="btn btn-danger" value = "Delete" name= "deleteButton" id ='deleteButton'/>
+                                <input style="float: right; margin-top: 10px;" type = "submit" class="btn btn-info" value = "Download" name= "downloadButton" id ='downloadButton'/>
+                                <input type = "hidden" name="actionDisclosureRisk" />
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6">
+                    <h3 class="mt-4" style="color:#00529F;">Disclosure-Risk Analysis</h3>
+                    <p>
+                        Selected log:
+                        {% if log_name and log_name != ':notset:' %}
+                            {{log_name}}
+                        {% else %}
+                            no selection made
+                        {% endif %}
+                    </p>
+
+                    {% if log_name and log_name != ':notset:' %}
+                        <input style="margin-top: 10px;" data-toggle="tooltip" data-placement="top" title="Perform Disclosure-Risk Analysis" type="button" class="btn btn-primary" value = "Perform  Disclosure-Risk Analysis" name= "drAnalysis" onclick="performDisclosureRiskAnalysis();"/>
+                        <br/><br/>
+                        <span id="drResult"></span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        </div>
+
+    <div class="tab-pane fade show {{dataUtilityActive}}" id="datautility" role="tabpanel" aria-labelledby="datautility-tab">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-6">
+                    <!-- Event Logs Container -->
+                    <h3 class="mt-4" style="color:#00529F;">Event Logs</h3>
+                    <div class="row">
+                        <div class=" col-sm-6 col-md-7 col-lg-8">
+                            <form  name="load" action="privacy_analysis_main" method = "POST" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                Event log:
+                                    <input    type = "file" value="fileupload" name="event_log" />
+                                    <input type = "submit" class="btn btn-primary mb-2" value = "Upload" name = "uploadButton" id ='submitEL2' />
+                                    <input type = "hidden" name="actionDataUtility" />
+                            </form>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class=" col-sm-6 col-md-7 col-lg-8">
+                            <form  name="choice" action="privacy_analysis_main" method = "POST">
+                                {% csrf_token %}
+                                <select name="log_list" class="custom-select" size="10">
+                                    {% for eventlog in eventlog_list %}
+                                        <option value="{{eventlog}}">{{eventlog}}</option>
+                                    {% endfor %}
+                                </select>
+                                <input style="margin-top: 10px;" data-toggle="tooltip" data-placement="top" title="Set as the input" type = "submit" class="btn btn-success" value = "Set first log" name= "setButton" id ='setButton2' />
+                                <input style="margin-top: 10px;" data-toggle="tooltip" data-placement="top" title="Set as the input" type = "submit" class="btn btn-success" value = "Set second log" name= "setButtonBackup" id ='setButton2backup' />
+                                <input style="margin-top: 10px;" type = "submit" class="btn btn-danger" value = "Delete" name= "deleteButton" id ='deleteButton2'/>
+                                <input style="float: right; margin-top: 10px;" type = "submit" class="btn btn-info" value = "Download" name= "downloadButton" id ='downloadButton2'/>
+                                <input type = "hidden" name="actionDataUtility" />
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-6">
+                    <h3 class="mt-4" style="color:#00529F;">Data-Utility Analysis</h3>
+                    <p>
+                        Selected first log:
+                        {% if log_name and log_name != ':notset:' %}
+                            {{log_name}}
+                        {% else %}
+                            no selection made
+                        {% endif %}
+                    </p>
+                    <p>
+                        Selected second log:
+                        {% if log_name_backup and log_name != ':notset:' %}
+                            {{log_name_backup}}
+                        {% else %}
+                            no selection made
+                        {% endif %}
+                    </p>
+
+                    {% if log_name and log_name != ':notset:' %}
+                        {% if log_name_backup and log_name != ':notset:' %}
+                            <input style="margin-top: 10px;" data-toggle="tooltip" data-placement="top" title="Perform Data-Utility Analysis" type="button" class="btn btn-primary" value = "Perform Data-Utility Analysis" name= "duAnalysis" onclick="performDataUtilityAnalysis();"/>
+                            <br/><br/>
+                            <span id="duResult"></span>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block script %}
+
+
+  <script>
+    var token = '{{csrf_token}}';
+
+    $(document).ready(function(){
+      $('[data-toggle="tooltip"]').tooltip();
+    });
+
+    function performDataUtilityAnalysis() {
+        $.ajax({
+            headers: { "X-CSRFToken": token },
+            type: "GET",
+            url: "privacy_analysis_main",
+            data: {'analysis': 'dataUtility' }
+            //dataType: 'json', //causes readystate 4 error if result is not json
+        }).done(result =>
+        {
+            $('#duResult').text("Calculcated Data-Utility value: " + result.Utility);
+        })
+        .fail(result =>
+        {
+            $('#duResult').text("Something went wrong!");
+        });
+    }
+
+    function performDisclosureRiskAnalysis() {
+        $.ajax({
+            headers: { "X-CSRFToken": token },
+            type: "GET",
+            url: "privacy_analysis_main",
+            data: {'analysis': 'disclosureRisk' }
+            //dataType: 'json', //causes readystate 4 error if result is not json
+        }).done(result =>
+        {
+            $('#drResult').html("Calculcated Disclosure-Risk values: " +
+            `<table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Background Knowledge</td><td>` + result.Risk.bkLength + `</td>
+                    </tr>
+                    <tr>
+                        <td>Case Disclosure</td><td>` + result.Risk.cd + `</td>
+                    </tr>
+                    <tr>
+                        <td>Trace Disclosure</td><td>` + result.Risk.td + `</td>
+                    </tr>
+                </tbody>
+            </table>`);
+        })
+        .fail(result =>
+        {
+            $('#drResult').text("Something went wrong!");
+        });
+    }
+  </script>
+
+
+
+
+{% endblock %}

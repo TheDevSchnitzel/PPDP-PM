@@ -583,15 +583,6 @@
         <input style="margin-top: 10px;" data-toggle="tooltip" data-placement="top" title="Test" type="button"
             class="btn btn-warning" value="Test" name="testButton" id='testButton'  onclick="startAnonymization()" />
 
-        <div id="anonStatistics" class="d-none">
-            <table>
-                <tr><td>Risk-Analysis:</td><td></td><td style="width: 40px;"></td><td>Data Utility: </td><td><span id="anonStatistics-DataUtil"></span></td></tr>
-                <tr><td> - BK:</td><td><span id="anonStatistics-Risk-bk"></span></td><td></td><td>Trace-Difference: </td><td><span id="anonStatistics-TraceDiff"></span></td></tr>
-                <tr><td> - CD:</td><td><span id="anonStatistics-Risk-cd"></span></td><td></td><td>Event-Difference: </td><td><span id="anonStatistics-EventDiff"></span></td></tr>
-                <tr><td> - TD:</td><td><span id="anonStatistics-Risk-td"></span></td><td></td><td></td><td></td></tr>
-            </table>
-        </div>
-
         <hr />
 
         <form name="outputHandling" action="anonymization_main" method="POST">
@@ -1139,15 +1130,6 @@
                 }).done(result =>
                 {
                     $('#outputFileList').append('<option value="' + result.log + '">' + result.log + '</option>');
-
-
-                    $("#anonStatistics-Risk-bk").text(result.Statistics["Risk"]["bkLength"]);
-                    $("#anonStatistics-Risk-cd").text(result.Statistics["Risk"]["cd"]);
-                    $("#anonStatistics-Risk-td").text(result.Statistics["Risk"]["td"]);
-                    $("#anonStatistics-DataUtil").text(result.Statistics["Utility"]);
-                    $("#anonStatistics-TraceDiff").text(result.Statistics["TraceDiff"]);
-                    $("#anonStatistics-EventDiff").text(result.Statistics["EventDiff"]);
-                    $("#anonStatistics").removeClass("d-none");
 
                     appState["Action"] = "Nothing";
                     $("#anonOp-Processing-Wait-Modal").modal('hide');
