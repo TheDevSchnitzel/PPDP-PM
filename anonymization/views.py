@@ -174,13 +174,19 @@ def handleAnonOps(appState):
             c = Condensation()
             condenseOp = op['Condensation-Operation']
             condenseTarget = op['Condensation-Target']
-            k = int(op['Condensation-kMeans-k'])
+            clusterOverAttributes = op['Condensation-ClusterOver']
+            k = int(op['Condensation-kClusters'])
 
             if(level == "Event"):
                 if(condenseOp == 'kMeans'):
                     log = c.CondenseEventAttributeBykMeanClusterMode(log, condenseTarget, k)
+                elif(condenseOp == 'kModes'):
+                    log = c.CondenseEventAttributeBykModeCluster(log, condenseTarget, clusterOverAttributes, k)
             elif(level == "Case"):
-                log = c.CondenseCaseAttributeUsingMode(log, condenseTarget, k)
+                if(condenseOp == 'kMeans'):
+                    log = c.CondenseCaseAttributeBykMeanClusterMode(log, condenseTarget, k)
+                elif(condenseOp == 'kModes'):
+                    log = c.CondenseCaseAttributeBykModeCluster(log, condenseTarget, clusterOverAttributes, k)
 
         elif(name == 'Cryptography'):
             c = Cryptography()
@@ -264,16 +270,16 @@ def handleAnonOps(appState):
     rv_bkLength, rv_cd, rv_td = getRiskValue(log)
 
     # Statistics
-    print("Diff. No. of traces %0f" % (origNoTraces - len(log)))
-    print("Diff. No. of events %0f" % (origNoEvents - sum([len(trace) for trace in log])))
+    print("Diff. No. of traces %0f" % (len(log) - origNoTraces))
+    print("Diff. No. of events %0f" % (sum([len(trace) for trace in log]) - origNoEvents))
 
     newName = exportLog(log)
 
     return HttpResponse(json.dumps({'log': newName, "Statistics": {
         "Risk": {"bkLength": rv_bkLength, "cd": rv_cd, "td": rv_td},
         "Utility": utility,
-        "TraceDiff": (origNoTraces - len(log)),
-        "EventDiff": (origNoEvents - sum([len(trace) for trace in log])),
+        "TraceDiff": (len(log) - origNoTraces),
+        "EventDiff": (sum([len(trace) for trace in log]) - origNoEvents),
     }}), content_type='application/json')
 
 

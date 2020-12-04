@@ -137,12 +137,12 @@
                                 <div class="input-group-prepend">
                                     <span class="input-group-text input-group-Configure">Edit Events:</span>
                                 </div>
-                                <select class="selectpicker" title="Choose event..." id="anonOpConfig-Addition-NewEvent" onchange="changeSelectedAdditionEventEdit();">
+                                <select class="selectpicker" title="Choose event..." id="anonOpConfig-Addition-NewEvent" onchange="additionChangeSelectedEventEdit();">
 
                                 </select>
-                                <button type="button" class="btn btn-primary" id="anonOpConfig-Addition-NewEvent-editButton" onclick="loadAdditionEventData();" data-toggle="modal" data-target="#anonOpConfig-Addition-NewEvent-Modal" style="margin: 0px 0px 0px 10px;" disabled> Open event designer</button>
-                                <button type="button" class="btn btn-success btn-sm" id="anonOpConfig-Addition-NewEvent-addButton" onclick="createNewAdditionEvent();" style="margin: 0px 10px 0px 10px;"><i class="glyphicon glyphicon-asterisk"></i> Create new</button>
-                                <button type="button" class="btn btn-danger btn-sm" id="anonOpConfig-Addition-NewEvent-deleteButton" onclick="deleteAdditionEvent();" disabled><i class="glyphicon glyphicon-remove"></i> Delete selected</button>
+                                <button type="button" class="btn btn-primary" id="anonOpConfig-Addition-NewEvent-editButton" onclick="additionLoadEventData();" data-toggle="modal" data-target="#anonOpConfig-Addition-NewEvent-Modal" style="margin: 0px 0px 0px 10px;" disabled> Open event designer</button>
+                                <button type="button" class="btn btn-success btn-sm" id="anonOpConfig-Addition-NewEvent-addButton" onclick="additionCreateNewEvent();" style="margin: 0px 10px 0px 10px;"><i class="glyphicon glyphicon-asterisk"></i> Create new</button>
+                                <button type="button" class="btn btn-danger btn-sm" id="anonOpConfig-Addition-NewEvent-deleteButton" onclick="additionDeleteEvent();" disabled><i class="glyphicon glyphicon-remove"></i> Delete selected</button>
                             </div>
 
 
@@ -220,13 +220,13 @@
                                                     </tbody>
                                                 </table>
                                             </div>
-                                            <div class="text-center"><button onclick="createNewAdditionEventAttributeRow('New Attribute', 'Value');" class="btn btn-success"><i class="fa fa-plus"></i> ADD NEW</button></div>
+                                            <div class="text-center"><button onclick="additionCreateNewEventAttributeRow('New Attribute', 'Value');" class="btn btn-success"><i class="fa fa-plus"></i> ADD NEW</button></div>
                                         </div>
                                         <div class="modal-footer">
                                             <div class="container">
                                                 <div class="row">
                                                     <div class="col-auto mr-auto">
-                                                        <button class="btn btn-success mb-2" type="button" onclick="saveNewAdditionEventAttribute();" data-dismiss="modal">Save</button>
+                                                        <button class="btn btn-success mb-2" type="button" onclick="additionSaveNewEventAttribute();" data-dismiss="modal">Save</button>
                                                     </div>
                                                     <div class="col-auto">
                                                         <button class="btn btn-danger mb-2" type="button" data-dismiss="modal">Close</button>
@@ -255,16 +255,17 @@
                                 <div class="input-group-prepend">
                                     <span class="input-group-text input-group-Configure">Clusterizer:</span>
                                 </div>
-                                <select class="selectpicker" id="anonOpConfig-Condensation-Operation" required>
+                                <select class="selectpicker" id="anonOpConfig-Condensation-Operation" onchange="condensationOperationChanged();" required>
                                     <option selected>kMeans</option>
+                                    <option>kModes</option>
                                 </select>
                             </div>
 
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">k for kMeans:</span>
+                                    <span class="input-group-text input-group-Configure">Num. of clusters:</span>
                                 </div>
-                                <input type="number" class="form-control" placeholder="kMeans-k" min="2" value="2" id="anonOpConfig-Condensation-kMeans-k">
+                                <input type="number" class="form-control" placeholder="kClusters" min="2" value="2" id="anonOpConfig-Condensation-kClusters">
                             </div>
 
                             <div class="input-group mb-3">
@@ -272,6 +273,14 @@
                                     <span class="input-group-text input-group-Configure">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
                                 </div>
                                 <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Condensation-Target" required>
+                                </select>
+                            </div>
+
+                            <div class="input-group mb-3 d-none" id="anonOpConfig-Condensation-INPUT-ClusterOver">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text input-group-Configure">Descriptive Attributes:</span>
+                                </div>
+                                <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Condensation-ClusterOver" required multiple>
                                 </select>
                             </div>
 
@@ -582,6 +591,7 @@
                 <tr><td> - TD:</td><td><span id="anonStatistics-Risk-td"></span></td><td></td><td></td><td></td></tr>
             </table>
         </div>
+
         <hr />
 
         <form name="outputHandling" action="anonymization_main" method="POST">
@@ -926,22 +936,14 @@
             restoreDropDownMenuFromDictList('#anonOpConfig-Addition-NewEvent',           appState['AdditionEvents'], 'anonOpConfig-Addition-NewEvents-eventOption-',          'Id', 'Name');
             restoreDropDownMenuFromDictList('#anonOpConfig-Addition-EventSelectionList', appState['AdditionEvents'], 'anonOpConfig-Addition-EventSelectionList-eventOption-', 'Id', 'Name', appState['AdditionEvents'].map( x => (cfg['Addition-Events'].indexOf(x.Id) >= 0) ? x.Name : undefined ));
 
-            //Restore match operation based on level
-            if(cfg['Level'] === 'Case') {
-                $('#anonOpConfig-Addition-MatchOperation').addClass('d-none');
-                $('#anonOpConfig-Addition-MatchOperation').parent().addClass('d-none'); //Workaround -> DropDown container not refreshed with newly added class
-            } else if (cfg['Level'] === 'Event') {
-                $('#anonOpConfig-Addition-MatchOperation').removeClass('d-none');
-                $('#anonOpConfig-Addition-MatchOperation').parent().removeClass('d-none');
-            }
             restoreDropDownMenuSelect('#anonOpConfig-Addition-MatchOperation', cfg['Addition-MatchOp']);
         }
         else if(cfg.Operation === 'Condensation') {
             restoreDropDownMenu('#anonOpConfig-Condensation-Target', logAttributes, cfg['Condensation-Target']);
-
             restoreDropDownMenuSelect("#anonOpConfig-Condensation-Operation", cfg['Condensation-Operation']);
+            restoreDropDownMenu('#anonOpConfig-Condensation-ClusterOver', logAttributes, cfg['Condensation-ClusterOver']);
 
-            $("#anonOpConfig-Condensation-kMeans-k").val(cfg['Condensation-kMeans-k']);
+            $("#anonOpConfig-Condensation-kClusters").val(cfg['Condensation-kClusters']);
         }
         else if(cfg.Operation === 'Cryptography') {
             restoreDropDownMenu('#anonOpConfig-Cryptography-MatchAttr', logAttributes, cfg['Cryptography-MatchAttr']);
@@ -1037,7 +1039,12 @@
         else if(opType === "Condensation") {
             cfg['Condensation-Operation'] = $("#anonOpConfig-Condensation-Operation").val();
             cfg['Condensation-Target'] = $("#anonOpConfig-Condensation-Target").val();
-            cfg['Condensation-kMeans-k'] = $("#anonOpConfig-Condensation-kMeans-k").val();
+            cfg['Condensation-kClusters'] = $("#anonOpConfig-Condensation-kClusters").val();
+
+            cfg['Condensation-ClusterOver'] = [];
+            $("#anonOpConfig-Condensation-ClusterOver option:selected").each((i, e) => {
+                cfg['Condensation-ClusterOver'].push($(e).val());
+            });
         }
         else if(opType === "Cryptography") {
             cfg['Cryptography-Operation'] = $("#anonOpConfig-Cryptography-Operation").val();
@@ -1100,6 +1107,7 @@
             if(idx - 1 > 0)
             {
                 $("#anonOp-" + appState['ActiveId']).insertAfter("#operationsList :nth-child(" + (idx - 1) + ")");
+                appState['Operations'] = swapItemsInArray(appState['Operations'], (idx - 1), (idx - 2));
             }
         }
         else if(direction === 'Down') {
@@ -1107,36 +1115,8 @@
             if(idx + 2 <= $('#operationsList').children().length)
             {
                 $("#anonOp-" + appState['ActiveId']).insertAfter("#operationsList :nth-child(" + (idx + 2) + ")");
+                appState['Operations'] = swapItemsInArray(appState['Operations'], (idx - 1), idx);
             }
-        }
-    }
-
-    function removeItemFromArray(arr, lambda) {
-        let index = -1;
-        for (let i = 0; i < arr.length; i++) {
-            if(lambda( arr[i])) {
-                index = i;
-                break;
-            }
-        }
-
-        if (index > -1) {
-            arr.splice(index, 1);
-        }
-        return arr;
-    }
-    function getFirstMatch(arr, lambda) {
-        let index = -1;
-        for (let i = 0; i < arr.length; i++) {
-            if(lambda( arr[i])) {
-                index = i;
-                break;
-            }
-        }
-        if(index > -1){
-            return arr[index];
-        } else {
-            return undefined;
         }
     }
 
@@ -1188,7 +1168,7 @@
 
 
     /* AnonOp - Addition */
-    function createNewAdditionEvent() {
+    function additionCreateNewEvent() {
         let id = generateID();
 
         appState['AdditionEvents'].push({ Id: id, Name: "NewEvent", Attributes: []});
@@ -1201,10 +1181,10 @@
 
         //Set new event as selected, activate the buttons and open the modal panel for the designer
         restoreDropDownMenuSelect('#anonOpConfig-Addition-NewEvent', "NewEvent");
-        changeSelectedAdditionEventEdit();
+        additionChangeSelectedEventEdit();
         $('#anonOpConfig-Addition-NewEvent-editButton').click();
     }
-    function deleteAdditionEvent() {
+    function additionDeleteEvent() {
         let idSplit = $("#anonOpConfig-Addition-NewEvent option:selected").prop('id').split("-");
         let id = idSplit[idSplit.length - 1];
 
@@ -1217,9 +1197,9 @@
 
         appState['AdditionEvents'] = removeItemFromArray(appState['AdditionEvents'], (x => x.Id == id));
 
-        changeSelectedAdditionEventEdit();
+        additionChangeSelectedEventEdit();
     }
-    function loadAdditionEventData(){
+    function additionLoadEventData(){
         let idSplit = $("#anonOpConfig-Addition-NewEvent option:selected").prop("id").split("-");
         let id = idSplit[idSplit.length - 1];
 
@@ -1230,40 +1210,40 @@
         if(event.Attributes.length == 0) {
             for(let i = 0; i < appState['LogAttributes']['EventAttributes'].length; i++) {
                 if(!appState['LogAttributes']['EventAttributes'][i].startsWith("@") && appState['LogAttributes']['EventAttributes'][i] != 'time:timestamp') {
-                    createNewAdditionEventAttributeRow(appState['LogAttributes']['EventAttributes'][i], 'Value');
+                    additionCreateNewEventAttributeRow(appState['LogAttributes']['EventAttributes'][i], 'Value');
                 }
             }
         }
         else {
             for(let i = 0; i < event.Attributes.length; i++) {
                 let x = event.Attributes[i];
-                createNewAdditionEventAttributeRow(x.Name, x.Value);
+                additionCreateNewEventAttributeRow(x.Name, x.Value);
             }
         }
 
         $('#anonOpConfig-Addition-NewEvent-Modal-EventName').val(event.Name);
     }
-    function changeSelectedAdditionEventEdit() {
+    function additionChangeSelectedEventEdit() {
         let val = $('#anonOpConfig-Addition-NewEvent').val();
         let disable = !(val != undefined && val != '');
 
         $('#anonOpConfig-Addition-NewEvent-editButton').prop( "disabled", disable);
         $('#anonOpConfig-Addition-NewEvent-deleteButton').prop( "disabled", disable);
     }
-    function deleteNewAdditionEventAttributeRow(elemId) {
+    function additionDeleteNewEventAttributeRow(elemId) {
         $(elemId).remove();
     }
-    function createNewAdditionEventAttributeRow(attribute, val) {
+    function additionCreateNewEventAttributeRow(attribute, val) {
         let id = generateID();
         html = '<tr id="anonOpConfig-Addition-NewEvents-ModalRow-' + id + '">';
         html += '<td><input type="text" class="form-control" placeholder="Attribute name" value="' + attribute + '"></td>';
         html += '<td><input type="text" class="form-control" placeholder="Value" value="' + val + '"></td>';
-        html += '<td class="mt-10"><button class="btn btn-danger" onclick="deleteNewAdditionEventAttributeRow(\'#anonOpConfig-Addition-NewEvents-ModalRow-' + id + '\');"><i class="fa fa-trash"></i> Delete</button></td>';
+        html += '<td class="mt-10"><button class="btn btn-danger" onclick="additionDeleteNewEventAttributeRow(\'#anonOpConfig-Addition-NewEvents-ModalRow-' + id + '\');"><i class="fa fa-trash"></i> Delete</button></td>';
         html += '</tr>';
 
         $('#anonOpConfig-Addition-NewEvent-Modal-Table tbody').append(html);
     }
-    function saveNewAdditionEventAttribute() {
+    function additionSaveNewEventAttribute() {
         let idSplit = $("#anonOpConfig-Addition-NewEvent option:selected").prop("id").split("-");
         let id = idSplit[idSplit.length - 1];
         let event = getFirstMatch(appState['AdditionEvents'], (x => x.Id == id));
@@ -1283,6 +1263,18 @@
 
         $("#anonOpConfig-Addition-NewEvents-eventOption-" + id).text(event.Name);
         $('#anonOpConfig-Addition-NewEvent').selectpicker('refresh');
+    }
+
+    /* AnonOp - Condensation*/
+    function condensationOperationChanged() {
+        let op = $("#anonOpConfig-Condensation-Operation").val();
+
+        $("#anonOpConfig-Condensation-INPUT-ClusterOver").addClass("d-none");
+
+        if(op === "kMeans") {}
+        else if(op === "kModes") {
+            $("#anonOpConfig-Condensation-INPUT-ClusterOver").removeClass("d-none");
+        }
     }
 
     /* AnonOp - Generalization */
@@ -1433,6 +1425,7 @@
         ref.delete_node(sel);
     };
 
+    /* Handle Output-Buttons Add / Delete */
     function handleOutput(button) {
         $.ajax({
             headers: { "X-CSRFToken": token },
@@ -1446,7 +1439,7 @@
         }).fail(result => console.log('handleOutput-Ajax failed'));
     }
 
-
+    /* Syntactic sugar */
     function generateID() {
         let min = 10000000;
         let max = 99999999;
@@ -1455,7 +1448,43 @@
     function sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
+    function swapItemsInArray(arr, old_index, new_index) {
+        let tmp = arr[old_index];
+        arr[old_index] = arr[new_index];
+        arr[new_index] = tmp;
 
+        return arr; // for testing
+    }
+    function removeItemFromArray(arr, lambda) {
+        let index = -1;
+        for (let i = 0; i < arr.length; i++) {
+            if(lambda(arr[i])) {
+                index = i;
+                break;
+            }
+        }
+
+        if (index > -1) {
+            arr.splice(index, 1);
+        }
+        return arr;
+    }
+    function getFirstMatch(arr, lambda) {
+        let index = -1;
+        for (let i = 0; i < arr.length; i++) {
+            if(lambda( arr[i])) {
+                index = i;
+                break;
+            }
+        }
+        if(index > -1){
+            return arr[index];
+        } else {
+            return undefined;
+        }
+    }
+
+    /* Handling Bootstrap DropDowns */
     function restoreDropDownMenu(id, optionList, selectedElement)
     {
         //Clear old entries
