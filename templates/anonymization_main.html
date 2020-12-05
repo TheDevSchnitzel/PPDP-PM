@@ -80,7 +80,7 @@
                                 <option>Cryptography</option>
                                 <option>Generalization</option>
                                 <option>Substitution</option>
-                                <option>Supression</option>
+                                <option>Suppression</option>
                                 <option>Swapping</option>
                             </select>
                             <div class="invalid-feedback">
@@ -160,21 +160,22 @@
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
                                     <div class="input-group-text">
-                                    <input type="checkbox" id="anonOpConfig-Addition-MatchActive" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Addition-MatchAttr', '#anonOpConfig-Addition-MatchVal', '#anonOpConfig-Addition-MatchOperation'])">
+                                    <input type="checkbox" id="anonOpConfig-Addition-ConditionalActive" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Addition-ConditionalAttr', '#anonOpConfig-Addition-ConditionalVal', '#anonOpConfig-Addition-MatchOperation'])">
                                     </div>
-                                    <span class="input-group-text input-group-ConfigureWithPrefixedBox">Match Attribute &nbsp;<span data-toggle="tooltip" title="Add event to trace if any event's attribute in a trace matched the entered value">&#x1F6C8;</span>:</span>
+                                    <span class="input-group-text input-group-ConfigureWithPrefixedBox">Conditional Attrib. <span data-toggle="tooltip" title="Only add the new event(s) to the trace if the (first/last/all/any) event or the case itself contains an attribute whichs value equals the entered value">&#x1F6C8;</span>:</span>
                                 </div>
 
                                 <select class="selectpicker" id="anonOpConfig-Addition-MatchOperation" disabled>
+                                    <option value="matchCase">Apply condition on case attributes</option>
                                     <option value="matchFirstEvent" selected>Match on first event in trace needed</option>
                                     <option value="matchLastEvent">Match on last event in trace needed</option>
                                     <option value="matchAnyEvent">Match on any event in trace needed</option>
                                     <option value="matchAllEvent">Match on all events in trace needed</option>
                                 </select>
 
-                                <select class="selectpicker" title="Choose Match-Attribute..." id="anonOpConfig-Addition-MatchAttr" disabled>
+                                <select class="selectpicker" title="Choose Conditional-Attribute..." id="anonOpConfig-Addition-ConditionalAttr" disabled>
                                 </select>
-                                <input type="text" class="form-control" placeholder="Match-Attribute-Value" id="anonOpConfig-Addition-MatchVal" disabled>
+                                <input type="text" class="form-control" placeholder="Conditional-Attribute-Value" id="anonOpConfig-Addition-ConditionalVal" disabled>
                             </div>
 
                             <div class="input-group mb-3">
@@ -258,6 +259,7 @@
                                 <select class="selectpicker" id="anonOpConfig-Condensation-Operation" onchange="condensationOperationChanged();" required>
                                     <option selected>kMeans</option>
                                     <option>kModes</option>
+                                    <option>Euclidian Distance</option>
                                 </select>
                             </div>
 
@@ -276,12 +278,55 @@
                                 </select>
                             </div>
 
-                            <div class="input-group mb-3 d-none" id="anonOpConfig-Condensation-INPUT-ClusterOver">
+                            <div class="input-group mb-3 d-none" id="anonOpConfig-Condensation-INPUT-DescriptiveAttributes">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text input-group-Configure">Descriptive Attributes:</span>
                                 </div>
-                                <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Condensation-ClusterOver" required multiple>
+                                <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Condensation-DescriptiveAttributes" required multiple>
                                 </select>
+
+                                <button type="button" class="btn btn-primary" id="anonOpConfig-Condensation-AttributeWeights" onclick="condensationLoadAttributeWeights();" data-toggle="modal" data-target="#anonOpConfig-Condensation-AttributeWeights-Modal" style="margin: 0px 0px 0px 10px;"> Open Weight Designer</button>
+                            </div>
+
+                            <!-- Modal -->
+                            <div class="modal fade" id="anonOpConfig-Condensation-AttributeWeights-Modal" tabindex="-1" role="dialog" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered" role="document">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="anonOpConfig-Condensation-AttributeWeights-ModalLongTitle">Weight Designer</h5>
+                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                            </button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="table-responsive">
+
+                                                <table id="anonOpConfig-Condensation-AttributeWeights-Modal-Table" class="table table-hover">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Attribute</th>
+                                                            <th>Weight</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <div class="container">
+                                                <div class="row">
+                                                    <div class="col-auto mr-auto">
+                                                        <button class="btn btn-success mb-2" type="button" onclick="condensationSaveAttributeWeights();" data-dismiss="modal">Save</button>
+                                                    </div>
+                                                    <div class="col-auto">
+                                                        <button class="btn btn-danger mb-2" type="button" data-dismiss="modal">Close</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="row">
@@ -310,12 +355,12 @@
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
                                     <div class="input-group-text">
-                                    <input type="checkbox" id="anonOpConfig-Cryptography-MatchActive" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Cryptography-MatchAttr', '#anonOpConfig-Cryptography-MatchVal'])">
+                                    <input type="checkbox" id="anonOpConfig-Cryptography-ConditionalActive" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Cryptography-ConditionalAttr', '#anonOpConfig-Cryptography-ConditionalVal'])">
                                     </div>
-                                    <span class="input-group-text input-group-ConfigureWithPrefixedBox">Match Attribute &nbsp;<span data-toggle="tooltip" title="Attribute which's value needs to match the entered one on case/event level to apply the operation">&#x1F6C8;</span>:</span>
+                                    <span class="input-group-text input-group-ConfigureWithPrefixedBox">Conditional Attrib. <span data-toggle="tooltip" title="Only encrypt/hash the target attribute of the case/event, if the case/event has the conditional-attribute with an equal value to the one specified">&#x1F6C8;</span>:</span>
                                 </div>
-                                <select class="selectpicker" title="Choose Match-Attribute..." id="anonOpConfig-Cryptography-MatchAttr" disabled></select>
-                                <input type="text" class="form-control" placeholder="Match-Attribute-Value" id="anonOpConfig-Cryptography-MatchVal" disabled>
+                                <select class="selectpicker" title="Choose Conditional-Attribute..." id="anonOpConfig-Cryptography-ConditionalAttr" disabled></select>
+                                <input type="text" class="form-control" placeholder="Conditional-Attribute-Value" id="anonOpConfig-Cryptography-ConditionalVal" disabled>
                             </div>
 
                             <div class="input-group mb-3">
@@ -464,42 +509,42 @@
                         </form>
                     </div>
 
-                    <div class="tab-pane fade" id="anonOpConfig-Supression" role="tabpanel">
-                        <form class="needs-validation" action="javascript:saveAnonOpConfig('Supression')" novalidate>
+                    <div class="tab-pane fade" id="anonOpConfig-Suppression" role="tabpanel">
+                        <form class="needs-validation" action="javascript:saveAnonOpConfig('Suppression')" novalidate>
                             <div class="input-group mb-3">
                                 <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Supression-Operation:</span>
+                                    <span class="input-group-text input-group-Configure">Suppression-Operation:</span>
                                 </div>
-                                <select class="selectpicker" id="anonOpConfig-Supression-Operation" required onchange="supressionOperationChanged();">
-                                    <option value="SuppressEvent" selected>Suppress event entirely</option>
-                                    <option value="SuppressEventAttribute">Suppress event attribute</option>
+                                <select class="selectpicker" id="anonOpConfig-Suppression-Operation" required onchange="suppressionOperationChanged();">
+                                    <option value="Suppress" selected>Suppress event/case entirely</option>
+                                    <option value="SuppressAttribute">Suppress event/case attribute</option>
                                     <option value="SuppressCaseByTraceLength">Suppress whole case by trace length</option>
                                 </select>
                             </div>
 
-                            <div class="input-group mb-3" id="anonOpConfig-Supression-INPUT-Match">
+                            <div class="input-group mb-3" id="anonOpConfig-Suppression-INPUT-Match">
                                 <div class="input-group-prepend">
                                     <div class="input-group-text">
-                                    <input type="checkbox" id="anonOpConfig-Supression-MatchActive" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Supression-MatchAttr', '#anonOpConfig-Supression-MatchVal'])">
+                                    <input type="checkbox" id="anonOpConfig-Suppression-ConditionalActive" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Suppression-ConditionalAttr', '#anonOpConfig-Suppression-ConditionalVal'])">
                                     </div>
-                                    <span class="input-group-text input-group-ConfigureWithPrefixedBox">Match Attribute &nbsp;<span data-toggle="tooltip" title="Attribute which's value needs to match the entered one on case/event level to apply the operation">&#x1F6C8;</span>:</span>
+                                    <span class="input-group-text input-group-ConfigureWithPrefixedBox">Conditional Attrib. <span data-toggle="tooltip" title="Only perform suppression on the target attribute of the case/event, if the case/event has the conditional-attribute with an equal value to the one specified">&#x1F6C8;</span>:</span>
                                 </div>
-                                <select class="selectpicker" title="Choose Match-Attribute..." id="anonOpConfig-Supression-MatchAttr" disabled></select>
-                                <input type="text" class="form-control" placeholder="Match-Attribute-Value" id="anonOpConfig-Supression-MatchVal" disabled>
+                                <select class="selectpicker" title="Choose Conditional-Attribute..." id="anonOpConfig-Suppression-ConditionalAttr" disabled></select>
+                                <input type="text" class="form-control" placeholder="Conditional-Attribute-Value" id="anonOpConfig-Suppression-ConditionalVal" disabled>
                             </div>
 
-                            <div class="input-group mb-3 d-none" id="anonOpConfig-Supression-INPUT-Target">
+                            <div class="input-group mb-3 d-none" id="anonOpConfig-Suppression-INPUT-Target">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text input-group-Configure">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
                                 </div>
-                                <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Supression-Target" required></select>
+                                <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Suppression-Target" required></select>
                             </div>
 
-                            <div class="input-group mb-3 d-none" id="anonOpConfig-Supression-INPUT-TraceLength">
+                            <div class="input-group mb-3 d-none" id="anonOpConfig-Suppression-INPUT-TraceLength">
                                 <div class="input-group-prepend">
                                     <span class="input-group-text input-group-Configure">Max. Trace Length:</span>
                                 </div>
-                                <input type="number" class="form-control" placeholder="TraceLength" min="1" value="6" id="anonOpConfig-Supression-TraceLength">
+                                <input type="number" class="form-control" placeholder="TraceLength" min="1" value="6" id="anonOpConfig-Suppression-TraceLength">
                             </div>
 
                             <div class="row">
@@ -528,7 +573,7 @@
                                 <div class="input-group-prepend">
                                     <span class="input-group-text input-group-Configure">k for kMeans:</span>
                                 </div>
-                                <input type="number" class="form-control" placeholder="kMeans-k" min="2" value="2" id="anonOpConfig-Swapping-kMeans-k">
+                                <input type="number" class="form-control" placeholder="kClusters" min="2" value="2" id="anonOpConfig-Swapping-kClusters">
                             </div>
 
                             <div class="input-group mb-3">
@@ -918,11 +963,12 @@
         }
 
         if(cfg.Operation === 'Addition') {
-            restoreDropDownMenu('#anonOpConfig-Addition-MatchAttr', logAttributes, cfg['Addition-MatchAttr']);
+            //restoreDropDownMenu('#anonOpConfig-Addition-ConditionalAttr', logAttributes, cfg['Addition-ConditionalAttr']);
+            restoreDropDownMenuOptGroups('#anonOpConfig-Addition-ConditionalAttr', {'Case-Attributes': appState['LogAttributes']['CaseAttributes'], 'Event-Attributes': appState['LogAttributes']['EventAttributes']}, cfg['Addition-ConditionalAttr']);
             restoreDropDownMenuSelect('#anonOpConfig-Addition-Operation', cfg['Addition-Operation']);
 
-            $("#anonOpConfig-Addition-MatchActive").prop("checked", cfg['Addition-MatchActive']);
-            $("#anonOpConfig-Addition-MatchVal").val(cfg['Addition-MatchVal']);
+            $("#anonOpConfig-Addition-ConditionalActive").prop("checked", cfg['Addition-ConditionalActive']);
+            $("#anonOpConfig-Addition-ConditionalVal").val(cfg['Addition-ConditionalVal']);
 
             restoreDropDownMenuFromDictList('#anonOpConfig-Addition-NewEvent',           appState['AdditionEvents'], 'anonOpConfig-Addition-NewEvents-eventOption-',          'Id', 'Name');
             restoreDropDownMenuFromDictList('#anonOpConfig-Addition-EventSelectionList', appState['AdditionEvents'], 'anonOpConfig-Addition-EventSelectionList-eventOption-', 'Id', 'Name', appState['AdditionEvents'].map( x => (cfg['Addition-Events'].indexOf(x.Id) >= 0) ? x.Name : undefined ));
@@ -932,16 +978,16 @@
         else if(cfg.Operation === 'Condensation') {
             restoreDropDownMenu('#anonOpConfig-Condensation-Target', logAttributes, cfg['Condensation-Target']);
             restoreDropDownMenuSelect("#anonOpConfig-Condensation-Operation", cfg['Condensation-Operation']);
-            restoreDropDownMenu('#anonOpConfig-Condensation-ClusterOver', logAttributes, cfg['Condensation-ClusterOver']);
+            restoreDropDownMenu('#anonOpConfig-Condensation-DescriptiveAttributes', logAttributes, cfg['Condensation-DescriptiveAttributes']);
 
             $("#anonOpConfig-Condensation-kClusters").val(cfg['Condensation-kClusters']);
         }
         else if(cfg.Operation === 'Cryptography') {
-            restoreDropDownMenu('#anonOpConfig-Cryptography-MatchAttr', logAttributes, cfg['Cryptography-MatchAttr']);
+            restoreDropDownMenu('#anonOpConfig-Cryptography-ConditionalAttr', logAttributes, cfg['Cryptography-ConditionalAttr']);
             restoreDropDownMenu('#anonOpConfig-Cryptography-Target', logAttributes, cfg['Cryptography-Target']);
 
             restoreDropDownMenuSelect("#anonOpConfig-Cryptography-Operation", cfg['Cryptography-Operation']);
-            $("#anonOpConfig-Cryptography-MatchVal").val(cfg['Cryptography-MatchVal']);
+            $("#anonOpConfig-Cryptography-ConditionalVal").val(cfg['Cryptography-ConditionalVal']);
         }
         else if(cfg.Operation === 'Generalization') {
             restoreDropDownMenu('#anonOpConfig-Generalization-Target', logAttributes, cfg['Generalization-Target']);
@@ -958,21 +1004,26 @@
 
             restoreDropDownMenu('#anonOpConfig-Substitution-Target', logAttributes, cfg['Substitution-Target']);
         }
-        else if(cfg.Operation === "Supression") {
-            restoreDropDownMenuSelect("#anonOpConfig-Supression-Operation", cfg['Supression-Operation']);
-            restoreDropDownMenu('#anonOpConfig-Supression-MatchAttr', logAttributes, cfg['Supression-MatchAttr']);
-            restoreDropDownMenu('#anonOpConfig-Supression-Target', logAttributes, cfg['Supression-Target']);
+        else if(cfg.Operation === "Suppression") {
+            restoreDropDownMenu('#anonOpConfig-Suppression-ConditionalAttr', logAttributes, cfg['Suppression-ConditionalAttr']);
+            restoreDropDownMenu('#anonOpConfig-Suppression-Target', logAttributes, cfg['Suppression-Target']);
 
-            $("#anonOpConfig-Supression-MatchActive").prop("checked", cfg['Supression-MatchActive']);
-            $("#anonOpConfig-Supression-MatchVal").val(cfg['Supression-MatchVal']);
-            $("#anonOpConfig-Supression-TraceLength").val(cfg['Supression-TraceLength']);
+            $("#anonOpConfig-Suppression-ConditionalActive").prop("checked", cfg['Suppression-ConditionalActive']);
+            $("#anonOpConfig-Suppression-ConditionalVal").val(cfg['Suppression-ConditionalVal']);
+            $("#anonOpConfig-Suppression-TraceLength").val(cfg['Suppression-TraceLength']);
+
+            //Restore DropDown based on the seletec level
+            $("#anonOpConfig-Suppression-Operation option[value|='Suppress']").text("Suppress " + cfg['Level'].toLowerCase() + " entirely");
+            $("#anonOpConfig-Suppression-Operation option[value|='SuppressAttribute']").text("Suppress " + cfg['Level'].toLowerCase() + " attribute");
+            restoreDropDownMenuSelect("#anonOpConfig-Suppression-Operation", cfg['Suppression-Operation']);
+            $("#anonOpConfig-Suppression-Operation").selectpicker('refresh');
         }
         else if(cfg.Operation === 'Swapping') {
             restoreDropDownMenu('#anonOpConfig-Swapping-Target', logAttributes, cfg['Swapping-Target']);
 
             restoreDropDownMenuSelect("#anonOpConfig-Swapping-Operation", cfg['Swapping-Operation']);
 
-            $("#anonOpConfig-Swapping-kMeans-k").val(cfg['Swapping-kMeans-k']);
+            $("#anonOpConfig-Swapping-kClusters").val(cfg['Swapping-kClusters']);
         }
     }
 
@@ -998,12 +1049,12 @@
         let operation = $('#DDMB_anon_op').val();
 
         if(["Addition"].includes(operation)) {
-            restoreDropDownMenu('#DDMB_anon_level', ['Case']);
+            restoreDropDownMenu('#DDMB_anon_level', ['Case'], 'Case');
         }
         else if(["Substitution"].includes(operation)) {
-            restoreDropDownMenu('#DDMB_anon_level', ['Event']);
+            restoreDropDownMenu('#DDMB_anon_level', ['Event'], 'Event');
         }
-        else if(["Condensation", "Cryptography", "Generalization", "Supression", "Swapping"].includes(operation)) {
+        else if(["Condensation", "Cryptography", "Generalization", "Suppression", "Swapping"].includes(operation)) {
             restoreDropDownMenu('#DDMB_anon_level', ['Case', 'Event']);
         }
     }
@@ -1014,10 +1065,10 @@
         if(opType === "Addition") {
             cfg['Addition-Operation'] = $("#anonOpConfig-Addition-Operation").val();
 
-            let checked = $("#anonOpConfig-Addition-MatchActive").prop("checked");
-            cfg['Addition-MatchActive'] = checked;
-            cfg['Addition-MatchAttr'] = (checked ? $("#anonOpConfig-Addition-MatchAttr").val() : '');
-            cfg['Addition-MatchVal'] = (checked ? $("#anonOpConfig-Addition-MatchVal").val() : '');
+            let checked = $("#anonOpConfig-Addition-ConditionalActive").prop("checked");
+            cfg['Addition-ConditionalActive'] = checked;
+            cfg['Addition-ConditionalAttr'] = (checked ? $("#anonOpConfig-Addition-ConditionalAttr").val() : '');
+            cfg['Addition-ConditionalVal'] = (checked ? $("#anonOpConfig-Addition-ConditionalVal").val() : '');
             cfg['Addition-MatchOp'] = (checked ? $("#anonOpConfig-Addition-MatchOperation").val() : '');
 
             cfg['Addition-Events'] = [];
@@ -1032,9 +1083,9 @@
             cfg['Condensation-Target'] = $("#anonOpConfig-Condensation-Target").val();
             cfg['Condensation-kClusters'] = $("#anonOpConfig-Condensation-kClusters").val();
 
-            cfg['Condensation-ClusterOver'] = [];
-            $("#anonOpConfig-Condensation-ClusterOver option:selected").each((i, e) => {
-                cfg['Condensation-ClusterOver'].push($(e).val());
+            cfg['Condensation-DescriptiveAttributes'] = [];
+            $("#anonOpConfig-Condensation-DescriptiveAttributes option:selected").each((i, e) => {
+                cfg['Condensation-DescriptiveAttributes'].push($(e).val());
             });
         }
         else if(opType === "Cryptography") {
@@ -1042,10 +1093,10 @@
             cfg['Cryptography-Target'] = $("#anonOpConfig-Cryptography-Target").val();
 
 
-            let checked = $("#anonOpConfig-Cryptography-MatchActive").prop("checked");
-            cfg['Cryptography-MatchActive'] = checked;
-            cfg['Cryptography-MatchAttr'] = (checked ? $("#anonOpConfig-Cryptography-MatchAttr").val() : '');
-            cfg['Cryptography-MatchVal'] = (checked ? $("#anonOpConfig-Cryptography-MatchVal").val() : '');
+            let checked = $("#anonOpConfig-Cryptography-ConditionalActive").prop("checked");
+            cfg['Cryptography-ConditionalActive'] = checked;
+            cfg['Cryptography-ConditionalAttr'] = (checked ? $("#anonOpConfig-Cryptography-ConditionalAttr").val() : '');
+            cfg['Cryptography-ConditionalVal'] = (checked ? $("#anonOpConfig-Cryptography-ConditionalVal").val() : '');
         }
         else if(opType === "Generalization") {
             let id = $('#anonOpConfig-Generalization-TaxTree option:selected').prop('id').split('-').pop();
@@ -1060,21 +1111,21 @@
             cfg['Substitution-SensitiveVal'] = $("#anonOpConfig-Substitution-SensitiveVal").val();
             cfg['Substitution-Target'] = $("#anonOpConfig-Substitution-Target").val();
         }
-        else if(opType === "Supression") {
-            cfg['Supression-Operation'] = $("#anonOpConfig-Supression-Operation").val();
+        else if(opType === "Suppression") {
+            cfg['Suppression-Operation'] = $("#anonOpConfig-Suppression-Operation").val();
 
-            let checked = $("#anonOpConfig-Supression-MatchActive").prop("checked");
-            cfg['Supression-MatchActive'] = checked;
-            cfg['Supression-MatchAttr'] = (checked ? $("#anonOpConfig-Supression-MatchAttr").val() : '');
-            cfg['Supression-MatchVal'] = (checked ? $("#anonOpConfig-Supression-MatchVal").val() : '');
+            let checked = $("#anonOpConfig-Suppression-ConditionalActive").prop("checked");
+            cfg['Suppression-ConditionalActive'] = checked;
+            cfg['Suppression-ConditionalAttr'] = (checked ? $("#anonOpConfig-Suppression-ConditionalAttr").val() : '');
+            cfg['Suppression-ConditionalVal'] = (checked ? $("#anonOpConfig-Suppression-ConditionalVal").val() : '');
 
-            cfg['Supression-Target'] = $("#anonOpConfig-Supression-Target").val();
-            cfg['Supression-TraceLength'] = $("#anonOpConfig-Supression-TraceLength").val();
+            cfg['Suppression-Target'] = $("#anonOpConfig-Suppression-Target").val();
+            cfg['Suppression-TraceLength'] = $("#anonOpConfig-Suppression-TraceLength").val();
         }
         else if(opType === "Swapping") {
             cfg['Swapping-Operation'] = $("#anonOpConfig-Swapping-Operation").val();
             cfg['Swapping-Target'] = $("#anonOpConfig-Swapping-Target").val();
-            cfg['Swapping-kMeans-k'] = $("#anonOpConfig-Swapping-kMeans-k").val();
+            cfg['Swapping-kClusters'] = $("#anonOpConfig-Swapping-kClusters").val();
         }
     }
 
@@ -1251,11 +1302,52 @@
     function condensationOperationChanged() {
         let op = $("#anonOpConfig-Condensation-Operation").val();
 
-        $("#anonOpConfig-Condensation-INPUT-ClusterOver").addClass("d-none");
+        $("#anonOpConfig-Condensation-INPUT-DescriptiveAttributes").addClass("d-none");
+        $("#anonOpConfig-Condensation-AttributeWeights").addClass("d-none");
 
         if(op === "kMeans") {}
         else if(op === "kModes") {
-            $("#anonOpConfig-Condensation-INPUT-ClusterOver").removeClass("d-none");
+            $("#anonOpConfig-Condensation-INPUT-DescriptiveAttributes").removeClass("d-none");
+        }
+        else if(op === "Euclidian Distance") {
+            $("#anonOpConfig-Condensation-INPUT-DescriptiveAttributes").removeClass("d-none");
+            $("#anonOpConfig-Condensation-AttributeWeights").removeClass("d-none");
+        }
+    }
+    function condensationLoadAttributeWeights() {
+        let cfg = getFirstMatch(appState['Operations'], (x => x.Id == appState['ActiveId']));
+
+        let attributes = [$("#anonOpConfig-Condensation-Target").val()];
+        $("#anonOpConfig-Condensation-DescriptiveAttributes option:selected").each((i, e) => {
+            attributes.push($(e).val());
+        });
+
+        if(!('Condensation-AttributeWeights' in cfg)) cfg['Condensation-AttributeWeights'] = {};
+
+        //Clear table from old entries
+        $('#anonOpConfig-Condensation-AttributeWeights-Modal-Table tbody tr').remove();
+
+        for(let i = 0; i < attributes.length; i++) {
+            let val = (!(attributes[i] in cfg['Condensation-AttributeWeights'])) ? 0 : cfg['Condensation-AttributeWeights'][attributes[i]];
+            html = '<tr>';
+            html += '<td>' + attributes[i] + '</td>';
+            html += '<td><input type="number" class="form-control" placeholder="Value" min="0" max="1" step="0.001" value="' + val + '"></td>';
+            html += '</tr>';
+
+            $('#anonOpConfig-Condensation-AttributeWeights-Modal-Table tbody').append(html);
+        }
+    }
+    function condensationSaveAttributeWeights() {
+        let cfg = getFirstMatch(appState['Operations'], (x => x.Id == appState['ActiveId']));
+        cfg['Condensation-AttributeWeights'] = {}
+
+        let rows = $('#anonOpConfig-Condensation-AttributeWeights-Modal-Table tbody').find('tr');
+        for(let i = 0; i < rows.length; i++) {
+            let row = rows[i];
+            let name = $(row).find("td").text();
+            let input = $(row).find("input");
+
+            cfg['Condensation-AttributeWeights'][name] = parseFloat(input.val()) || 0;
         }
     }
 
@@ -1362,23 +1454,23 @@
         }
     }
 
-    /* AnonOp - Supression */
-    function supressionOperationChanged() {
-        let action = $('#anonOpConfig-Supression-Operation').val();
+    /* AnonOp - Suppression */
+    function suppressionOperationChanged() {
+        let action = $('#anonOpConfig-Suppression-Operation').val();
 
-        $('#anonOpConfig-Supression-INPUT-Match').addClass('d-none');
-        $('#anonOpConfig-Supression-INPUT-Target').addClass('d-none');
-        $('#anonOpConfig-Supression-INPUT-TraceLength').addClass('d-none');
+        $('#anonOpConfig-Suppression-INPUT-Match').addClass('d-none');
+        $('#anonOpConfig-Suppression-INPUT-Target').addClass('d-none');
+        $('#anonOpConfig-Suppression-INPUT-TraceLength').addClass('d-none');
 
-        if (action === "SuppressEvent") {
-            $('#anonOpConfig-Supression-INPUT-Match').removeClass('d-none');
+        if (action === "Suppress") {
+            $('#anonOpConfig-Suppression-INPUT-Match').removeClass('d-none');
         }
-        else if (action === "SuppressEventAttribute") {
-            $('#anonOpConfig-Supression-INPUT-Match').removeClass('d-none');
-            $('#anonOpConfig-Supression-INPUT-Target').removeClass('d-none');
+        else if (action === "SuppressAttribute") {
+            $('#anonOpConfig-Suppression-INPUT-Match').removeClass('d-none');
+            $('#anonOpConfig-Suppression-INPUT-Target').removeClass('d-none');
         }
         else if (action === "SuppressCaseByTraceLength") {
-            $('#anonOpConfig-Supression-INPUT-TraceLength').removeClass('d-none');
+            $('#anonOpConfig-Suppression-INPUT-TraceLength').removeClass('d-none');
         }
     }
 
@@ -1476,6 +1568,27 @@
         for(let i = 0; i < optionList.length; i++) {
             $(id).append('<option value="' + optionList[i] + '">' + optionList[i] + '</option>')
         }
+
+        //Update drop down
+        $(id).selectpicker('refresh');
+
+        restoreDropDownMenuSelect(id, selectedElement);
+    }
+    function restoreDropDownMenuOptGroups(id, optgroupDict, selectedElement)
+    {
+        //Clear old entries
+        $(id).find('option').remove();
+        $(id).find('optgroup').remove();
+
+        //Create new entries and select one
+        Object.entries(optgroupDict).forEach(([key, value]) => {
+            let group = '<optgroup label="' + key + '">';
+            for(let i = 0; i < value.length; i++) {
+                group += '<option value="' + value[i] + '">' + value[i] + '</option>';
+            }
+            group += '</optgroup>';
+            $(id).append(group);
+        });
 
         //Update drop down
         $(id).selectpicker('refresh');
