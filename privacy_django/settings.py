@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'tlkc_privacy.apps.TlkcPrivacyConfig',
     'anonymization.apps.AnonymizationConfig',
     'privacy_analysis.apps.PrivacyAnalysisConfig',
+    'tlkc_privacy_ext.apps.TlkcPrivacyExtConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -144,6 +145,13 @@ CONNECTOR_FILE = ''
 
 TLKC_APPLIED = False
 TLKC_FILE = ''
+
+# for uploading large files > 2.5 Mb
+
+
+TLKC_EXT_APPLIED = False
+TLKC_EXT_FILE = ''
+
 # for uploading large files > 2.5 Mb
 # FILE_UPLOAD_HANDLERS = [
 #     'django.core.files.uploadhandler.TemporaryFileUploadHandler',

@@ -28,6 +28,7 @@ urlpatterns = [
     path('tlkc_privacy/', include('tlkc_privacy.urls')),
     path('anonymization/', include('anonymization.urls')),
     path('privacy_analysis/', include('privacy_analysis.urls')),
+    path('tlkc_privacy_ext/', include('tlkc_privacy_ext.urls')),
     path('analyses_main/', views.analyses_main, name='analyses_main'),
     path('comming_main/', views.comming_main, name='comming_main')
 ]
