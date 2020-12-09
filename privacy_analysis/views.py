@@ -27,7 +27,16 @@ def privacy_analysis_main(request):
 
     eventlogs = [f for f in listdir(event_logs_path) if isfile(join(event_logs_path, f))]
 
-    returnObject = {'eventlog_list': eventlogs, 'disclosureRiskActive': "active"}
+    logEventAttributes = []
+    logBackupEventAttributes = []
+    if(event_log not in [':notset:', None]):
+        eLog = xes_importer.apply(event_log)
+        logEventAttributes = [a for a in eLog[0][0].keys()]
+    if(event_log_backup not in [':notset:', None]):
+        eLog = xes_importer.apply(event_log_backup)
+        logBackupEventAttributes = [a for a in eLog[0][0].keys()]
+
+    returnObject = {'eventlog_list': eventlogs, 'disclosureRiskActive': "active", 'dataUtilityActive': '', 'logEventAttributes': logEventAttributes, 'logBackupEventAttributes': logBackupEventAttributes}
 
     if request.method == 'POST':
         if("actionDataUtility" in request.POST):
@@ -73,11 +82,15 @@ def privacy_analysis_main(request):
                     return HttpResponseRedirect(request.path_info)
 
                 filename = request.POST["log_list"]
+                eLog = xes_importer.apply(getXesLogPath(filename))
 
                 if "setButton" in request.POST:
                     settings.EVENT_LOG_NAME = filename
+                    returnObject['logEventAttributes'] = [a for a in eLog[0][0].keys()]
+
                 elif "setButtonBackup" in request.POST:
                     settings.BACKUP_EVENT_LOG_NAME = filename
+                    returnObject['logBackupEventAttributes'] = [a for a in eLog[0][0].keys()]
 
                 returnObject['eventlog_list'] = [f for f in listdir(event_logs_path) if isfile(join(event_logs_path, f))]
                 returnObject['log_name'] = settings.EVENT_LOG_NAME
@@ -103,13 +116,19 @@ def privacy_analysis_main(request):
     else:
         if request.is_ajax():
             if(request.GET['analysis'] == 'dataUtility'):
+                reqConfData = json.loads(getRequestParameter(request.GET, 'data', '{}'))
+                print(getDataUtilitySettings(reqConfData))
+
                 # Total data utility
-                utility = getDataUtilityValue(xes_importer.apply(event_log), xes_importer.apply(event_log_backup))
+                utility = getDataUtilityValue(event_log, event_log_backup, getDataUtilitySettings(reqConfData))
                 return HttpResponse(json.dumps({"Utility": utility}), content_type='application/json')
 
             elif(request.GET['analysis'] == 'disclosureRisk'):
-                rv_bkLength, rv_cd, rv_td = getRiskValue(xes_importer.apply(event_log))
-                return HttpResponse(json.dumps({"Risk": {"bkLength": rv_bkLength, "cd": rv_cd, "td": rv_td}}), content_type='application/json')
+                reqConfData = json.loads(getRequestParameter(request.GET, 'data', '{}'))
+                print(getDisclosureRiskSettings(reqConfData))
+
+                rv_cd, rv_td = getRiskValue(event_log, getDisclosureRiskSettings(reqConfData))
+                return HttpResponse(json.dumps({"Risk": {"cd": rv_cd, "td": rv_td}}), content_type='application/json')
 
         return render(request, 'privacy_analysis.html', returnObject)
 
@@ -123,29 +142,35 @@ def getXesLogPath(logName):
     return event_log
 
 
-def getDataUtilityValue(original_log, privacy_log):
+def getDataUtilityValue(origLogPath, privLogPath, settings):
     sys.stdout = open(os.devnull, 'w')
 
     sensitive = []
-    time_accuracy = "minutes"
-    time_info = False
-    trace_attributes = ['concept:name', 'org:resource', 'time:timestamp']
+    time_accuracy = settings['DU_TimeAccuracy'].lower()  # original, seconds, minutes, hours, days
+    event_attributes = settings['DU_EventAttributes']
     # these life cycles are applied only when all_lif_cycle = False
-    life_cycle = ['complete', '', 'COMPLETE']
+    life_cycle = settings['DU_LifeCycle']
     # when life cycle is in trace attributes then all_life_cycle has to be True
-    all_life_cycle = True  # True will ignore the transitions specified in life_cycle
+    all_life_cycle = settings['DU_IsAllLifeCycle']
+
+    original_log = xes_importer.apply(origLogPath)
+    privacy_log = xes_importer.apply(privLogPath)
+    from_same_origin = settings['DU_IsFromSameOrigin']  # when both event logs drived from the same original event logs
 
     sms = SMS()
-    logsimple, traces, sensitives = sms.create_simple_log_adv(original_log, trace_attributes, life_cycle, all_life_cycle, sensitive, time_info, time_accuracy)
-    logsimple_2, traces_2, sensitives_2 = sms.create_simple_log_adv(privacy_log, trace_attributes, life_cycle, all_life_cycle, sensitive, time_info, time_accuracy)
+    logsimple, traces, sensitives = sms.create_simple_log_adv(original_log, event_attributes, life_cycle, all_life_cycle, sensitive, time_accuracy)
+    logsimple_2, traces_2, sensitives_2 = sms.create_simple_log_adv(privacy_log, event_attributes, life_cycle, all_life_cycle, sensitive, time_accuracy)
 
     # log 1 convert to char
     map_dict_act_chr, map_dict_chr_act = sms.map_act_char(traces)
     simple_log_char_1 = sms.convert_simple_log_act_to_char(traces, map_dict_act_chr)
 
     # log 2 convert to char
-    # map_dict_act_chr_2,map_dict_chr_act_2 = sms.map_act_char(traces_2)
-    simple_log_char_2 = sms.convert_simple_log_act_to_char(traces_2, map_dict_act_chr)
+    if from_same_origin:  # use the same mapping
+        simple_log_char_2 = sms.convert_simple_log_act_to_char(traces_2, map_dict_act_chr)
+    else:
+        map_dict_act_chr_2, map_dict_chr_act_2 = sms.map_act_char(traces_2)
+        simple_log_char_2 = sms.convert_simple_log_act_to_char(traces_2, map_dict_act_chr_2)
 
     start_time = time.time()
 
@@ -165,24 +190,28 @@ def getDataUtilityValue(original_log, privacy_log):
     return data_utility
 
 
-def getRiskValue(log):
-    existence_based = True  # it is faster when there is no super long traces in the event log
-    measurement_type = "average"  # average or worst_case
-    sensitive = []
-    time_accuracy = "minutes"
-    time_info = False
-    trace_attributes = ['concept:name']
-    # these life cycles are applied only when all_lif_cycle = False
-    life_cycle = ['complete', '', 'COMPLETE']
-    # when life cycle is in trace attributes then all_life_cycle has to be True
-    all_life_cycle = True
+def getRiskValue(event_log, settings):
+    print(settings)
 
-    bk_type = 'set'  # set,mult,seq
-    bk_length = 2  # int
+    existence_based = settings['DR_IsExistenceBased']  # it is faster when there is no super long traces in the event log
+    measurement_type = settings['DR_MeasureType'].lower()  # average or worst_case
+    sensitive = []
+    # is needed only when time is included in the event_attributes
+    time_accuracy = settings['DR_TimeAccuracy'].lower()  # original, seconds, minutes, hours, days
+    event_attributes = settings['DR_EventAttributes']
+    # these life cycles are applied only when all_lif_cycle = False
+    life_cycle = settings['DR_LifeCycle']
+    # when life cycle is in trace attributes then all_life_cycle has to be True
+    all_life_cycle = settings['DR_IsAllLifeCycle']
+
+    log = xes_importer.apply(event_log)
+
+    bk_type = settings['DR_BKType'].lower()  # set,multiset,sequence
+    bk_length = settings['DR_BKSizePower']  # int
 
     sms = SMS()
     # simple_log = sms.create_simple_log(log,["concept:name", "lifecycle:transition"])
-    logsimple, traces, sensitives = sms.create_simple_log_adv(log, trace_attributes, life_cycle, all_life_cycle, sensitive, time_info, time_accuracy)
+    logsimple, traces, sensitives = sms.create_simple_log_adv(log, event_attributes, life_cycle, all_life_cycle, sensitive, time_accuracy)
 
     map_dict_act_chr, map_dict_chr_act = sms.map_act_char(traces)
     simple_log_char_1 = sms.convert_simple_log_act_to_char(traces, map_dict_act_chr)
@@ -196,10 +225,40 @@ def getRiskValue(log):
     uniq_act = sms.get_unique_elem(simple_log_char_1)
 
     start_time = time.time()
-    results_file_name = "testName.csv"
 
     # min_len = min(len(uniq_act),3)
 
-    cd, td = sms.disclosure_calc(bk_type, uniq_act, measurement_type, results_file_name, bk_length, existence_based, simple_log_char_1, multiset_log)
+    return sms.disclosure_calc(bk_type, uniq_act, measurement_type, bk_length, existence_based, simple_log_char_1, multiset_log)
 
-    return bk_length, cd, td
+
+def getDisclosureRiskSettings(requestData):
+    return {
+        'DR_IsExistenceBased': getRequestParameter(requestData, 'DR_IsExistenceBased', True),
+        'DR_IsAllLifeCycle': getRequestParameter(requestData, 'DR_IsAllLifeCycle', True),
+        'DR_MeasureType': getRequestParameter(requestData, 'DR_MeasureType', 'average'),
+        'DR_EventAttributes': getRequestParameter(requestData, 'DR_EventAttributes', []),
+        'DR_TimeAccuracy': getRequestParameter(requestData, 'DR_TimeAccuracy', 'original'),
+        'DR_LifeCycle': getRequestParameter(requestData, 'DR_LifeCycle', []),
+        'DR_BKType': getRequestParameter(requestData, 'DR_BKType', 'set'),
+        'DR_BKSizePower': int(getRequestParameter(requestData, 'DR_BKSizePower', 2))
+    }
+
+
+def getDataUtilitySettings(requestData):
+    return {
+        'DU_IsFromSameOrigin': getRequestParameter(requestData, 'DU_IsFromSameOrigin', True),
+        'DU_IsAllLifeCycle': getRequestParameter(requestData, 'DU_IsAllLifeCycle', True),
+        'DU_EventAttributes': getRequestParameter(requestData, 'DU_EventAttributes', []),
+        'DU_TimeAccuracy': getRequestParameter(requestData, 'DU_TimeAccuracy', 'original'),
+        'DU_LifeCycle': getRequestParameter(requestData, 'DU_LifeCycle', [])
+    }
+
+
+def getRequestParameter(requestData, parameter, default=None):
+    if parameter in requestData:
+        if requestData[parameter] is None:
+            return default
+        else:
+            return requestData[parameter]
+    else:
+        return default
