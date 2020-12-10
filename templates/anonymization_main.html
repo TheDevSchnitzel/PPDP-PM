@@ -1341,14 +1341,25 @@
         $('#anonOpConfig-Condensation-AttributeWeights-Modal-Table tbody tr').remove();
 
         for(let i = 0; i < attributes.length; i++) {
-            let val = (!(attributes[i] in cfg['Condensation-AttributeWeights'])) ? 0 : cfg['Condensation-AttributeWeights'][attributes[i]];
+            let val = (!(attributes[i] in cfg['Condensation-AttributeWeights'])) ? (1.0/attributes.length) : cfg['Condensation-AttributeWeights'][attributes[i]];
             html = '<tr>';
             html += '<td>' + attributes[i] + '</td>';
-            html += '<td><input type="number" class="form-control" placeholder="Value" min="0" max="1" step="0.001" value="' + val + '"></td>';
+            html += '<td><input type="number" class="form-control" placeholder="Value" min="0" max="1" step="0.001" value="' + val + '" onchange="condensationWeightChanged(this);"></td>';
             html += '</tr>';
 
             $('#anonOpConfig-Condensation-AttributeWeights-Modal-Table tbody').append(html);
         }
+    }
+    function condensationWeightChanged(element) {
+        let sum = 0, last = undefined;
+        $(element).closest("table").find("input").each((i,e) =>
+        {
+            sum += parseFloat($(e).val());
+            last = e;
+        });
+
+        if(sum > 1) $(element).val((parseFloat($(element).val()) - (sum - 1)).toFixed(3));
+        else if (sum < 1) $(last).val( ((1-sum) + parseFloat($(last).val())).toFixed(3));
     }
     function condensationSaveAttributeWeights() {
         let cfg = getFirstMatch(appState['Operations'], (x => x.Id == appState['ActiveId']));
