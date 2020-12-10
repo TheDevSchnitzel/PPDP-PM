@@ -172,7 +172,7 @@ def performAddition(log, op, appState):
     additionEvents = {e['Id']: e for e in appState['AdditionEvents']}
 
     additionOp = op['Addition-Operation']
-    additionConditional = buildConditional('Addition', op)
+    additionConditional = buildConditional('Addition', op, True)
 
     for event in additionEvents:
         eventTemplate = additionEvents[event]['Attributes']
@@ -314,23 +314,24 @@ def performSwapping(log, op):
 # Building both conditional filters (case and event) for thegiven operation
 
 
-def buildConditional(operation, cfg):
+def buildConditional(operation, cfg, onlyCase=False):
     isConditionalActive = cfg[operation + '-ConditionalActive-Case']
     condAttCase = cfg[operation + '-ConditionalAttr-Case'] if isConditionalActive else None
     condValCase = cfg[operation + '-ConditionalVal-Case'] if isConditionalActive else None
     condModCase = cfg[operation + '-MatchOp-Case'] if isConditionalActive else None
     condOprCase = cfg[operation + '-ConditionalOperator-Case'] if isConditionalActive else None
-
-    isConditionalActive = cfg[operation + '-ConditionalActive-Event']
-    condAttEvent = cfg[operation + '-ConditionalAttr-Event'] if isConditionalActive else None
-    condValEvent = cfg[operation + '-ConditionalVal-Event'] if isConditionalActive else None
-    condModEvent = cfg[operation + '-MatchOp-Event'] if isConditionalActive else None
-    condOprEvent = cfg[operation + '-ConditionalOperator-Event'] if isConditionalActive else None
-
-    # Select Match Mode (Trace, Attribute, Value => MATCH-PATTERN)
     condCase = getConditionalLambda(condModCase, condAttCase, condValCase, condOprCase)
-    condEvent = getConditionalLambda(condModEvent, condAttEvent, condValEvent, condOprEvent)
-    return (lambda c, e: condCase(c, e) and condEvent(c, e))
+
+    if(not onlyCase):
+        isConditionalActive = cfg[operation + '-ConditionalActive-Event']
+        condAttEvent = cfg[operation + '-ConditionalAttr-Event'] if isConditionalActive else None
+        condValEvent = cfg[operation + '-ConditionalVal-Event'] if isConditionalActive else None
+        condModEvent = cfg[operation + '-MatchOp-Event'] if isConditionalActive else None
+        condOprEvent = cfg[operation + '-ConditionalOperator-Event'] if isConditionalActive else None
+        condEvent = getConditionalLambda(condModEvent, condAttEvent, condValEvent, condOprEvent)
+        return (lambda c, e: condCase(c, e) and condEvent(c, e))
+
+    return (lambda c, e: condCase(c, e))
 
 # Constructing the lambdas for the conditional filters and generating operator lambdas
 
@@ -339,17 +340,17 @@ def getConditionalLambda(matchOperation, attribute, value, operator):
     op = (lambda l, r: True)
 
     if(operator == "=="):
-        op = (lambda l, r: l == r)
+        op = (lambda l, r: str(l) == str(r))
     elif(operator == ">="):
-        op = (lambda l, r: l >= r)
+        op = (lambda l, r: float(l) >= float(r))
     elif(operator == "<="):
-        op = (lambda l, r: l <= r)
+        op = (lambda l, r: float(l) <= float(r))
     elif(operator == ">"):
-        op = (lambda l, r: l > r)
+        op = (lambda l, r: float(l) > float(r))
     elif(operator == "<"):
-        op = (lambda l, r: l < r)
+        op = (lambda l, r: float(l) < float(r))
     elif(operator == "!="):
-        op = (lambda l, r: l != r)
+        op = (lambda l, r: str(l) != str(r))
     elif(operator == "in"):
         op = (lambda l, r: l in r.split(','))
     elif(operator == "not in"):
