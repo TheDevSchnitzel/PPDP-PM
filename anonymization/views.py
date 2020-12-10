@@ -133,149 +133,23 @@ def handleAnonOps(appState):
     for op in operations:
         start_time = time.time()
         name = op["Operation"]
-        level = op['Level']
 
         if(name == 'Addition'):
-            a = Addition()
-            additionEvents = {e['Id']: e for e in appState['AdditionEvents']}
-
-            additionOp = op['Addition-Operation']
-            isConditionalActive = op['Addition-ConditionalActive']
-            additionConditionalAttr = op['Addition-ConditionalAttr'] if isConditionalActive else None
-            additionConditionalVal = op['Addition-ConditionalVal'] if isConditionalActive else None
-            additionMatchOp = op['Addition-MatchOp'] if isConditionalActive else None
-
-            # Select Match Mode (Trace, Attribute, Value => MATCH-PATTERN)
-            if(additionMatchOp == "matchCase"):
-                additionMatchOp = (lambda t, a, v: a in t.attributes.keys() and t.attributes[a] == v)
-            elif(additionMatchOp == "matchFirstEvent"):
-                additionMatchOp = (lambda t, a, v: len(t) > 0 and a in t[0].keys() and t[0][a] == v)
-            elif(additionMatchOp == "matchLastEvent"):
-                additionMatchOp = (lambda t, a, v: len(t) > 0 and a in t[-1].keys() and t[-1][a] == v)
-            elif(additionMatchOp == "matchAnyEvent"):
-                additionMatchOp = (lambda t, a, v: len(t) > 0 and len([x for x in t if a in x.keys() and x[a] == v]) > 0)
-            elif(additionMatchOp == "matchAllEvent"):
-                additionMatchOp = (lambda t, a, v: len(t) > 0 and len([x for x in t if a in x.keys() and x[a] == v]) == len(t))
-            else:
-                additionMatchOp = None
-
-            for event in additionEvents:
-                eventTemplate = additionEvents[event]['Attributes']
-
-                if(additionOp == 'Add new event as first in trace'):
-                    log = a.AddEventFirstInTrace(log, eventTemplate, additionConditionalAttr, additionConditionalVal, additionMatchOp)
-                elif(additionOp == 'Add new event as last in trace'):
-                    log = a.AddEventLastInTrace(log, eventTemplate, additionConditionalAttr, additionConditionalVal, additionMatchOp)
-                elif(additionOp == 'Add new event at random position'):
-                    log = a.AddEventAtRandomPlaceInTrace(log, eventTemplate, additionConditionalAttr, additionConditionalVal, additionMatchOp)
-
+            log = performAddition(log, op, appState)
         elif(name == 'Condensation'):
-            c = Condensation()
-            condenseOp = op['Condensation-Operation']
-            condenseTarget = op['Condensation-Target']
-            descriptiveAttributes = op['Condensation-DescriptiveAttributes']
-            weights = op['Condensation-AttributeWeights']
-            k = int(op['Condensation-kClusters'])
-
-            if(level == "Event"):
-                if(condenseOp == 'kMeans'):
-                    log = c.CondenseEventAttributeBykMeanClusterMode(log, condenseTarget, k)
-                elif(condenseOp == 'kModes'):
-                    log = c.CondenseEventAttributeBykModeCluster(log, condenseTarget, descriptiveAttributes, k)
-                elif(condenseOp == 'Euclidian Distance'):
-                    log = c.CondenseEventAttributeByEuclidianDistance(log, condenseTarget, descriptiveAttributes, weights, k)
-            elif(level == "Case"):
-                if(condenseOp == 'kMeans'):
-                    log = c.CondenseCaseAttributeBykMeanClusterMode(log, condenseTarget, k)
-                elif(condenseOp == 'kModes'):
-                    log = c.CondenseCaseAttributeBykModeCluster(log, condenseTarget, descriptiveAttributes, k)
-                elif(condenseOp == 'Euclidian Distance'):
-                    log = c.CondenseCaseAttributeByEuclidianDistance(log, condenseTarget, descriptiveAttributes, weights, k)
-
+            log = performCondensation(log, op)
         elif(name == 'Cryptography'):
-            c = Cryptography()
-            cryptoOp = op['Cryptography-Operation']
-            cryptTarget = op['Cryptography-Target']
-            cryptConditionalAttr = op['Cryptography-ConditionalAttr']
-            cryptConditionalVal = op['Cryptography-ConditionalVal']
-
-            if(cryptoOp == "Hash"):
-                if(level == "Case"):
-                    log = c.HashCaseAttribute(log, cryptTarget, cryptConditionalAttr, cryptConditionalVal)
-                elif(level == "Event"):
-                    log = c.HashEventAttribute(log, cryptTarget, cryptConditionalAttr, cryptConditionalVal)
-            elif(cryptoOp == "Encrypt"):
-                if(level == "Case"):
-                    log = c.EncryptCaseAttribute(log, cryptTarget, cryptConditionalAttr, cryptConditionalVal)
-                elif(level == "Event"):
-                    log = c.EncryptEventAttribute(log, cryptTarget, cryptConditionalAttr, cryptConditionalVal)
-
+            log = performCryptography(log, op)
         elif(name == 'Generalization'):
-            g = Generalization()
-
-            tree = TaxonomyTree.CreateFromJSON(getTaxonomyTree("anonymization", op['Generalization-TaxTreeSelectionId']), "text", "children")
-            generalizationTarget = op['Generalization-Target']
-            generalizationDepth = op['Generalization-Depth']
-
-            generalizationOperation = op['Generalization-Operation']
-            generalizationTimeDepth = op['Generalization-TimeDepth']
-
-            if(generalizationOperation == "GenTaxonomyTree"):
-                if(level == "Case"):
-                    log = g.GeneralizeCaseAttributeByTaxonomyTreeDepth(log, generalizationTarget, tree, generalizationDepth)
-                elif(level == "Event"):
-                    log = g.GeneralizeEventAttributeByTaxonomyTreeDepth(log, generalizationTarget, tree, generalizationDepth)
-            elif(generalizationOperation == "GenTimestamp"):
-                if(level == "Case"):
-                    log = g.GeneralizeCaseTimeAttribute(log, "time:timestamp", generalizationTimeDepth)
-                elif(level == "Event"):
-                    log = g.GeneralizeEventTimeAttribute(log, "time:timestamp", generalizationTimeDepth)
-
+            log = performGeneralization(log, op)
         elif(name == 'Substitution'):
-            s = Substitution()
-            subTarget = op['Substitution-Target']
-            subSensitiveVal = op['Substitution-SensitiveVal']
-            log = s.SubstituteEventAttributeValue(log, subTarget, subSensitiveVal)
-
+            log = performSubstitution(log, op)
         elif(name == 'Suppression'):
-            s = Suppression()
-            suppressionOP = op['Suppression-Operation']
-            isConditionalActive = op['Suppression-ConditionalActive']
-            suppressionConditionalAttr = op['Suppression-ConditionalAttr'] if isConditionalActive else None
-            suppressionConditionalVal = op['Suppression-ConditionalVal'] if isConditionalActive else None
-            suppressionTarget = op['Suppression-Target']
-            suppressionTraceLength = int((op['Suppression-TraceLength'] if op['Suppression-TraceLength'] not in ['', None, ' '] else 0))
-
-            if(suppressionOP == "SuppressCaseByTraceLength"):
-                log = s.SuppressCaseByTraceLength(log, suppressionTraceLength)
-            else:
-                if(level == "Event"):
-                    if(suppressionOP == "Suppress"):
-                        log = s.SuppressEvent(log, suppressionConditionalAttr, suppressionConditionalVal)
-                    elif(suppressionOP == "SuppressAttribute"):
-                        log = s.SuppressEventAttribute(log, suppressionTarget, suppressionConditionalAttr, suppressionConditionalVal)
-                elif(level == "Case"):
-                    if(suppressionOP == "Suppress"):
-                        log = s.SuppressCase(log, suppressionConditionalAttr, suppressionConditionalVal)
-                    elif(suppressionOP == "SuppressAttribute"):
-                        log = s.SuppressCaseAttribute(log, suppressionTarget, suppressionConditionalAttr, suppressionConditionalVal)
-
+            log = performSuppression(log, op)
         elif(name == 'Swapping'):
-            s = Swapping()
-            swapOp = op['Swapping-Operation']
-            swapTarget = op['Swapping-Target']
-            k = int(op['Swapping-kClusters'])
+            log = performSwapping(log, op)
 
-            if(swapOp == "kMeans"):
-                if(level == "Case"):
-                    log = s.SwapCaseAttributeValuesBykMeanCluster(log, swapTarget, k)
-                elif(level == "Event"):
-                    log = s.SwapEventAttributeValuesBykMeanCluster(log, swapTarget, k)
-
-        # else:
-            # raise NotImplementedError
-
-        print(name[0:3].upper() + " - " + level[0:1].upper() + " TOOK: --- %s seconds ---" % (time.time() - start_time))
+        print(name[0:3].upper() + " - " + op["Level"][0:1].upper() + " TOOK: --- %s seconds ---" % (time.time() - start_time))
 
     # Statistics
     print("Diff. No. of traces %0f" % (len(log) - origNoTraces))
@@ -284,6 +158,216 @@ def handleAnonOps(appState):
     newName = exportLog(log)
 
     return HttpResponse(json.dumps({'log': newName}), content_type='application/json')
+
+
+################################
+#                              #
+#       Anon Op Execution      #
+#                              #
+################################
+def performAddition(log, op, appState):
+    level = op['Level']
+
+    a = Addition()
+    additionEvents = {e['Id']: e for e in appState['AdditionEvents']}
+
+    additionOp = op['Addition-Operation']
+    additionConditional = buildConditional('Addition', op)
+
+    for event in additionEvents:
+        eventTemplate = additionEvents[event]['Attributes']
+
+        if(additionOp == 'Add new event as first in trace'):
+            log = a.AddEventFirstInTrace(log, eventTemplate, additionConditional)
+        elif(additionOp == 'Add new event as last in trace'):
+            log = a.AddEventLastInTrace(log, eventTemplate, additionConditional)
+        elif(additionOp == 'Add new event at random position'):
+            log = a.AddEventAtRandomPlaceInTrace(log, eventTemplate, additionConditional)
+    return log
+
+
+def performCondensation(log, op):
+    level = op['Level']
+
+    c = Condensation()
+    condenseOp = op['Condensation-Operation']
+    condenseTarget = op['Condensation-Target']
+    descriptiveAttributes = op['Condensation-DescriptiveAttributes']
+    weights = op['Condensation-AttributeWeights']
+    k = int(op['Condensation-kClusters'])
+
+    if(level == "Event"):
+        if(condenseOp == 'kMeans'):
+            log = c.CondenseEventAttributeBykMeanClusterMode(log, condenseTarget, k)
+        elif(condenseOp == 'kModes'):
+            log = c.CondenseEventAttributeBykModeCluster(log, condenseTarget, descriptiveAttributes, k)
+        elif(condenseOp == 'Euclidian Distance'):
+            log = c.CondenseEventAttributeByEuclidianDistance(log, condenseTarget, descriptiveAttributes, weights, k)
+    elif(level == "Case"):
+        if(condenseOp == 'kMeans'):
+            log = c.CondenseCaseAttributeBykMeanClusterMode(log, condenseTarget, k)
+        elif(condenseOp == 'kModes'):
+            log = c.CondenseCaseAttributeBykModeCluster(log, condenseTarget, descriptiveAttributes, k)
+        elif(condenseOp == 'Euclidian Distance'):
+            log = c.CondenseCaseAttributeByEuclidianDistance(log, condenseTarget, descriptiveAttributes, weights, k)
+    return log
+
+
+def performCryptography(log, op):
+    level = op['Level']
+
+    c = Cryptography()
+    cryptoOp = op['Cryptography-Operation']
+    cryptTarget = op['Cryptography-Target']
+    cryptConditionalAttr = op['Cryptography-ConditionalAttr']
+    cryptConditionalVal = op['Cryptography-ConditionalVal']
+    conditional = buildConditional('Cryptography', op)
+
+    if(cryptoOp == "Hash"):
+        if(level == "Case"):
+            log = c.HashCaseAttribute(log, cryptTarget, conditional)
+        elif(level == "Event"):
+            log = c.HashEventAttribute(log, cryptTarget, conditional)
+    elif(cryptoOp == "Encrypt"):
+        if(level == "Case"):
+            log = c.EncryptCaseAttribute(log, cryptTarget, conditional)
+        elif(level == "Event"):
+            log = c.EncryptEventAttribute(log, cryptTarget, conditional)
+    return log
+
+
+def performGeneralization(log, op):
+    level = op['Level']
+
+    g = Generalization()
+
+    tree = TaxonomyTree.CreateFromJSON(getTaxonomyTree("anonymization", op['Generalization-TaxTreeSelectionId']), "text", "children")
+    generalizationTarget = op['Generalization-Target']
+    generalizationDepth = op['Generalization-Depth']
+
+    generalizationOperation = op['Generalization-Operation']
+    generalizationTimeDepth = op['Generalization-TimeDepth']
+
+    if(generalizationOperation == "GenTaxonomyTree"):
+        if(level == "Case"):
+            log = g.GeneralizeCaseAttributeByTaxonomyTreeDepth(log, generalizationTarget, tree, generalizationDepth)
+        elif(level == "Event"):
+            log = g.GeneralizeEventAttributeByTaxonomyTreeDepth(log, generalizationTarget, tree, generalizationDepth)
+    elif(generalizationOperation == "GenTimestamp"):
+        if(level == "Case"):
+            log = g.GeneralizeCaseTimeAttribute(log, "time:timestamp", generalizationTimeDepth)
+        elif(level == "Event"):
+            log = g.GeneralizeEventTimeAttribute(log, "time:timestamp", generalizationTimeDepth)
+    return log
+
+
+def performSubstitution(log, op):
+    level = op['Level']
+
+    s = Substitution()
+    subTarget = op['Substitution-Target']
+    subSensitiveVal = op['Substitution-SensitiveVal']
+    log = s.SubstituteEventAttributeValue(log, subTarget, subSensitiveVal)
+    return log
+
+
+def performSuppression(log, op):
+    level = op['Level']
+
+    s = Suppression()
+    suppressionOP = op['Suppression-Operation']
+    suppressionTarget = op['Suppression-Target']
+    conditional = buildConditional('Suppression', op)
+
+    if(level == "Event"):
+        if(suppressionOP == "Suppress"):
+            log = s.SuppressEvent(log, conditional)
+        elif(suppressionOP == "SuppressAttribute"):
+            log = s.SuppressEventAttribute(log, suppressionTarget, conditional)
+    elif(level == "Case"):
+        if(suppressionOP == "Suppress"):
+            log = s.SuppressCase(log, conditional)
+        elif(suppressionOP == "SuppressAttribute"):
+            log = s.SuppressCaseAttribute(log, suppressionTarget, conditional)
+    return level
+
+
+def performSwapping(log, op):
+    level = op['Level']
+
+    s = Swapping()
+    swapOp = op['Swapping-Operation']
+    swapTarget = op['Swapping-Target']
+    k = int(op['Swapping-kClusters'])
+
+    if(swapOp == "kMeans"):
+        if(level == "Case"):
+            log = s.SwapCaseAttributeValuesBykMeanCluster(log, swapTarget, k)
+        elif(level == "Event"):
+            log = s.SwapEventAttributeValuesBykMeanCluster(log, swapTarget, k)
+
+
+def buildConditional(operation, cfg):
+    isConditionalActive = cfg[operation + '-ConditionalActive-Case']
+    condAttCase = cfg[operation + '-ConditionalAttr-Case'] if isConditionalActive else None
+    condValCase = cfg[operation + '-ConditionalVal-Case'] if isConditionalActive else None
+    condModCase = cfg[operation + '-MatchOp-Case'] if isConditionalActive else None
+    condOprCase = cfg[operation + '-ConditionalOperator-Case'] if isConditionalActive else None
+
+    isConditionalActive = cfg[operation + '-ConditionalActive-Event']
+    condAttEvent = cfg[operation + '-ConditionalAttr-Event'] if isConditionalActive else None
+    condValEvent = cfg[operation + '-ConditionalVal-Event'] if isConditionalActive else None
+    condModEvent = cfg[operation + '-MatchOp-Event'] if isConditionalActive else None
+    condOprEvent = cfg[operation + '-ConditionalOperator-Event'] if isConditionalActive else None
+
+    # Select Match Mode (Trace, Attribute, Value => MATCH-PATTERN)
+    condCase = getConditionalLambda(condModCase, condAttCase, condValCase, condOprCase)
+    condEvent = getConditionalLambda(condModEvent, condAttEvent, condValEvent, condOprEvent)
+    return (lambda c, e: condCase(c, e) and condEvent(c, e))
+
+
+def getConditionalLambda(matchOperation, attribute, value, operator):
+    op = (lambda l, r: True)
+
+    if(operator == "=="):
+        op = (lambda l, r: l == r)
+    elif(operator == ">="):
+        op = (lambda l, r: l >= r)
+    elif(operator == "<="):
+        op = (lambda l, r: l <= r)
+    elif(operator == ">"):
+        op = (lambda l, r: l > r)
+    elif(operator == "<"):
+        op = (lambda l, r: l < r)
+    elif(operator == "!="):
+        op = (lambda l, r: l != r)
+    elif(operator == "in"):
+        op = (lambda l, r: l in r.split(','))
+    elif(operator == "not in"):
+        op = (lambda l, r: l not in r.split(','))
+
+    if(matchOperation == "matchCase"):
+        return (lambda c, e: attribute in c.attributes.keys() and op(c.attributes[attribute], value))
+    elif(matchOperation == "matchTraceLength"):
+        return (lambda c, e: op(len(c), value))
+    elif(matchOperation == "matchFirstEvent"):
+        return (lambda c, e: len(c) > 0 and attribute in c[0].keys() and op(c[0][attribute], value))
+    elif(matchOperation == "matchLastEvent"):
+        return (lambda c, e: len(c) > 0 and attribute in c[-1].keys() and op(c[-1][attribute], value))
+    elif(matchOperation == "matchAnyEvent"):
+        return (lambda c, e: len(c) > 0 and len([x for x in c if attribute in x.keys() and op(x[attribute], value)]) > 0)
+    elif(matchOperation == "matchAllEvent"):
+        return (lambda c, e: len(c) > 0 and len([x for x in c if attribute in x.keys() and op(x[attribute], value)]) == len(c))
+    elif(matchOperation == "eventAttribute"):
+        return (lambda c, e: attribute in e.keys() and op(e[attribute], value))
+    else:
+        return (lambda c, e: True)
+
+################################
+#                              #
+#       HELPER FUNCTIONS       #
+#                              #
+################################
 
 
 def getLogCaseAttributes(xesLog):

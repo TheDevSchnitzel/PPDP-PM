@@ -1,9 +1,8 @@
 {% extends 'base.html' %}
 
 {% block style %}
-<link href="/static/plugins/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet">
-<link href="/static/plugins/vakata-jstree/themes/default/style.min.css" rel="stylesheet">
-
+<link href="/static/plugins/bootstrap-select/css/bootstrap-select.min.css" rel="stylesheet"/>
+<link href="/static/plugins/vakata-jstree/themes/default/style.min.css" rel="stylesheet"/>
 <style>
     .dropdown-menu {
         max-height: none !important;
@@ -41,677 +40,802 @@
      font-size: 0.875rem;
      padding: .475rem 0.4375rem
  }
+
+ .dd-filterOperation {
+    max-width: 5em;
+ }
 </style>
 {% endblock %}
 
 {% block content  %}
-
 <div class="container-fluid">
     <h3 class="mt-4" style="color:#00529F;">Anonymization Operations</h3>
-
-
-        {% csrf_token %}
-
-        <div class="row">
-            <div class=" col-sm-6 col-md-7 col-lg-8">
-                {% if log_name != ':notset:' %}
-                <p style="color:green;"> {{log_name}} is used as input.</p>
-                {% else %}
-                <p style="color:red;"> You have not set any event log as input. Use "Event Data" tab to set an event log
-                    as input or click <a href="/upload/upload_eventlog">here</a>!</p>
-                {% endif %}
-            </div>
+    {% csrf_token %}
+    <div class="row">
+        <div class=" col-sm-6 col-md-7 col-lg-8">
+            {% if log_name != ':notset:' %}
+            <p style="color:green;"> {{log_name}} is used as input.</p>
+            {% else %}
+            <p style="color:red;">
+                You have not set any event log as input. Use "Event Data" tab to set an event log
+                    as input or click
+                <a href="/upload/upload_eventlog">here</a>
+                !
+            </p>
+            {% endif %}
         </div>
-
-
-
-        {% if log_name != ':notset:' %}
-        <form class="needs-validation" action="javascript:addOperation()" novalidate>
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm">
-                        <div class="input-group mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text input-group-mediumWith" id="basic-addon1">Operation:</span>
-                            </div>
-                            <select class="selectpicker" title="Choose Operation..." id="DDMB_anon_op" onchange="chooseOperationChanged();" required>
-                                <option>Addition</option>
-                                <option>Condensation</option>
-                                <option>Cryptography</option>
-                                <option>Generalization</option>
-                                <option>Substitution</option>
-                                <option>Suppression</option>
-                                <option>Swapping</option>
-                            </select>
-                            <div class="invalid-feedback">
-                                Please choose an operation
-                            </div>
+    </div>
+    {% if log_name != ':notset:' %}
+    <form class="needs-validation" action="javascript:addOperation()" novalidate>
+        <div class="container">
+            <div class="row">
+                <div class="col-sm">
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text input-group-mediumWith" id="basic-addon1">Operation:</span>
                         </div>
-                    </div>
-                    <div class="col-sm">
-                        <div class="input-group mb-3">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text input-group-mediumWith" id="basic-addon1">Level:</span>
-                            </div>
-                            <select class="selectpicker" title="Choose Level..." id="DDMB_anon_level" required>
-                                <option>Case</option>
-                                <option>Event</option>
-                            </select>
-                            <div class="invalid-feedback">
-                                Please choose an operation level
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm">
-                        <button class="btn btn-primary mb-2" id='addOperationButton' name="addOperationButton" type="submit">
-                            Add Operation
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </form>
-
-        <hr />
-
-        <div class="row">
-            <div class="col-2">
-                <label for="operationsList">Operations to apply (in order):</label>
-                <div class="list-group" id="operationsList" role="tablist" style="max-height: 250px; overflow-y: auto;">
-                    <a class="list-group-item list-group-item-action active d-none" data-toggle="list" href="#anonOpConfig-default" role="tab">Default</a>
-                </div>
-
-                <div id="operationsListSorter" class="d-none">
-                    <input style="margin-top: 10px;" data-toggle="tooltip" data-placement="top" title="Change execution order" type="button" class="btn btn-primary" value="Up &#x21D1;" onclick="moveOperationExecOrder('Up');" />
-
-                    <input style="margin-top: 10px; float: right;" data-toggle="tooltip" data-placement="top" title="Change execution order" type="button" class="btn btn-primary" value="Down &#x21D3;" onclick="moveOperationExecOrder('Down');" />
-                </div>
-            </div>
-            <div class="col-10">
-                <label for="anonOpConfig">Configure:</label>
-                <div class="tab-content border rounded" id="anonOpConfig" style="padding: 10px;">
-                    <div class="tab-pane fade show active" id="anonOpConfig-default" role="tabpanel">No operation currently selected</div>
-
-                    <div class="tab-pane fade" id="anonOpConfig-Addition" role="tabpanel">
-                        <form class="needs-validation" action="javascript:saveAnonOpConfig('Addition')" novalidate>
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Edit Events:</span>
-                                </div>
-                                <select class="selectpicker" title="Choose event..." id="anonOpConfig-Addition-NewEvent" onchange="additionChangeSelectedEventEdit();">
-
-                                </select>
-                                <button type="button" class="btn btn-primary" id="anonOpConfig-Addition-NewEvent-editButton" onclick="additionLoadEventData();" data-toggle="modal" data-target="#anonOpConfig-Addition-NewEvent-Modal" style="margin: 0px 0px 0px 10px;" disabled> Open event designer</button>
-                                <button type="button" class="btn btn-success btn-sm" id="anonOpConfig-Addition-NewEvent-addButton" onclick="additionCreateNewEvent();" style="margin: 0px 10px 0px 10px;"><i class="glyphicon glyphicon-asterisk"></i> Create new</button>
-                                <button type="button" class="btn btn-danger btn-sm" id="anonOpConfig-Addition-NewEvent-deleteButton" onclick="additionDeleteEvent();" disabled><i class="glyphicon glyphicon-remove"></i> Delete selected</button>
-                            </div>
-
-
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Addition-Operation:</span>
-                                </div>
-                                <select class="selectpicker" id="anonOpConfig-Addition-Operation" required>
-                                    <option selected>Add new event as first in trace</option>
-                                    <option>Add new event as last in trace</option>
-                                    <option>Add new event at random position</option>
-                                </select>
-                            </div>
-
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <div class="input-group-text">
-                                    <input type="checkbox" id="anonOpConfig-Addition-ConditionalActive" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Addition-ConditionalAttr', '#anonOpConfig-Addition-ConditionalVal', '#anonOpConfig-Addition-MatchOperation'])">
-                                    </div>
-                                    <span class="input-group-text input-group-ConfigureWithPrefixedBox">Conditional Attrib. <span data-toggle="tooltip" title="Only add the new event(s) to the trace if the (first/last/all/any) event or the case itself contains an attribute whichs value equals the entered value">&#x1F6C8;</span>:</span>
-                                </div>
-
-                                <select class="selectpicker" id="anonOpConfig-Addition-MatchOperation" disabled>
-                                    <option value="matchCase">Apply condition on case attributes</option>
-                                    <option value="matchFirstEvent" selected>Match on first event in trace needed</option>
-                                    <option value="matchLastEvent">Match on last event in trace needed</option>
-                                    <option value="matchAnyEvent">Match on any event in trace needed</option>
-                                    <option value="matchAllEvent">Match on all events in trace needed</option>
-                                </select>
-
-                                <select class="selectpicker" title="Choose Conditional-Attribute..." id="anonOpConfig-Addition-ConditionalAttr" disabled>
-                                </select>
-                                <input type="text" class="form-control" placeholder="Conditional-Attribute-Value" id="anonOpConfig-Addition-ConditionalVal" disabled>
-                            </div>
-
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Events to add<span data-toggle="tooltip" title="The events that will be added to the log by applying the configured operation">&#x1F6C8;</span>:</span>
-                                </div>
-                                <select class="selectpicker" title="Choose events..." id="anonOpConfig-Addition-EventSelectionList" multiple>
-
-                                </select>
-                            </div>
-
-                            <!-- Modal -->
-                            <div class="modal fade" id="anonOpConfig-Addition-NewEvent-Modal" tabindex="-1" role="dialog" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="anonOpConfig-Addition-NewEvent-ModalLongTitle">Event Designer</h5>
-                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                            </button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="input-group mb-3">
-                                                <div class="input-group-prepend">
-                                                    <span class="input-group-text input-group-Configure">Event-Name:</span>
-                                                </div>
-                                                <input type="text" class="form-control" placeholder="Name" id="anonOpConfig-Addition-NewEvent-Modal-EventName"/>
-                                            </div>
-
-                                            <div class="table-responsive">
-                                                <div class="alert alert-warning" role="alert">
-                                                Attention: Currently there is no support for a custom timestamp attribute. The timestamp of the new event will be automatically generated according to its new position in the trace.
-                                                </div>
-                                                <table id="anonOpConfig-Addition-NewEvent-Modal-Table" class="table table-hover">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Attribute</th>
-                                                            <th>Value</th>
-                                                            <th></th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                            <div class="text-center"><button onclick="additionCreateNewEventAttributeRow('New Attribute', 'Value');" class="btn btn-success"><i class="fa fa-plus"></i> ADD NEW</button></div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <div class="container">
-                                                <div class="row">
-                                                    <div class="col-auto mr-auto">
-                                                        <button class="btn btn-success mb-2" type="button" onclick="additionSaveNewEventAttribute();" data-dismiss="modal">Save</button>
-                                                    </div>
-                                                    <div class="col-auto">
-                                                        <button class="btn btn-danger mb-2" type="button" data-dismiss="modal">Close</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-auto mr-auto">
-                                    <button class="btn btn-success mb-2" type="submit">Save</button>
-                                </div>
-                                <div class="col-auto">
-                                    <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="tab-pane fade" id="anonOpConfig-Condensation" role="tabpanel">
-                        <form class="needs-validation" action="javascript:saveAnonOpConfig('Condensation')" novalidate>
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Clusterizer:</span>
-                                </div>
-                                <select class="selectpicker" id="anonOpConfig-Condensation-Operation" onchange="condensationOperationChanged();" required>
-                                    <option selected>kMeans</option>
-                                    <option>kModes</option>
-                                    <option>Euclidian Distance</option>
-                                </select>
-                            </div>
-
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Num. of clusters:</span>
-                                </div>
-                                <input type="number" class="form-control" placeholder="kClusters" min="2" value="2" id="anonOpConfig-Condensation-kClusters">
-                            </div>
-
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
-                                </div>
-                                <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Condensation-Target" required>
-                                </select>
-                            </div>
-
-                            <div class="input-group mb-3 d-none" id="anonOpConfig-Condensation-INPUT-DescriptiveAttributes">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Descriptive Attributes:</span>
-                                </div>
-                                <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Condensation-DescriptiveAttributes" required multiple>
-                                </select>
-
-                                <button type="button" class="btn btn-primary" id="anonOpConfig-Condensation-AttributeWeights" onclick="condensationLoadAttributeWeights();" data-toggle="modal" data-target="#anonOpConfig-Condensation-AttributeWeights-Modal" style="margin: 0px 0px 0px 10px;"> Open Weight Designer</button>
-                            </div>
-
-                            <!-- Modal -->
-                            <div class="modal fade" id="anonOpConfig-Condensation-AttributeWeights-Modal" tabindex="-1" role="dialog" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="anonOpConfig-Condensation-AttributeWeights-ModalLongTitle">Weight Designer</h5>
-                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                            </button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="table-responsive">
-
-                                                <table id="anonOpConfig-Condensation-AttributeWeights-Modal-Table" class="table table-hover">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Attribute</th>
-                                                            <th>Weight</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <div class="container">
-                                                <div class="row">
-                                                    <div class="col-auto mr-auto">
-                                                        <button class="btn btn-success mb-2" type="button" onclick="condensationSaveAttributeWeights();" data-dismiss="modal">Save</button>
-                                                    </div>
-                                                    <div class="col-auto">
-                                                        <button class="btn btn-danger mb-2" type="button" data-dismiss="modal">Close</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-auto mr-auto">
-                                    <button class="btn btn-success mb-2" type="submit">Save</button>
-                                </div>
-                                <div class="col-auto">
-                                    <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="tab-pane fade" id="anonOpConfig-Cryptography" role="tabpanel">
-                        <form class="needs-validation" action="javascript:saveAnonOpConfig('Cryptography')" novalidate>
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Cryptography-Operation:</span>
-                                </div>
-                                <select class="selectpicker" id="anonOpConfig-Cryptography-Operation" required>
-                                    <option selected>Hash</option>
-                                    <option>Encrypt</option>
-                                </select>
-                            </div>
-
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <div class="input-group-text">
-                                    <input type="checkbox" id="anonOpConfig-Cryptography-ConditionalActive" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Cryptography-ConditionalAttr', '#anonOpConfig-Cryptography-ConditionalVal'])">
-                                    </div>
-                                    <span class="input-group-text input-group-ConfigureWithPrefixedBox">Conditional Attrib. <span data-toggle="tooltip" title="Only encrypt/hash the target attribute of the case/event, if the case/event has the conditional-attribute with an equal value to the one specified">&#x1F6C8;</span>:</span>
-                                </div>
-                                <select class="selectpicker" title="Choose Conditional-Attribute..." id="anonOpConfig-Cryptography-ConditionalAttr" disabled></select>
-                                <input type="text" class="form-control" placeholder="Conditional-Attribute-Value" id="anonOpConfig-Cryptography-ConditionalVal" disabled>
-                            </div>
-
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
-                                </div>
-                                <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Cryptography-Target" required></select>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-auto mr-auto">
-                                    <button class="btn btn-success mb-2" type="submit">Save</button>
-                                </div>
-                                <div class="col-auto">
-                                    <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="tab-pane fade" id="anonOpConfig-Generalization" role="tabpanel">
-                        <form class="needs-validation" action="javascript:saveAnonOpConfig('Generalization')" novalidate>
-                            <div class="input-group mb-3" id="anonOpConfig-Generalization-INPUT-Target">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
-                                </div>
-                                <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Generalization-Target" required></select>
-                            </div>
-
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Generalization-Method:</span>
-                                </div>
-                                <select class="selectpicker" id="anonOpConfig-Generalization-Operation" required onchange="generalizationOperationChanged();">
-                                    <option value="GenTaxonomyTree" selected>Taxonomy Tree</option>
-                                    <option value="GenTimestamp">Timestamp</option>
-                                </select>
-                            </div>
-
-                            <div class="input-group mb-3" id="anonOpConfig-Generalization-INPUT-TaxTree">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Taxonomy-Tree &nbsp;<span data-toggle="tooltip" title="Choose the taxonomy tree used for generalization">&#x1F6C8;</span>:</span>
-                                </div>
-                                <select class="selectpicker" title="Choose TaxonomyTree..." id="anonOpConfig-Generalization-TaxTree" required onchange="generalizationTaxTreeSelectionChanged()"></select>
-                                <button type="button" class="btn btn-primary" id="anonOpConfig-Generalization-TaxTree-editButton" onclick="generalizationLoadTaxTreeData();" data-toggle="modal" data-target="#anonOpConfig-Generalization-Taxonomy-Modal" style="margin: 0px 0px 0px 10px;" disabled> Open taxonomy tree designer</button>
-                                <button type="button" class="btn btn-success btn-sm" id="anonOpConfig-Generalization-TaxTree-addButton" onclick="generalizationCreateNewTaxTree();" style="margin: 0px 10px 0px 10px;"><i class="glyphicon glyphicon-asterisk"></i> Create new</button>
-                                <button type="button" class="btn btn-danger btn-sm" id="anonOpConfig-Generalization-TaxTree-deleteButton" onclick="generalizationDeleteTaxTree();" disabled><i class="glyphicon glyphicon-remove"></i> Delete selected</button>
-                            </div>
-
-                            <div class="input-group mb-3" id="anonOpConfig-Generalization-INPUT-Depth">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Generalization-Depth &nbsp;<span data-toggle="tooltip" title="Leaf-Node has depth 0 - Each step up in the tree is a +1">&#x1F6C8;</span>:</span>
-                                </div>
-                                <input type="number" class="form-control" placeholder="Depth" min="0" value="2" id="anonOpConfig-Generalization-Depth">
-                            </div>
-
-                            <div class="input-group mb-3 d-none" id="anonOpConfig-Generalization-INPUT-TimeDepth">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Generalization-Level &nbsp;<span data-toggle="tooltip" title="Prunes all timing values below the given unit - e.g. you choose 'Days' and all time values will be dropped, so only date values remain.">&#x1F6C8;</span>:</span>
-                                </div>
-                                <select class="selectpicker" id="anonOpConfig-Generalization-TimeDepth">
-                                    <option value="Seconds" >Seconds</option>
-                                    <option value="Minutes" >Minutes</option>
-                                    <option value="Hours" >Hours</option>
-                                    <option value="Days" selected>Days</option>
-                                    <option value="Months" >Months</option>
-                                    <option value="Years" >Years</option>
-                                </select>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-auto mr-auto">
-                                    <button class="btn btn-success mb-2" type="submit">Save</button>
-                                </div>
-                                <div class="col-auto">
-                                    <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
-                                </div>
-                            </div>
-
-
-                            <!-- Modal -->
-                            <div class="modal fade" id="anonOpConfig-Generalization-Taxonomy-Modal" tabindex="-1" role="dialog" aria-hidden="true">
-                                <div class="modal-dialog modal-dialog-centered" role="document">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="anonOpConfig-Generalization-Taxonomy-ModalLongTitle">Taxonomy-Tree Designer</h5>
-                                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                            <span aria-hidden="true">&times;</span>
-                                            </button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="input-group mb-3">
-                                                <div class="input-group-prepend">
-                                                    <span class="input-group-text input-group-Configure">Tree-Name:</span>
-                                                </div>
-                                                <input type="text" class="form-control" placeholder="Name" id="anonOpConfig-Generalization-Taxonomy-Modal-TaxTreeName"/>
-                                            </div>
-
-                                            <div id="anonOpConfig-Generalization-TaxonomyTree"></div>
-
-                                            <button type="button" class="btn btn-success btn-sm" onclick="taxonomyTreeCreateNode();"><i class="glyphicon glyphicon-asterisk"></i> Create</button>
-                                            <button type="button" class="btn btn-warning btn-sm" onclick="taxonomyTreeRenameNode();"><i class="glyphicon glyphicon-pencil"></i> Rename</button>
-                                            <button type="button" class="btn btn-danger btn-sm" onclick="taxonomyTreeDeleteNode();"><i class="glyphicon glyphicon-remove"></i> Delete</button>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <div class="container">
-                                                <div class="row">
-                                                    <div class="col-auto mr-auto">
-                                                        <button class="btn btn-success mb-2" type="button" onclick="generalizationSaveTaxonomyTree();" data-dismiss="modal">Save</button>
-                                                    </div>
-                                                    <div class="col-auto">
-                                                        <button class="btn btn-danger mb-2" type="button" data-dismiss="modal">Close</button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="tab-pane fade" id="anonOpConfig-Substitution" role="tabpanel">
-                        <form class="needs-validation" action="javascript:saveAnonOpConfig('Substitution')" novalidate>
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
-                                </div>
-                                <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Substitution-Target" required></select>
-                            </div>
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Sensitive Attribute Value&nbsp;<span data-toggle="tooltip" title="Value of the target attribute which will be substituted">&#x1F6C8;</span>:</span>
-                                </div>
-                                <input type="text" class="form-control" placeholder="Value" id="anonOpConfig-Substitution-SensitiveVal"/>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-auto mr-auto">
-                                    <button class="btn btn-success mb-2" type="submit">Save</button>
-                                </div>
-                                <div class="col-auto">
-                                    <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="tab-pane fade" id="anonOpConfig-Suppression" role="tabpanel">
-                        <form class="needs-validation" action="javascript:saveAnonOpConfig('Suppression')" novalidate>
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Suppression-Operation:</span>
-                                </div>
-                                <select class="selectpicker" id="anonOpConfig-Suppression-Operation" required onchange="suppressionOperationChanged();">
-                                    <option value="Suppress" selected>Suppress event/case entirely</option>
-                                    <option value="SuppressAttribute">Suppress event/case attribute</option>
-                                    <option value="SuppressCaseByTraceLength">Suppress whole case by trace length</option>
-                                </select>
-                            </div>
-
-                            <div class="input-group mb-3" id="anonOpConfig-Suppression-INPUT-Match">
-                                <div class="input-group-prepend">
-                                    <div class="input-group-text">
-                                    <input type="checkbox" id="anonOpConfig-Suppression-ConditionalActive" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Suppression-ConditionalAttr', '#anonOpConfig-Suppression-ConditionalVal'])">
-                                    </div>
-                                    <span class="input-group-text input-group-ConfigureWithPrefixedBox">Conditional Attrib. <span data-toggle="tooltip" title="Only perform suppression on the target attribute of the case/event, if the case/event has the conditional-attribute with an equal value to the one specified">&#x1F6C8;</span>:</span>
-                                </div>
-                                <select class="selectpicker" title="Choose Conditional-Attribute..." id="anonOpConfig-Suppression-ConditionalAttr" disabled></select>
-                                <input type="text" class="form-control" placeholder="Conditional-Attribute-Value" id="anonOpConfig-Suppression-ConditionalVal" disabled>
-                            </div>
-
-                            <div class="input-group mb-3 d-none" id="anonOpConfig-Suppression-INPUT-Target">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
-                                </div>
-                                <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Suppression-Target" required></select>
-                            </div>
-
-                            <div class="input-group mb-3 d-none" id="anonOpConfig-Suppression-INPUT-TraceLength">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Max. Trace Length:</span>
-                                </div>
-                                <input type="number" class="form-control" placeholder="TraceLength" min="1" value="6" id="anonOpConfig-Suppression-TraceLength">
-                            </div>
-
-                            <div class="row">
-                                <div class="col-auto mr-auto">
-                                    <button class="btn btn-success mb-2" type="submit">Save</button>
-                                </div>
-                                <div class="col-auto">
-                                    <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div class="tab-pane fade" id="anonOpConfig-Swapping" role="tabpanel">
-                        <form class="needs-validation" action="javascript:saveAnonOpConfig('Swapping')" novalidate>
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Clusterizer:</span>
-                                </div>
-                                <select class="selectpicker" id="anonOpConfig-Swapping-Operation" required>
-                                    <option selected>kMeans</option>
-                                </select>
-                            </div>
-
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">k for kMeans:</span>
-                                </div>
-                                <input type="number" class="form-control" placeholder="kClusters" min="2" value="2" id="anonOpConfig-Swapping-kClusters">
-                            </div>
-
-                            <div class="input-group mb-3">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text input-group-Configure">Target Attribute &nbsp;<span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
-                                </div>
-                                <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Swapping-Target" required></select>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-auto mr-auto">
-                                    <button class="btn btn-success mb-2" type="submit">Save</button>
-                                </div>
-                                <div class="col-auto">
-                                    <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        <input style="margin-top: 10px;" data-toggle="tooltip" data-placement="top" title="Test" type="button"
-            class="btn btn-warning" value="Test" name="testButton" id='testButton'  onclick="startAnonymization()" />
-
-        <hr />
-
-        <form name="outputHandling" action="anonymization_main" method="POST">
-
-            {% csrf_token %}
-            <div class="container">
-                <div class="row">
-                    <div class=" col-sm-6 col-md-7 col-lg-8">
-                        <h5> Outputs </h5>
-                        <select id="outputFileList" name="output_list" class="custom-select" size="4">
-                            {% for output in outputs %}
-                                <option value="{{output}}">{{output}}</option>
-                            {% endfor %}
+                        <select class="selectpicker" title="Choose Operation..." id="DDMB_anon_op" onchange="chooseOperationChanged();" required>
+                            <option>Addition</option>
+                            <option>Condensation</option>
+                            <option>Cryptography</option>
+                            <option>Generalization</option>
+                            <option>Substitution</option>
+                            <option>Suppression</option>
+                            <option>Swapping</option>
                         </select>
-                        <input style="margin-top: 10px;" data-toggle="tooltip" data-placement="top" title="Add to the none event logs" type="button" class="btn btn-success" value="Add" name="addButton" id='addButton' onclick="handleOutput('addButton')" />
-                        <input style="margin-top: 10px;" type="button" class="btn btn-danger" value="Delete" name="deleteButton" id='deleteButton' onclick="handleOutput('deleteButton')" />
-                        <input style="float: right; margin-top: 10px;" type="submit" class="btn btn-info" value="Download" name="downloadButton" id='downloadButton' />
-                    </div>
-                    <div class="spinner-grow text-primary" style="display:none" role="status">
-                        <span class="sr-only">Loading...</span>
-                    </div>
-                </div>
-            </div>
-        </form>
-
-
-
-
-        {{result}}
-
-
-
-
-
-
-        <!-- Processing-Error-Modal -->
-        <div class="modal fade" id="anonOp-Processing-Error-Modal" tabindex="-1" role="dialog" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="anonOp-Processing-Error-ModalLongTitle">We are sorry, but an error occured!</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="alert alert-danger" role="alert" id="anonOp-Processing-Error-Modal-Text">
+                        <div class="invalid-feedback">
+                            Please choose an operation
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <div class="container">
-                            <div class="row">
-                                <div class="col-auto">
-                                    <button class="btn btn-danger mb-2" type="button" data-dismiss="modal">Close</button>
+                </div>
+                <div class="col-sm">
+                    <div class="input-group mb-3">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text input-group-mediumWith" id="basic-addon1">Level:</span>
+                        </div>
+                        <select class="selectpicker" title="Choose Level..." id="DDMB_anon_level" required>
+                            <option>Case</option>
+                            <option>Event</option>
+                        </select>
+                        <div class="invalid-feedback">
+                            Please choose an operation level
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm">
+                    <button class="btn btn-primary mb-2" id="addOperationButton" name="addOperationButton" type="submit">
+                        Add Operation
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+    <hr/>
+    <div class="row">
+        <div class="col-2">
+            <label for="operationsList">Operations to apply (in order):</label>
+            <div class="list-group" id="operationsList" role="tablist" style="max-height: 250px; overflow-y: auto;">
+                <a class="list-group-item list-group-item-action active d-none" data-toggle="list" href="#anonOpConfig-default" role="tab">Default</a>
+            </div>
+            <div id="operationsListSorter" class="d-none">
+                <input
+                    style="margin-top: 10px;"
+                    data-toggle="tooltip"
+                    data-placement="top"
+                    title="Change execution order"
+                    type="button"
+                    class="btn btn-primary"
+                    value="Up &#x21D1;"
+                    onclick="moveOperationExecOrder('Up');"
+                />
+                <input
+                    style="margin-top: 10px; float: right;"
+                    data-toggle="tooltip"
+                    data-placement="top"
+                    title="Change execution order"
+                    type="button"
+                    class="btn btn-primary"
+                    value="Down &#x21D3;"
+                    onclick="moveOperationExecOrder('Down');"
+                />
+            </div>
+        </div>
+        <div class="col-10">
+            <label for="anonOpConfig">Configure:</label>
+            <div class="tab-content border rounded" id="anonOpConfig" style="padding: 10px;">
+                <div class="tab-pane fade show active" id="anonOpConfig-default" role="tabpanel">No operation currently selected</div>
+                <div class="tab-pane fade" id="anonOpConfig-Addition" role="tabpanel">
+                    <form class="needs-validation" action="javascript:saveAnonOpConfig('Addition')" novalidate>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">Edit Events:</span>
+                            </div>
+                            <select class="selectpicker" title="Choose event..." id="anonOpConfig-Addition-NewEvent" onchange="additionChangeSelectedEventEdit();"></select>
+                            <button
+                                type="button"
+                                class="btn btn-primary"
+                                id="anonOpConfig-Addition-NewEvent-editButton"
+                                onclick="additionLoadEventData();"
+                                data-toggle="modal"
+                                data-target="#anonOpConfig-Addition-NewEvent-Modal"
+                                style="margin: 0px 0px 0px 10px;"
+                                disabled
+                            > Open event designer</button>
+                            <button type="button" class="btn btn-success btn-sm" id="anonOpConfig-Addition-NewEvent-addButton" onclick="additionCreateNewEvent();" style="margin: 0px 10px 0px 10px;">
+                                <i class="glyphicon glyphicon-asterisk"></i>
+                                Create new
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm" id="anonOpConfig-Addition-NewEvent-deleteButton" onclick="additionDeleteEvent();" disabled>
+                                <i class="glyphicon glyphicon-remove"></i>
+                                Delete selected
+                            </button>
+                        </div>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">Addition-Operation:</span>
+                            </div>
+                            <select class="selectpicker" id="anonOpConfig-Addition-Operation" required>
+                                <option selected>Add new event as first in trace</option>
+                                <option>Add new event as last in trace</option>
+                                <option>Add new event at random position</option>
+                            </select>
+                        </div>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    <input type="checkbox" id="anonOpConfig-Addition-ConditionalActive-Case" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Addition-ConditionalAttr-Case', '#anonOpConfig-Addition-ConditionalVal-Case', '#anonOpConfig-Addition-MatchOperation-Case', '#anonOpConfig-Addition-ConditionalOperator-Case'])"/>
+                                </div>
+                                <span class="input-group-text input-group-ConfigureWithPrefixedBox">
+                                    Case Filter
+                                    <span data-toggle="tooltip" title="Only apply the operation if the according case contains the specified attribute whichs value matches the entered value and the operator">&#x1F6C8;</span>:</span>
+                            </div>
+                            <select class="selectpicker" id="anonOpConfig-Addition-MatchOperation-Case" disabled>
+                                <option value="matchCase" selected>Match on case attribute</option>
+                                <option value="matchTraceLength">Trace Length</option>
+                                <option value="matchFirstEvent">Match on first event in trace needed</option>
+                                <option value="matchLastEvent">Match on last event in trace needed</option>
+                                <option value="matchAnyEvent">Match on any event in trace needed</option>
+                                <option value="matchAllEvent">Match on all events in trace needed</option>
+                            </select>
+                            <select class="selectpicker" title="Choose Conditional-Attribute..." id="anonOpConfig-Addition-ConditionalAttr-Case" disabled></select>
+                            <select class="selectpicker dd-filterOperation" id="anonOpConfig-Addition-ConditionalOperator-Case" disabled>
+                                <option selected>==</option>
+                                <option>&gt;=</option>
+                                <option>&lt;=</option>
+                                <option>&gt;</option>
+                                <option>&lt;</option>
+                                <option>!=</option>
+                                <option>in</option>
+                                <option>not in</option>
+                            </select>
+                            <input type="text" class="form-control" style="max-width: 11.5em;" placeholder="Value(s)" id="anonOpConfig-Addition-ConditionalVal-Case" disabled/>
+                        </div>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    <input type="checkbox" id="anonOpConfig-Addition-ConditionalActive-Event" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Addition-ConditionalAttr-Event', '#anonOpConfig-Addition-ConditionalVal-Event', '#anonOpConfig-Addition-MatchOperation-Event', '#anonOpConfig-Addition-ConditionalOperator-Event'])"/>
+                                </div>
+                                <span class="input-group-text input-group-ConfigureWithPrefixedBox">
+                                    Event Filter
+                                    <span data-toggle="tooltip" title="Only apply the operation if the according event contains the specified attribute whichs value matches the entered value and the operator">&#x1F6C8;</span>:</span>
+                            </div>
+                            <select class="selectpicker" id="anonOpConfig-Addition-MatchOperation-Event" disabled>
+                                <option value="eventAttribute" selected>Match on event attribute</option>
+                            </select>
+                            <select class="selectpicker" title="Choose Conditional-Attribute..." id="anonOpConfig-Addition-ConditionalAttr-Event" disabled></select>
+                            <select class="selectpicker dd-filterOperation" id="anonOpConfig-Addition-ConditionalOperator-Event" disabled>
+                                <option selected>==</option>
+                                <option>&gt;=</option>
+                                <option>&lt;=</option>
+                                <option>&gt;</option>
+                                <option>&lt;</option>
+                                <option>!=</option>
+                                <option>in</option>
+                                <option>not in</option>
+                            </select>
+                            <input type="text" class="form-control" style="max-width: 11.5em;" placeholder="Value(s)" id="anonOpConfig-Addition-ConditionalVal-Event" disabled/>
+                        </div>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">
+                                    Events to add
+                                    <span data-toggle="tooltip" title="The events that will be added to the log by applying the configured operation">&#x1F6C8;</span>:</span>
+                            </div>
+                            <select class="selectpicker" title="Choose events..." id="anonOpConfig-Addition-EventSelectionList" multiple></select>
+                        </div>
+                        <!-- Modal -->
+                        <div class="modal fade" id="anonOpConfig-Addition-NewEvent-Modal" tabindex="-1" role="dialog" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="anonOpConfig-Addition-NewEvent-ModalLongTitle">Event Designer</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="input-group mb-3">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text input-group-Configure">Event-Name:</span>
+                                            </div>
+                                            <input type="text" class="form-control" placeholder="Name" id="anonOpConfig-Addition-NewEvent-Modal-EventName"/>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <div class="alert alert-warning" role="alert">
+                                                Attention: Currently there is no support for a custom timestamp attribute. The timestamp of the new event will be automatically generated according to its new position in the trace.
+                                            </div>
+                                            <table id="anonOpConfig-Addition-NewEvent-Modal-Table" class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Attribute</th>
+                                                        <th>Value</th>
+                                                        <th></th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+                                        <div class="text-center">
+                                            <button onclick="additionCreateNewEventAttributeRow('New Attribute', 'Value');" class="btn btn-success">
+                                                <i class="fa fa-plus"></i>
+                                                ADD NEW
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <div class="container">
+                                            <div class="row">
+                                                <div class="col-auto mr-auto">
+                                                    <button class="btn btn-success mb-2" type="button" onclick="additionSaveNewEventAttribute();" data-dismiss="modal">Save</button>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <button class="btn btn-danger mb-2" type="button" data-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal shown during processing -->
-        <div class="modal fade" id="anonOp-Processing-Wait-Modal" tabindex="-1" role="dialog" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    <div class="modal-body">
-                        <div class="d-flex justify-content-center align-items-center">
-                            <span>Processing your request - Please wait...</span>
-                            <div class="spinner-border" role="status" style="margin-left: 25px;">
-                                <span class="sr-only">Loading...</span>
+                        <div class="row">
+                            <div class="col-auto mr-auto">
+                                <button class="btn btn-success mb-2" type="submit">Save</button>
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
                             </div>
                         </div>
-
-                        <div class="d-flex justify-content-center align-items-center">
-                            <span style="font-size: 8pt;">Please note that processing files &gt;500MB may take a few minutes!</span>
+                    </form>
+                </div>
+                <div class="tab-pane fade" id="anonOpConfig-Condensation" role="tabpanel">
+                    <form action="javascript:saveAnonOpConfig('Condensation')">
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">Clusterizer:</span>
+                            </div>
+                            <select class="selectpicker" id="anonOpConfig-Condensation-Operation" onchange="condensationOperationChanged();">
+                                <option selected>kMeans</option>
+                                <option>kModes</option>
+                                <option>Euclidian Distance</option>
+                            </select>
+                        </div>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">Num. of clusters:</span>
+                            </div>
+                            <input type="number" class="form-control" placeholder="kClusters" min="2" value="2" id="anonOpConfig-Condensation-kClusters"/>
+                        </div>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">
+                                    Target Attribute &nbsp;
+                                    <span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
+                            </div>
+                            <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Condensation-Target"></select>
+                        </div>
+                        <div class="input-group mb-3 d-none" id="anonOpConfig-Condensation-INPUT-DescriptiveAttributes">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">Descriptive Attributes:</span>
+                            </div>
+                            <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Condensation-DescriptiveAttributes" multiple></select>
+                            <button type="button" class="btn btn-primary" id="anonOpConfig-Condensation-AttributeWeights" onclick="condensationLoadAttributeWeights();" data-toggle="modal" data-target="#anonOpConfig-Condensation-AttributeWeights-Modal" style="margin: 0px 0px 0px 10px;"> Open Weight Designer</button>
+                        </div>
+                        <!-- Modal -->
+                        <div class="modal fade" id="anonOpConfig-Condensation-AttributeWeights-Modal" tabindex="-1" role="dialog" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="anonOpConfig-Condensation-AttributeWeights-ModalLongTitle">Weight Designer</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="table-responsive">
+                                            <table id="anonOpConfig-Condensation-AttributeWeights-Modal-Table" class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Attribute</th>
+                                                        <th>Weight</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <div class="container">
+                                            <div class="row">
+                                                <div class="col-auto mr-auto">
+                                                    <button class="btn btn-success mb-2" type="button" onclick="condensationSaveAttributeWeights();" data-dismiss="modal">Save</button>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <button class="btn btn-danger mb-2" type="button" data-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-auto mr-auto">
+                                <button class="btn btn-success mb-2" type="submit">Save</button>
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="tab-pane fade" id="anonOpConfig-Cryptography" role="tabpanel">
+                    <form class="needs-validation" action="javascript:saveAnonOpConfig('Cryptography')" novalidate>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">Cryptography-Operation:</span>
+                            </div>
+                            <select class="selectpicker" id="anonOpConfig-Cryptography-Operation" required>
+                                <option selected>Hash</option>
+                                <option>Encrypt</option>
+                            </select>
+                        </div>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    <input type="checkbox" id="anonOpConfig-Cryptography-ConditionalActive-Case" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Cryptography-ConditionalAttr-Case', '#anonOpConfig-Cryptography-ConditionalVal-Case', '#anonOpConfig-Cryptography-MatchOperation-Case', '#anonOpConfig-Cryptography-ConditionalOperator-Case'])"/>
+                                </div>
+                                <span class="input-group-text input-group-ConfigureWithPrefixedBox">
+                                    Case Filter
+                                    <span data-toggle="tooltip" title="Only apply the operation if the according case contains the specified attribute whichs value matches the entered value and the operator">&#x1F6C8;</span>:</span>
+                            </div>
+                            <select class="selectpicker" id="anonOpConfig-Cryptography-MatchOperation-Case" disabled>
+                                <option value="matchCase" selected>Match on case attribute</option>
+                                <option value="matchTraceLength">Trace Length</option>
+                                <option value="matchFirstEvent">Match on first event in trace needed</option>
+                                <option value="matchLastEvent">Match on last event in trace needed</option>
+                                <option value="matchAnyEvent">Match on any event in trace needed</option>
+                                <option value="matchAllEvent">Match on all events in trace needed</option>
+                            </select>
+                            <select class="selectpicker" title="Choose Conditional-Attribute..." id="anonOpConfig-Cryptography-ConditionalAttr-Case" disabled></select>
+                            <select class="selectpicker dd-filterOperation" id="anonOpConfig-Cryptography-ConditionalOperator-Case" disabled>
+                                <option selected>==</option>
+                                <option>&gt;=</option>
+                                <option>&lt;=</option>
+                                <option>&gt;</option>
+                                <option>&lt;</option>
+                                <option>!=</option>
+                                <option>in</option>
+                                <option>not in</option>
+                            </select>
+                            <input type="text" class="form-control" style="max-width: 11.5em;" placeholder="Value(s)" id="anonOpConfig-Cryptography-ConditionalVal-Case" disabled/>
+                        </div>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    <input type="checkbox" id="anonOpConfig-Cryptography-ConditionalActive-Event" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Cryptography-ConditionalAttr-Event', '#anonOpConfig-Cryptography-ConditionalVal-Event', '#anonOpConfig-Cryptography-MatchOperation-Event', '#anonOpConfig-Cryptography-ConditionalOperator-Event'])"/>
+                                </div>
+                                <span class="input-group-text input-group-ConfigureWithPrefixedBox">
+                                    Event Filter
+                                    <span data-toggle="tooltip" title="Only apply the operation if the according event contains the specified attribute whichs value matches the entered value and the operator">&#x1F6C8;</span>:</span>
+                            </div>
+                            <select class="selectpicker" id="anonOpConfig-Cryptography-MatchOperation-Event" disabled>
+                                <option value="eventAttribute" selected>Match on event attribute</option>
+                            </select>
+                            <select class="selectpicker" title="Choose Conditional-Attribute..." id="anonOpConfig-Cryptography-ConditionalAttr-Event" disabled></select>
+                            <select class="selectpicker dd-filterOperation" id="anonOpConfig-Cryptography-ConditionalOperator-Event" disabled>
+                                <option selected>==</option>
+                                <option>&gt;=</option>
+                                <option>&lt;=</option>
+                                <option>&gt;</option>
+                                <option>&lt;</option>
+                                <option>!=</option>
+                                <option>in</option>
+                                <option>not in</option>
+                            </select>
+                            <input type="text" class="form-control" style="max-width: 11.5em;" placeholder="Value(s)" id="anonOpConfig-Cryptography-ConditionalVal-Event" disabled/>
+                        </div>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">
+                                    Target Attribute &nbsp;
+                                    <span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
+                            </div>
+                            <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Cryptography-Target" required></select>
+                        </div>
+                        <div class="row">
+                            <div class="col-auto mr-auto">
+                                <button class="btn btn-success mb-2" type="submit">Save</button>
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="tab-pane fade" id="anonOpConfig-Generalization" role="tabpanel">
+                    <form class="needs-validation" action="javascript:saveAnonOpConfig('Generalization')" novalidate>
+                        <div class="input-group mb-3" id="anonOpConfig-Generalization-INPUT-Target">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">
+                                    Target Attribute &nbsp;
+                                    <span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
+                            </div>
+                            <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Generalization-Target" required></select>
+                        </div>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">Generalization-Method:</span>
+                            </div>
+                            <select class="selectpicker" id="anonOpConfig-Generalization-Operation" required onchange="generalizationOperationChanged();">
+                                <option value="GenTaxonomyTree" selected>Taxonomy Tree</option>
+                                <option value="GenTimestamp">Timestamp</option>
+                            </select>
+                        </div>
+                        <div class="input-group mb-3" id="anonOpConfig-Generalization-INPUT-TaxTree">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">
+                                    Taxonomy-Tree &nbsp;
+                                    <span data-toggle="tooltip" title="Choose the taxonomy tree used for generalization">&#x1F6C8;</span>:</span>
+                            </div>
+                            <select class="selectpicker" title="Choose TaxonomyTree..." id="anonOpConfig-Generalization-TaxTree" required onchange="generalizationTaxTreeSelectionChanged()"></select>
+                            <button
+                                type="button"
+                                class="btn btn-primary"
+                                id="anonOpConfig-Generalization-TaxTree-editButton"
+                                onclick="generalizationLoadTaxTreeData();"
+                                data-toggle="modal"
+                                data-target="#anonOpConfig-Generalization-Taxonomy-Modal"
+                                style="margin: 0px 0px 0px 10px;"
+                                disabled
+                            > Open taxonomy tree designer</button>
+                            <button type="button" class="btn btn-success btn-sm" id="anonOpConfig-Generalization-TaxTree-addButton" onclick="generalizationCreateNewTaxTree();" style="margin: 0px 10px 0px 10px;">
+                                <i class="glyphicon glyphicon-asterisk"></i>
+                                Create new
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm" id="anonOpConfig-Generalization-TaxTree-deleteButton" onclick="generalizationDeleteTaxTree();" disabled>
+                                <i class="glyphicon glyphicon-remove"></i>
+                                Delete selected
+                            </button>
+                        </div>
+                        <div class="input-group mb-3" id="anonOpConfig-Generalization-INPUT-Depth">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">
+                                    Generalization-Depth &nbsp;
+                                    <span data-toggle="tooltip" title="Leaf-Node has depth 0 - Each step up in the tree is a +1">&#x1F6C8;</span>:</span>
+                            </div>
+                            <input type="number" class="form-control" placeholder="Depth" min="0" value="2" id="anonOpConfig-Generalization-Depth"/>
+                        </div>
+                        <div class="input-group mb-3 d-none" id="anonOpConfig-Generalization-INPUT-TimeDepth">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">
+                                    Generalization-Level &nbsp;
+                                    <span data-toggle="tooltip" title="Prunes all timing values below the given unit - e.g. you choose 'Days' and all time values will be dropped, so only date values remain.">&#x1F6C8;</span>:</span>
+                            </div>
+                            <select class="selectpicker" id="anonOpConfig-Generalization-TimeDepth">
+                                <option value="Seconds">Seconds</option>
+                                <option value="Minutes">Minutes</option>
+                                <option value="Hours">Hours</option>
+                                <option value="Days" selected>Days</option>
+                                <option value="Months">Months</option>
+                                <option value="Years">Years</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <div class="col-auto mr-auto">
+                                <button class="btn btn-success mb-2" type="submit">Save</button>
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
+                            </div>
+                        </div>
+                        <!-- Modal -->
+                        <div class="modal fade" id="anonOpConfig-Generalization-Taxonomy-Modal" tabindex="-1" role="dialog" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="anonOpConfig-Generalization-Taxonomy-ModalLongTitle">Taxonomy-Tree Designer</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="input-group mb-3">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text input-group-Configure">Tree-Name:</span>
+                                            </div>
+                                            <input type="text" class="form-control" placeholder="Name" id="anonOpConfig-Generalization-Taxonomy-Modal-TaxTreeName"/>
+                                        </div>
+                                        <div id="anonOpConfig-Generalization-TaxonomyTree"></div>
+                                        <button type="button" class="btn btn-success btn-sm" onclick="taxonomyTreeCreateNode();">
+                                            <i class="glyphicon glyphicon-asterisk"></i>
+                                            Create
+                                        </button>
+                                        <button type="button" class="btn btn-warning btn-sm" onclick="taxonomyTreeRenameNode();">
+                                            <i class="glyphicon glyphicon-pencil"></i>
+                                            Rename
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-sm" onclick="taxonomyTreeDeleteNode();">
+                                            <i class="glyphicon glyphicon-remove"></i>
+                                            Delete
+                                        </button>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <div class="container">
+                                            <div class="row">
+                                                <div class="col-auto mr-auto">
+                                                    <button class="btn btn-success mb-2" type="button" onclick="generalizationSaveTaxonomyTree();" data-dismiss="modal">Save</button>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <button class="btn btn-danger mb-2" type="button" data-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="tab-pane fade" id="anonOpConfig-Substitution" role="tabpanel">
+                    <form class="needs-validation" action="javascript:saveAnonOpConfig('Substitution')" novalidate>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">
+                                    Target Attribute &nbsp;
+                                    <span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
+                            </div>
+                            <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Substitution-Target" required></select>
+                        </div>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">
+                                    Sensitive Attribute Value&nbsp;
+                                    <span data-toggle="tooltip" title="Value of the target attribute which will be substituted">&#x1F6C8;</span>:</span>
+                            </div>
+                            <input type="text" class="form-control" placeholder="Value" id="anonOpConfig-Substitution-SensitiveVal"/>
+                        </div>
+                        <div class="row">
+                            <div class="col-auto mr-auto">
+                                <button class="btn btn-success mb-2" type="submit">Save</button>
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="tab-pane fade" id="anonOpConfig-Suppression" role="tabpanel">
+                    <form class="needs-validation" action="javascript:saveAnonOpConfig('Suppression')" novalidate>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">Suppression-Operation:</span>
+                            </div>
+                            <select class="selectpicker" id="anonOpConfig-Suppression-Operation" required onchange="suppressionOperationChanged();">
+                                <option value="Suppress" selected>Suppress event/case entirely</option>
+                                <option value="SuppressAttribute">Suppress event/case attribute</option>
+                            </select>
+                        </div>
+                        <div class="input-group mb-3" id="anonOpConfig-Suppression-INPUT-Conditional-Case">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    <input type="checkbox" id="anonOpConfig-Suppression-ConditionalActive-Case" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Suppression-ConditionalAttr-Case', '#anonOpConfig-Suppression-ConditionalVal-Case', '#anonOpConfig-Suppression-MatchOperation-Case', '#anonOpConfig-Suppression-ConditionalOperator-Case'])"/>
+                                </div>
+                                <span class="input-group-text input-group-ConfigureWithPrefixedBox">
+                                    Case Filter
+                                    <span data-toggle="tooltip" title="Only apply the operation if the according case contains the specified attribute whichs value matches the entered value and the operator">&#x1F6C8;</span>:</span>
+                            </div>
+                            <select class="selectpicker" id="anonOpConfig-Suppression-MatchOperation-Case" disabled>
+                                <option value="matchCase" selected>Match on case attribute</option>
+                                <option value="matchTraceLength">Trace Length</option>
+                                <option value="matchFirstEvent">Match on first event in trace needed</option>
+                                <option value="matchLastEvent">Match on last event in trace needed</option>
+                                <option value="matchAnyEvent">Match on any event in trace needed</option>
+                                <option value="matchAllEvent">Match on all events in trace needed</option>
+                            </select>
+                            <select class="selectpicker" title="Choose Conditional-Attribute..." id="anonOpConfig-Suppression-ConditionalAttr-Case" disabled></select>
+                            <select class="selectpicker dd-filterOperation" id="anonOpConfig-Suppression-ConditionalOperator-Case" disabled>
+                                <option selected>==</option>
+                                <option>&gt;=</option>
+                                <option>&lt;=</option>
+                                <option>&gt;</option>
+                                <option>&lt;</option>
+                                <option>!=</option>
+                                <option>in</option>
+                                <option>not in</option>
+                            </select>
+                            <input type="text" class="form-control" style="max-width: 11.5em;" placeholder="Value(s)" id="anonOpConfig-Suppression-ConditionalVal-Case" disabled/>
+                        </div>
+                        <div class="input-group mb-3" id="anonOpConfig-Suppression-INPUT-Conditional-Event">
+                            <div class="input-group-prepend">
+                                <div class="input-group-text">
+                                    <input type="checkbox" id="anonOpConfig-Suppression-ConditionalActive-Event" onclick="checkboxToggleEnable(this, ['#anonOpConfig-Suppression-ConditionalAttr-Event', '#anonOpConfig-Suppression-ConditionalVal-Event', '#anonOpConfig-Suppression-MatchOperation-Event', '#anonOpConfig-Suppression-ConditionalOperator-Event'])"/>
+                                </div>
+                                <span class="input-group-text input-group-ConfigureWithPrefixedBox">
+                                    Event Filter
+                                    <span data-toggle="tooltip" title="Only apply the operation if the according event contains the specified attribute whichs value matches the entered value and the operator">&#x1F6C8;</span>:</span>
+                            </div>
+                            <select class="selectpicker" id="anonOpConfig-Suppression-MatchOperation-Event" disabled>
+                                <option value="eventAttribute" selected>Match on event attribute</option>
+                            </select>
+                            <select class="selectpicker" title="Choose Conditional-Attribute..." id="anonOpConfig-Suppression-ConditionalAttr-Event" disabled></select>
+                            <select class="selectpicker dd-filterOperation" id="anonOpConfig-Suppression-ConditionalOperator-Event" disabled>
+                                <option selected>==</option>
+                                <option>&gt;=</option>
+                                <option>&lt;=</option>
+                                <option>&gt;</option>
+                                <option>&lt;</option>
+                                <option>!=</option>
+                                <option>in</option>
+                                <option>not in</option>
+                            </select>
+                            <input type="text" class="form-control" style="max-width: 11.5em;" placeholder="Value(s)" id="anonOpConfig-Suppression-ConditionalVal-Event" disabled/>
+                        </div>
+                        <div class="input-group mb-3 d-none" id="anonOpConfig-Suppression-INPUT-Target">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">
+                                    Target Attribute &nbsp;
+                                    <span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
+                            </div>
+                            <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Suppression-Target" required></select>
+                        </div>
+                        <div class="row">
+                            <div class="col-auto mr-auto">
+                                <button class="btn btn-success mb-2" type="submit">Save</button>
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="tab-pane fade" id="anonOpConfig-Swapping" role="tabpanel">
+                    <form class="needs-validation" action="javascript:saveAnonOpConfig('Swapping')" novalidate>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">Clusterizer:</span>
+                            </div>
+                            <select class="selectpicker" id="anonOpConfig-Swapping-Operation" required>
+                                <option selected>kMeans</option>
+                            </select>
+                        </div>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">k for kMeans:</span>
+                            </div>
+                            <input type="number" class="form-control" placeholder="kClusters" min="2" value="2" id="anonOpConfig-Swapping-kClusters"/>
+                        </div>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">
+                                    Target Attribute &nbsp;
+                                    <span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
+                            </div>
+                            <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Swapping-Target" required></select>
+                        </div>
+                        <div class="row">
+                            <div class="col-auto mr-auto">
+                                <button class="btn btn-success mb-2" type="submit">Save</button>
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn btn-danger mb-2" type="button" onclick="deleteOperation()">Delete</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <input
+        style="margin-top: 10px;"
+        data-toggle="tooltip"
+        data-placement="top"
+        title="Apply operations to selected log"
+        type="button"
+        class="btn btn-primary"
+        value="Apply operations to selected log"
+        name="applyButton"
+        id="applyButton"
+        onclick="startAnonymization()"
+    />
+    <hr/>
+    <form name="outputHandling" action="anonymization_main" method="POST">
+        {% csrf_token %}
+        <div class="container">
+            <div class="row">
+                <div class=" col-sm-6 col-md-7 col-lg-8">
+                    <h5> Outputs</h5>
+                    <select id="outputFileList" name="output_list" class="custom-select" size="4">
+                        {% for output in outputs %}
+                        <option value="{{output}}">{{output}}</option>
+                        {% endfor %}
+                    </select>
+                    <input
+                        style="margin-top: 10px;"
+                        data-toggle="tooltip"
+                        data-placement="top"
+                        title="Add to the none event logs"
+                        type="button"
+                        class="btn btn-success"
+                        value="Add"
+                        name="addButton"
+                        id="addButton"
+                        onclick="handleOutput('addButton')"
+                    />
+                    <input style="margin-top: 10px;" type="button" class="btn btn-danger" value="Delete" name="deleteButton" id="deleteButton" onclick="handleOutput('deleteButton')"/>
+                    <input style="float: right; margin-top: 10px;" type="submit" class="btn btn-info" value="Download" name="downloadButton" id="downloadButton"/>
+                </div>
+                <div class="spinner-grow text-primary" style="display:none" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+        </div>
+    </form>
+    {{result}}
+    <!-- Processing-Error-Modal -->
+    <div class="modal fade" id="anonOp-Processing-Error-Modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="anonOp-Processing-Error-ModalLongTitle">We are sorry, but an error occured!</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger" role="alert" id="anonOp-Processing-Error-Modal-Text"></div>
+                </div>
+                <div class="modal-footer">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-auto">
+                                <button class="btn btn-danger mb-2" type="button" data-dismiss="modal">Close</button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <!-- End (log_name != ':notset:') -->
-        {% endif %}
+    </div>
+    <!-- Modal shown during processing -->
+    <div class="modal fade" id="anonOp-Processing-Wait-Modal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="d-flex justify-content-center align-items-center">
+                        <span>Processing your request - Please wait...</span>
+                        <div class="spinner-border" role="status" style="margin-left: 25px;">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-center align-items-center">
+                        <span style="font-size: 8pt;">Please note that processing files &gt;500MB may take a few minutes!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End (log_name != ':notset:') -->
+    {% endif %}
 </div>
 {% endblock %}
 
@@ -719,7 +843,6 @@
 {% block script %}
 <script src="/static/plugins/bootstrap-select/js/bootstrap-select.min.js"></script>
 <script src="/static/plugins/vakata-jstree/jstree.min.js"></script>
-
 <script>
     var token = '{{csrf_token}}';
 
@@ -734,23 +857,6 @@
         //Initialize the Generalization Taxonomy-Tree
         initializeGeneralizationTaxTreeList();
         initializeGeneralizationTaxonomyTree('', true);
-
-        /* VALIDATE FORMS */
-        'use strict';
-        // Fetch all the forms we want to apply custom Bootstrap validation styles to
-        var forms = document.getElementsByClassName('needs-validation');
-        // Loop over them and prevent submission
-        var validation = Array.prototype.filter.call(forms, function(form) {
-            form.addEventListener('submit', function(event) {
-                if (form.checkValidity() === false) {
-                    event.preventDefault();
-                    event.stopPropagation();
-                }
-
-                form.classList.add('was-validated');
-            }, false);
-        });
-
     });
 
     function initializeGeneralizationTaxTreeList() {
@@ -937,105 +1043,48 @@
     }
 
     /* AnonOps - Config */
-    function checkboxToggleEnable(checkbox, inputList) {
-        inputList.forEach(id => {
-            $(id).prop( "disabled", !checkbox.checked);
-            $(id).prop( "required",  checkbox.checked);
-
-            //Refresh Bootstrap-Select DropDowns
-            if( $(id).prop("tagName") == "SELECT") {
-                $(id).selectpicker('refresh');
-            }
-        });
-    }
-
     function setActiveOp(id)
     {
         appState['ActiveId'] = id;
 
         let cfg = getFirstMatch(appState['Operations'], (x => x.Id == appState['ActiveId']));
 
-        let logAttributes= []
-        if(cfg['Level'] === 'Case') {
-            logAttributes = appState['LogAttributes']['CaseAttributes'];
-        } else if (cfg['Level'] === 'Event') {
-            logAttributes = appState['LogAttributes']['EventAttributes'];
-        }
+        let caseAttributes  = appState['LogAttributes']['CaseAttributes'];
+        let eventAttributes = appState['LogAttributes']['EventAttributes'];
+        let uniqueEventAttributes = appState['LogAttributes']['FirstEventUniqueAttributes'];
 
-        if(cfg.Operation === 'Addition') {
-            //restoreDropDownMenu('#anonOpConfig-Addition-ConditionalAttr', logAttributes, cfg['Addition-ConditionalAttr']);
-            restoreDropDownMenuOptGroups('#anonOpConfig-Addition-ConditionalAttr', {'Case-Attributes': appState['LogAttributes']['CaseAttributes'], 'Event-Attributes': appState['LogAttributes']['EventAttributes']}, cfg['Addition-ConditionalAttr']);
-            restoreDropDownMenuSelect('#anonOpConfig-Addition-Operation', cfg['Addition-Operation']);
-
-            $("#anonOpConfig-Addition-ConditionalActive").prop("checked", cfg['Addition-ConditionalActive']);
-            $("#anonOpConfig-Addition-ConditionalVal").val(cfg['Addition-ConditionalVal']);
-
-            restoreDropDownMenuFromDictList('#anonOpConfig-Addition-NewEvent',           appState['AdditionEvents'], 'anonOpConfig-Addition-NewEvents-eventOption-',          'Id', 'Name');
-            restoreDropDownMenuFromDictList('#anonOpConfig-Addition-EventSelectionList', appState['AdditionEvents'], 'anonOpConfig-Addition-EventSelectionList-eventOption-', 'Id', 'Name', appState['AdditionEvents'].map( x => (cfg['Addition-Events'].indexOf(x.Id) >= 0) ? x.Name : undefined ));
-
-            restoreDropDownMenuSelect('#anonOpConfig-Addition-MatchOperation', cfg['Addition-MatchOp']);
-        }
-        else if(cfg.Operation === 'Condensation') {
-            restoreDropDownMenu('#anonOpConfig-Condensation-Target', logAttributes, cfg['Condensation-Target']);
-            restoreDropDownMenuSelect("#anonOpConfig-Condensation-Operation", cfg['Condensation-Operation']);
-            restoreDropDownMenu('#anonOpConfig-Condensation-DescriptiveAttributes', logAttributes, cfg['Condensation-DescriptiveAttributes']);
-
-            $("#anonOpConfig-Condensation-kClusters").val(cfg['Condensation-kClusters']);
-        }
-        else if(cfg.Operation === 'Cryptography') {
-            restoreDropDownMenu('#anonOpConfig-Cryptography-ConditionalAttr', logAttributes, cfg['Cryptography-ConditionalAttr']);
-            restoreDropDownMenu('#anonOpConfig-Cryptography-Target', logAttributes, cfg['Cryptography-Target']);
-
-            restoreDropDownMenuSelect("#anonOpConfig-Cryptography-Operation", cfg['Cryptography-Operation']);
-            $("#anonOpConfig-Cryptography-ConditionalVal").val(cfg['Cryptography-ConditionalVal']);
-        }
-        else if(cfg.Operation === 'Generalization') {
-            restoreDropDownMenu('#anonOpConfig-Generalization-Target', logAttributes, cfg['Generalization-Target']);
-
-            //Only restore selection, as list should not change
-            restoreDropDownMenuSelect('#anonOpConfig-Generalization-TaxTree', cfg['Generalization-TaxTreeSelection']);
-            restoreDropDownMenuSelect('#anonOpConfig-Generalization-Operation', cfg['Generalization-Operation']);
-            restoreDropDownMenuSelect('#anonOpConfig-Generalization-TimeDepth', cfg['Generalization-TimeDepth']);
-
-            $('#anonOpConfig-Generalization-Depth').val(cfg['Generalization-Depth']);
-        }
-        else if(cfg.Operation === "Substitution") {
-            $("#anonOpConfig-Substitution-SensitiveVal").val(cfg['Substitution-SensitiveVal']);
-
-            restoreDropDownMenu('#anonOpConfig-Substitution-Target', logAttributes, cfg['Substitution-Target']);
-        }
-        else if(cfg.Operation === "Suppression") {
-            restoreDropDownMenu('#anonOpConfig-Suppression-ConditionalAttr', logAttributes, cfg['Suppression-ConditionalAttr']);
-            restoreDropDownMenu('#anonOpConfig-Suppression-Target', logAttributes, cfg['Suppression-Target']);
-
-            $("#anonOpConfig-Suppression-ConditionalActive").prop("checked", cfg['Suppression-ConditionalActive']);
-            $("#anonOpConfig-Suppression-ConditionalVal").val(cfg['Suppression-ConditionalVal']);
-            $("#anonOpConfig-Suppression-TraceLength").val(cfg['Suppression-TraceLength']);
-
-            //Restore DropDown based on the seletec level
-            $("#anonOpConfig-Suppression-Operation option[value|='Suppress']").text("Suppress " + cfg['Level'].toLowerCase() + " entirely");
-            $("#anonOpConfig-Suppression-Operation option[value|='SuppressAttribute']").text("Suppress " + cfg['Level'].toLowerCase() + " attribute");
-            restoreDropDownMenuSelect("#anonOpConfig-Suppression-Operation", cfg['Suppression-Operation']);
-            $("#anonOpConfig-Suppression-Operation").selectpicker('refresh');
-        }
-        else if(cfg.Operation === 'Swapping') {
-            restoreDropDownMenu('#anonOpConfig-Swapping-Target', logAttributes, cfg['Swapping-Target']);
-
-            restoreDropDownMenuSelect("#anonOpConfig-Swapping-Operation", cfg['Swapping-Operation']);
-
-            $("#anonOpConfig-Swapping-kClusters").val(cfg['Swapping-kClusters']);
+        switch(cfg.Operation) {
+            case "Addition": additionRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes); break;
+            case 'Condensation': condensationRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes); break;
+            case 'Cryptography': cryptographyRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes); break;
+            case 'Generalization': generalizationRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes); break;
+            case 'Substitution': substitutionRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes); break;
+            case 'Suppression': suppressionRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes); break;
+            case 'Swapping': swappingRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes); break;
+            default: console.log('Unknown operation'); break;
         }
     }
-
     function addOperation() {
         let operation = $('#DDMB_anon_op').val();
         let level = $('#DDMB_anon_level').val();
 
         if(operation != null && operation != "") {
             let customID = generateID();
-            $("#operationsList").append("<a class='list-group-item list-group-item-action' id='anonOp-" + customID + "' data-toggle='list' href='#anonOpConfig-" + operation + "' role='tab' aria-controls='" + operation + "' onclick='setActiveOp(" + customID + ")'>" + operation + "</a>");
+            $("#operationsList").append("<a class='list-group-item list-group-item-action' id='anonOp-" + customID + "' data-toggle='list' href='#anonOpConfig-" + operation + "' role='tab' aria-controls='" + operation + "' onclick='setActiveOp(" + customID + ")'>" + operation + " (" + level + ")</a>");
 
-            appState['Operations'].push({Id: customID, Operation: operation, Level: level});
+            let cfg = {Id: customID, Operation: operation, Level: level};
+            switch(operation){
+                case 'Addition': cfg = Object.assign({}, cfg, additionGetEmptyConfig()); break;
+                case 'Condensation': cfg = Object.assign({}, cfg, condensationGetEmptyConfig()); break;
+                case 'Cryptography': cfg = Object.assign({}, cfg, cryptographyGetEmptyConfig()); break;
+                case 'Generalization': cfg = Object.assign({}, cfg, generalizationGetEmptyConfig()); break;
+                case 'Substitution': cfg = Object.assign({}, cfg, substitutionGetEmptyConfig()); break;
+                case 'Suppression': cfg = Object.assign({}, cfg, suppressionGetEmptyConfig()); break;
+                case 'Swapping': cfg = Object.assign({}, cfg, swappingGetEmptyConfig()); break;
+                default: console.log('Unknown operation!'); break;
+            }
+
+            appState['Operations'].push(cfg);
             setActiveOp(customID);
 
             //Activating the config tab for the new operation
@@ -1058,77 +1107,20 @@
             restoreDropDownMenu('#DDMB_anon_level', ['Case', 'Event']);
         }
     }
-
     function saveAnonOpConfig(opType) {
         let cfg = getFirstMatch(appState['Operations'], (x => x.Id == appState['ActiveId']));
 
-        if(opType === "Addition") {
-            cfg['Addition-Operation'] = $("#anonOpConfig-Addition-Operation").val();
-
-            let checked = $("#anonOpConfig-Addition-ConditionalActive").prop("checked");
-            cfg['Addition-ConditionalActive'] = checked;
-            cfg['Addition-ConditionalAttr'] = (checked ? $("#anonOpConfig-Addition-ConditionalAttr").val() : '');
-            cfg['Addition-ConditionalVal'] = (checked ? $("#anonOpConfig-Addition-ConditionalVal").val() : '');
-            cfg['Addition-MatchOp'] = (checked ? $("#anonOpConfig-Addition-MatchOperation").val() : '');
-
-            cfg['Addition-Events'] = [];
-            $("#anonOpConfig-Addition-EventSelectionList option:selected").each((i, e) => {
-                let idSplit = $(e).prop('id').split("-");
-                let id = idSplit[idSplit.length - 1];
-                cfg['Addition-Events'].push(id);
-            });
-        }
-        else if(opType === "Condensation") {
-            cfg['Condensation-Operation'] = $("#anonOpConfig-Condensation-Operation").val();
-            cfg['Condensation-Target'] = $("#anonOpConfig-Condensation-Target").val();
-            cfg['Condensation-kClusters'] = $("#anonOpConfig-Condensation-kClusters").val();
-
-            cfg['Condensation-DescriptiveAttributes'] = [];
-            $("#anonOpConfig-Condensation-DescriptiveAttributes option:selected").each((i, e) => {
-                cfg['Condensation-DescriptiveAttributes'].push($(e).val());
-            });
-        }
-        else if(opType === "Cryptography") {
-            cfg['Cryptography-Operation'] = $("#anonOpConfig-Cryptography-Operation").val();
-            cfg['Cryptography-Target'] = $("#anonOpConfig-Cryptography-Target").val();
-
-
-            let checked = $("#anonOpConfig-Cryptography-ConditionalActive").prop("checked");
-            cfg['Cryptography-ConditionalActive'] = checked;
-            cfg['Cryptography-ConditionalAttr'] = (checked ? $("#anonOpConfig-Cryptography-ConditionalAttr").val() : '');
-            cfg['Cryptography-ConditionalVal'] = (checked ? $("#anonOpConfig-Cryptography-ConditionalVal").val() : '');
-        }
-        else if(opType === "Generalization") {
-            let id = $('#anonOpConfig-Generalization-TaxTree option:selected').prop('id').split('-').pop();
-            cfg['Generalization-TaxTreeSelectionId'] = id;
-            cfg['Generalization-TaxTreeSelection'] = $('#anonOpConfig-Generalization-TaxTree').val();
-            cfg['Generalization-Target'] = $('#anonOpConfig-Generalization-Target').val();
-            cfg['Generalization-Depth'] = $('#anonOpConfig-Generalization-Depth').val();
-            cfg['Generalization-TimeDepth'] = $('#anonOpConfig-Generalization-TimeDepth').val();
-            cfg['Generalization-Operation'] = $('#anonOpConfig-Generalization-Operation').val();
-        }
-        else if(opType === "Substitution") {
-            cfg['Substitution-SensitiveVal'] = $("#anonOpConfig-Substitution-SensitiveVal").val();
-            cfg['Substitution-Target'] = $("#anonOpConfig-Substitution-Target").val();
-        }
-        else if(opType === "Suppression") {
-            cfg['Suppression-Operation'] = $("#anonOpConfig-Suppression-Operation").val();
-
-            let checked = $("#anonOpConfig-Suppression-ConditionalActive").prop("checked");
-            cfg['Suppression-ConditionalActive'] = checked;
-            cfg['Suppression-ConditionalAttr'] = (checked ? $("#anonOpConfig-Suppression-ConditionalAttr").val() : '');
-            cfg['Suppression-ConditionalVal'] = (checked ? $("#anonOpConfig-Suppression-ConditionalVal").val() : '');
-
-            cfg['Suppression-Target'] = $("#anonOpConfig-Suppression-Target").val();
-            cfg['Suppression-TraceLength'] = $("#anonOpConfig-Suppression-TraceLength").val();
-        }
-        else if(opType === "Swapping") {
-            cfg['Swapping-Operation'] = $("#anonOpConfig-Swapping-Operation").val();
-            cfg['Swapping-Target'] = $("#anonOpConfig-Swapping-Target").val();
-            cfg['Swapping-kClusters'] = $("#anonOpConfig-Swapping-kClusters").val();
+        switch(opType){
+            case "Addition": additionSaveOperationConfig(cfg); break;
+            case 'Condensation': condensationSaveOperationConfig(cfg); break;
+            case 'Cryptography': cryptographySaveOperationConfig(cfg); break;
+            case 'Generalization': generalizationSaveOperationConfig(cfg); break;
+            case 'Substitution': substitutionSaveOperationConfig(cfg); break;
+            case 'Suppression': suppressionSaveOperationConfig(cfg); break;
+            case 'Swapping': swappingSaveOperationConfig(cfg); break;
+            default: console.log('Unknown operation'); break;
         }
     }
-
     function deleteOperation() {
         if(appState['ActiveId'] !== null) {
             appState['Operations'] = removeItemFromArray(appState['Operations'], (x => x.Id == appState['ActiveId']));
@@ -1161,7 +1153,6 @@
             }
         }
     }
-
     function startAnonymization() {
         appState["Action"] = "Process";
 
@@ -1298,6 +1289,67 @@
         $('#anonOpConfig-Addition-NewEvent').selectpicker('refresh');
     }
 
+    function additionRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes) {
+        let eventAttributesWithoutUnique = eventAttributes.filter(x => !uniqueEventAttributes.includes(x));
+
+        restoreDropDownMenu('#anonOpConfig-Addition-ConditionalAttr-Case', caseAttributes, cfg['Addition-ConditionalAttr-Case']);
+        $("#anonOpConfig-Addition-ConditionalActive-Case").prop("checked", cfg['Addition-ConditionalActive-Case']);
+        $("#anonOpConfig-Addition-ConditionalVal-Case").val(cfg['Addition-ConditionalVal-Case']);
+        restoreDropDownMenuSelect('#anonOpConfig-Addition-ConditionalOperator-Case', cfg['Addition-ConditionalOperator-Case']);
+        restoreDropDownMenuSelect('#anonOpConfig-Addition-MatchOperation-Case', cfg['Addition-MatchOp-Case']);
+
+        restoreDropDownMenuOptGroups('#anonOpConfig-Addition-ConditionalAttr-Event', {'Attributes unique to first event': appState['LogAttributes']['FirstEventUniqueAttributes'], 'Event-Attributes': eventAttributesWithoutUnique}, cfg['Addition-ConditionalAttr-Event']);
+        $("#anonOpConfig-Addition-ConditionalActive-Event").prop("checked", cfg['Addition-ConditionalActive-Event']);
+        $("#anonOpConfig-Addition-ConditionalVal-Event").val(cfg['Addition-ConditionalVal-Event']);
+        restoreDropDownMenuSelect('#anonOpConfig-Addition-ConditionalOperator-Event', cfg['Addition-ConditionalOperator-Event']);
+        restoreDropDownMenuSelect('#anonOpConfig-Addition-MatchOperation-Event', cfg['Addition-MatchOp-Event']);
+
+
+        restoreDropDownMenuSelect('#anonOpConfig-Addition-Operation', cfg['Addition-Operation']);
+        restoreDropDownMenuFromDictList('#anonOpConfig-Addition-NewEvent',           appState['AdditionEvents'], 'anonOpConfig-Addition-NewEvents-eventOption-',          'Id', 'Name');
+        restoreDropDownMenuFromDictList('#anonOpConfig-Addition-EventSelectionList', appState['AdditionEvents'], 'anonOpConfig-Addition-EventSelectionList-eventOption-', 'Id', 'Name', appState['AdditionEvents'].map( x => (cfg['Addition-Events'].indexOf(x.Id) >= 0) ? x.Name : undefined ));
+    }
+    function additionSaveOperationConfig(cfg) {
+        cfg['Addition-Operation'] = $("#anonOpConfig-Addition-Operation").val();
+
+        let checked = $("#anonOpConfig-Addition-ConditionalActive-Case").prop("checked");
+        cfg['Addition-ConditionalActive-Case'] = checked;
+        cfg['Addition-ConditionalAttr-Case'] = (checked ? $("#anonOpConfig-Addition-ConditionalAttr-Case").val() : '');
+        cfg['Addition-ConditionalVal-Case'] = (checked ? $("#anonOpConfig-Addition-ConditionalVal-Case").val() : '');
+        cfg['Addition-MatchOp-Case'] = (checked ? $("#anonOpConfig-Addition-MatchOperation-Case").val() : '');
+        cfg['Addition-ConditionalOperator-Case'] = (checked ? $("#anonOpConfig-Addition-ConditionalOperator-Case").val() : '');
+
+        checked = $("#anonOpConfig-Addition-ConditionalActive-Event").prop("checked");
+        cfg['Addition-ConditionalActive-Event'] = checked;
+        cfg['Addition-ConditionalAttr-Event'] = (checked ? $("#anonOpConfig-Addition-ConditionalAttr-Event").val() : '');
+        cfg['Addition-ConditionalVal-Event'] = (checked ? $("#anonOpConfig-Addition-ConditionalVal-Event").val() : '');
+        cfg['Addition-MatchOp-Event'] = (checked ? $("#anonOpConfig-Addition-MatchOperation-Event").val() : '');
+        cfg['Addition-ConditionalOperator-Event'] = (checked ? $("#anonOpConfig-Addition-ConditionalOperator-Event").val() : '');
+
+        cfg['Addition-Events'] = [];
+        $("#anonOpConfig-Addition-EventSelectionList option:selected").each((i, e) => {
+            let idSplit = $(e).prop('id').split("-");
+            let id = idSplit[idSplit.length - 1];
+            cfg['Addition-Events'].push(id);
+        });
+    }
+    function additionGetEmptyConfig() {
+        return {
+            'Addition-ConditionalAttr-Case': '',
+            'Addition-ConditionalActive-Case': '',
+            'Addition-ConditionalVal-Case': '',
+            'Addition-ConditionalOperator-Case': '',
+            'Addition-MatchOp-Case': '',
+            'Addition-ConditionalAttr-Event': '',
+            'Addition-ConditionalActive-Event': '',
+            'Addition-ConditionalVal-Event': '',
+            'Addition-ConditionalOperator-Event': '',
+            'Addition-MatchOp-Event': '',
+            'Addition-Operation':'',
+            'Addition-Events':[]
+        };
+    }
+
     /* AnonOp - Condensation*/
     function condensationOperationChanged() {
         let op = $("#anonOpConfig-Condensation-Operation").val();
@@ -1351,6 +1403,71 @@
         }
     }
 
+    function condensationSaveOperationConfig(cfg){
+        cfg['Condensation-Operation'] = $("#anonOpConfig-Condensation-Operation").val();
+        cfg['Condensation-Target'] = $("#anonOpConfig-Condensation-Target").val();
+        cfg['Condensation-kClusters'] = $("#anonOpConfig-Condensation-kClusters").val();
+
+        if (!Object.keys(cfg).includes('Condensation-AttributeWeights')) {
+            cfg['Condensation-AttributeWeights'] = [];
+        }
+
+        cfg['Condensation-DescriptiveAttributes'] = [];
+        $("#anonOpConfig-Condensation-DescriptiveAttributes option:selected").each((i, e) => {
+            cfg['Condensation-DescriptiveAttributes'].push($(e).val());
+        });
+    }
+    function condensationRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes) {
+        restoreDropDownMenu('#anonOpConfig-Condensation-Target', logAttributes, cfg['Condensation-Target']);
+        restoreDropDownMenuSelect("#anonOpConfig-Condensation-Operation", cfg['Condensation-Operation']);
+        restoreDropDownMenu('#anonOpConfig-Condensation-DescriptiveAttributes', logAttributes, cfg['Condensation-DescriptiveAttributes']);
+
+        $("#anonOpConfig-Condensation-kClusters").val(cfg['Condensation-kClusters']);
+    }
+    function condensationGetEmptyConfig() {
+        return {
+            'Condensation-Target': '',
+            'Condensation-Operation': '',
+            'Condensation-DescriptiveAttributes': [],
+            'Condensation-kClusters': 4
+        };
+    }
+
+    /* AnonOp - Cryptography */
+    function cryptographySaveOperationConfig(cfg){
+        cfg['Cryptography-Operation'] = $("#anonOpConfig-Cryptography-Operation").val();
+        cfg['Cryptography-Target'] = $("#anonOpConfig-Cryptography-Target").val();
+
+
+        let checked = $("#anonOpConfig-Cryptography-ConditionalActive").prop("checked");
+        cfg['Cryptography-ConditionalActive'] = checked;
+        cfg['Cryptography-ConditionalAttr'] = (checked ? $("#anonOpConfig-Cryptography-ConditionalAttr").val() : '');
+        cfg['Cryptography-ConditionalVal'] = (checked ? $("#anonOpConfig-Cryptography-ConditionalVal").val() : '');
+    }
+    function cryptographyRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes) {
+        restoreDropDownMenuOptGroups('#anonOpConfig-Cryptography-ConditionalAttr', {'Case-Attributes': appState['LogAttributes']['CaseAttributes'], 'Attributes unique to first event':appState['LogAttributes']['FirstEventUniqueAttributes'], 'Event-Attributes': eventAttributesWithoutUnique}, cfg['Cryptography-ConditionalAttr']);
+        $("#anonOpConfig-Cryptography-ConditionalVal").val(cfg['Cryptography-ConditionalVal']);
+
+        restoreDropDownMenu('#anonOpConfig-Cryptography-Target', logAttributes, cfg['Cryptography-Target']);
+
+        restoreDropDownMenuSelect("#anonOpConfig-Cryptography-Operation", cfg['Cryptography-Operation']);
+    }
+    function cryptographyGetEmptyConfig() {
+        return {
+            'Cryptography-ConditionalAttr-Case': '',
+            'Cryptography-ConditionalActive-Case': '',
+            'Cryptography-ConditionalVal-Case': '',
+            'Cryptography-ConditionalOperator-Case': '',
+            'Cryptography-MatchOp-Case': '',
+            'Cryptography-ConditionalAttr-Event': '',
+            'Cryptography-ConditionalActive-Event': '',
+            'Cryptography-ConditionalVal-Event': '',
+            'Cryptography-ConditionalOperator-Event': '',
+            'Cryptography-MatchOp-Event': '',
+            'Cryptography-Operation':'',
+            'Cryptography-Target': ''
+        };
+    }
     /* AnonOp - Generalization */
     function generalizationTaxTreeSelectionChanged() {
         let val = $('#anonOpConfig-Generalization-TaxTree').val();
@@ -1454,25 +1571,126 @@
         }
     }
 
+    function generalizationSaveOperationConfig(cfg) {
+        let id = $('#anonOpConfig-Generalization-TaxTree option:selected').prop('id').split('-').pop();
+        cfg['Generalization-TaxTreeSelectionId'] = id;
+        cfg['Generalization-TaxTreeSelection'] = $('#anonOpConfig-Generalization-TaxTree').val();
+        cfg['Generalization-Target'] = $('#anonOpConfig-Generalization-Target').val();
+        cfg['Generalization-Depth'] = $('#anonOpConfig-Generalization-Depth').val();
+        cfg['Generalization-TimeDepth'] = $('#anonOpConfig-Generalization-TimeDepth').val();
+        cfg['Generalization-Operation'] = $('#anonOpConfig-Generalization-Operation').val();
+    }
+    function generalizationRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes){
+        restoreDropDownMenu('#anonOpConfig-Generalization-Target', logAttributes, cfg['Generalization-Target']);
+
+        //Only restore selection, as list should not change
+        restoreDropDownMenuSelect('#anonOpConfig-Generalization-TaxTree', cfg['Generalization-TaxTreeSelection']);
+        restoreDropDownMenuSelect('#anonOpConfig-Generalization-Operation', cfg['Generalization-Operation']);
+        restoreDropDownMenuSelect('#anonOpConfig-Generalization-TimeDepth', cfg['Generalization-TimeDepth']);
+
+        $('#anonOpConfig-Generalization-Depth').val(cfg['Generalization-Depth']);
+    }
+    function generalisationGetEmptyConfig() {
+        return {
+            'Generalization-Target': '',
+            'Generalization-TaxTree': '',
+            'Generalization-Operation': '',
+            'Generalization-TimeDepth': '',
+            'Generalization-Depth': 2
+        };
+    }
+
+    /* AnonOps - Substitution */
+    function substitutionSaveOperationConfig(cfg) {
+        cfg['Substitution-SensitiveVal'] = $("#anonOpConfig-Substitution-SensitiveVal").val();
+        cfg['Substitution-Target'] = $("#anonOpConfig-Substitution-Target").val();
+    }
+    function substitutionRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes) {
+        $("#anonOpConfig-Substitution-SensitiveVal").val(cfg['Substitution-SensitiveVal']);
+
+        restoreDropDownMenu('#anonOpConfig-Substitution-Target', logAttributes, cfg['Substitution-Target']);
+    }
+    function substitutionGetEmptyConfig() {
+        return {
+            'Substitution-SensitiveVal':'',
+            'Substitution-Target': ''
+        };
+    }
+
     /* AnonOp - Suppression */
     function suppressionOperationChanged() {
         let action = $('#anonOpConfig-Suppression-Operation').val();
 
-        $('#anonOpConfig-Suppression-INPUT-Match').addClass('d-none');
         $('#anonOpConfig-Suppression-INPUT-Target').addClass('d-none');
-        $('#anonOpConfig-Suppression-INPUT-TraceLength').addClass('d-none');
 
-        if (action === "Suppress") {
-            $('#anonOpConfig-Suppression-INPUT-Match').removeClass('d-none');
-        }
-        else if (action === "SuppressAttribute") {
-            $('#anonOpConfig-Suppression-INPUT-Match').removeClass('d-none');
+        if (action === "SuppressAttribute") {
             $('#anonOpConfig-Suppression-INPUT-Target').removeClass('d-none');
         }
-        else if (action === "SuppressCaseByTraceLength") {
-            $('#anonOpConfig-Suppression-INPUT-TraceLength').removeClass('d-none');
-        }
     }
+    function suppressionSaveOperationConfig(cfg) {
+        cfg['Suppression-Operation'] = $("#anonOpConfig-Suppression-Operation").val();
+
+        let checked = $("#anonOpConfig-Suppression-ConditionalActive").prop("checked");
+        cfg['Suppression-ConditionalActive'] = checked;
+        cfg['Suppression-ConditionalAttr'] = (checked ? $("#anonOpConfig-Suppression-ConditionalAttr").val() : '');
+        cfg['Suppression-ConditionalVal'] = (checked ? $("#anonOpConfig-Suppression-ConditionalVal").val() : '');
+
+        cfg['Suppression-Target'] = $("#anonOpConfig-Suppression-Target").val();
+        cfg['Suppression-TraceLength'] = $("#anonOpConfig-Suppression-TraceLength").val();
+    }
+    function suppressionRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes){
+        restoreDropDownMenuOptGroups('#anonOpConfig-Suppression-ConditionalAttr', {'Case-Attributes': appState['LogAttributes']['CaseAttributes'], 'Attributes unique to first event':appState['LogAttributes']['FirstEventUniqueAttributes'], 'Event-Attributes': eventAttributesWithoutUnique}, cfg['Suppression-ConditionalAttr']);
+        restoreDropDownMenu('#anonOpConfig-Suppression-Target', logAttributes, cfg['Suppression-Target']);
+
+        $("#anonOpConfig-Suppression-ConditionalActive").prop("checked", cfg['Suppression-ConditionalActive']);
+        $("#anonOpConfig-Suppression-ConditionalVal").val(cfg['Suppression-ConditionalVal']);
+        $("#anonOpConfig-Suppression-TraceLength").val(cfg['Suppression-TraceLength']);
+
+        //Restore DropDown based on the seletec level
+        $("#anonOpConfig-Suppression-Operation option[value|='Suppress']").text("Suppress " + cfg['Level'].toLowerCase() + " entirely");
+        $("#anonOpConfig-Suppression-Operation option[value|='SuppressAttribute']").text("Suppress " + cfg['Level'].toLowerCase() + " attribute");
+        restoreDropDownMenuSelect("#anonOpConfig-Suppression-Operation", cfg['Suppression-Operation']);
+        $("#anonOpConfig-Suppression-Operation").selectpicker('refresh');
+    }
+    function suppressionGetEmptyConfig() {
+        return {
+            'Suppression-ConditionalAttr-Case': '',
+            'Suppression-ConditionalActive-Case': '',
+            'Suppression-ConditionalVal-Case': '',
+            'Suppression-ConditionalOperator-Case': '',
+            'Suppression-MatchOp-Case': '',
+            'Suppression-ConditionalAttr-Event': '',
+            'Suppression-ConditionalActive-Event': '',
+            'Suppression-ConditionalVal-Event': '',
+            'Suppression-ConditionalOperator-Event': '',
+            'Suppression-MatchOp-Event': '',
+
+            'Suppression-Target':'',
+            'Suppression-Operation':[]
+        };
+    }
+
+    /* AnonOps - Swapping */
+    function swappingSaveOperationConfig(cfg) {
+        cfg['Swapping-Operation'] = $("#anonOpConfig-Swapping-Operation").val();
+        cfg['Swapping-Target'] = $("#anonOpConfig-Swapping-Target").val();
+        cfg['Swapping-kClusters'] = $("#anonOpConfig-Swapping-kClusters").val();
+    }
+    function swappingRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes){
+        restoreDropDownMenu('#anonOpConfig-Swapping-Target', logAttributes, cfg['Swapping-Target']);
+
+        restoreDropDownMenuSelect("#anonOpConfig-Swapping-Operation", cfg['Swapping-Operation']);
+
+        $("#anonOpConfig-Swapping-kClusters").val(cfg['Swapping-kClusters']);
+    }
+    function swappingGetEmptyConfig() {
+        return {
+            'Swapping-Target': '',
+            'Swapping-Operation': '',
+            'Swapping-kClusters': 1
+        };
+    }
+
 
     /* TaxonomyTree */
     function taxonomyTreeCreateNode() {
@@ -1557,6 +1775,17 @@
             return undefined;
         }
     }
+    function checkboxToggleEnable(checkbox, inputList) {
+        inputList.forEach(id => {
+            $(id).prop( "disabled", !checkbox.checked);
+            $(id).prop( "required",  checkbox.checked);
+
+            //Refresh Bootstrap-Select DropDowns
+            if( $(id).prop("tagName") == "SELECT") {
+                $(id).selectpicker('refresh');
+            }
+        });
+    }
 
     /* Handling Bootstrap DropDowns */
     function restoreDropDownMenu(id, optionList, selectedElement)
@@ -1582,12 +1811,14 @@
 
         //Create new entries and select one
         Object.entries(optgroupDict).forEach(([key, value]) => {
-            let group = '<optgroup label="' + key + '">';
-            for(let i = 0; i < value.length; i++) {
-                group += '<option value="' + value[i] + '">' + value[i] + '</option>';
+            if(value.length > 0) {
+                let group = '<optgroup label="' + key + '">';
+                for(let i = 0; i < value.length; i++) {
+                    group += '<option value="' + value[i] + '">' + value[i] + '</option>';
+                }
+                group += '</optgroup>';
+                $(id).append(group);
             }
-            group += '</optgroup>';
-            $(id).append(group);
         });
 
         //Update drop down
