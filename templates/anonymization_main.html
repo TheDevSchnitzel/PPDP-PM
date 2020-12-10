@@ -286,7 +286,7 @@
                     <form action="javascript:saveAnonOpConfig('Condensation')">
                         <div class="input-group mb-3">
                             <div class="input-group-prepend">
-                                <span class="input-group-text input-group-Configure">Clusterizer:</span>
+                                <span class="input-group-text input-group-Configure">Clustering Technique:</span>
                             </div>
                             <select class="selectpicker" id="anonOpConfig-Condensation-Operation" onchange="condensationOperationChanged();">
                                 <option selected>kMeans</option>
@@ -298,7 +298,7 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text input-group-Configure">Num. of clusters:</span>
                             </div>
-                            <input type="number" class="form-control" placeholder="kClusters" min="2" value="2" id="anonOpConfig-Condensation-kClusters"/>
+                            <input type="number" class="form-control" style="max-width: 13.8em;" placeholder="kClusters" min="2" value="2" id="anonOpConfig-Condensation-kClusters"/>
                         </div>
                         <div class="input-group mb-3">
                             <div class="input-group-prepend">
@@ -306,7 +306,7 @@
                                     Target Attribute &nbsp;
                                     <span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
                             </div>
-                            <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Condensation-Target"></select>
+                            <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Condensation-Target" onchange="condensationTargetChanged();"></select>
                         </div>
                         <div class="input-group mb-3 d-none" id="anonOpConfig-Condensation-INPUT-DescriptiveAttributes">
                             <div class="input-group-prepend">
@@ -695,7 +695,7 @@
                     <form class="needs-validation" action="javascript:saveAnonOpConfig('Swapping')" novalidate>
                         <div class="input-group mb-3">
                             <div class="input-group-prepend">
-                                <span class="input-group-text input-group-Configure">Clusterizer:</span>
+                                <span class="input-group-text input-group-Configure">Clustering Technique:</span>
                             </div>
                             <select class="selectpicker" id="anonOpConfig-Swapping-Operation" required>
                                 <option selected>kMeans</option>
@@ -705,7 +705,7 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text input-group-Configure">k for kMeans:</span>
                             </div>
-                            <input type="number" class="form-control" placeholder="kClusters" min="2" value="2" id="anonOpConfig-Swapping-kClusters"/>
+                            <input type="number" class="form-control" style="max-width: 13.8em;" placeholder="kClusters" min="2" value="2" id="anonOpConfig-Swapping-kClusters"/>
                         </div>
                         <div class="input-group mb-3">
                             <div class="input-group-prepend">
@@ -713,7 +713,7 @@
                                     Target Attribute &nbsp;
                                     <span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
                             </div>
-                            <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Swapping-Target" required></select>
+                            <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Swapping-Target" onchange="swappingTargetChanged();" required></select>
                         </div>
                         <div class="row">
                             <div class="col-auto mr-auto">
@@ -1363,6 +1363,21 @@
             cfg['Condensation-AttributeWeights'][name] = parseFloat(input.val()) || 0;
         }
     }
+    function condensationTargetChanged() {
+        let val = $('#anonOpConfig-Condensation-Target').val();
+
+        $("#anonOpConfig-Condensation-DescriptiveAttributes option").each((i, e) => {
+            //Remove d-none from previous sets (if the target attribute has changed)
+            $(e).removeClass("d-none");
+
+            if($(e).val() == val) {
+                $(e).prop("selected", false);
+                $(e).addClass("d-none");
+            }
+        });
+
+        $('#anonOpConfig-Condensation-DescriptiveAttributes').selectpicker('refresh');
+    }
 
     function condensationSaveOperationConfig(cfg){
         cfg['Condensation-Operation'] = $("#anonOpConfig-Condensation-Operation").val();
@@ -1379,9 +1394,23 @@
         });
     }
     function condensationRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes) {
-        restoreDropDownMenu('#anonOpConfig-Condensation-Target', logAttributes, cfg['Condensation-Target']);
+        let nonUniqueEventAttributes = eventAttributes.filter(x=> !uniqueEventAttributes.includes(x));
+
+        if(cfg.Level == "Case"){
+            restoreDropDownMenu('#anonOpConfig-Condensation-Target', caseAttributes, cfg['Condensation-Target']);
+
+            caseAttributesWithoutTarget = caseAttributes.filter(x => x != cfg['Condensation-Target']);
+            restoreDropDownMenu('#anonOpConfig-Condensation-DescriptiveAttributes', caseAttributesWithoutTarget, cfg['Condensation-DescriptiveAttributes']);
+        }
+        else if(cfg.Level == "Event"){
+            restoreDropDownMenuOptGroups('#anonOpConfig-Condensation-Target', {'Attributes unique to first event': uniqueEventAttributes, 'Event-Attributes': nonUniqueEventAttributes}, cfg['Condensation-Target']);
+
+            uniqueWithoutTarget = uniqueEventAttributes.filter(x => x != cfg['Condensation-Target']);
+            nonUniqueWithoutTarget = nonUniqueEventAttributes.filter(x => x != cfg['Condensation-Target']);
+            restoreDropDownMenuOptGroups('#anonOpConfig-Condensation-DescriptiveAttributes', {'Attributes unique to first event': uniqueWithoutTarget, 'Event-Attributes': nonUniqueWithoutTarget}, cfg['Condensation-DescriptiveAttributes']);
+        }
+
         restoreDropDownMenuSelect("#anonOpConfig-Condensation-Operation", cfg['Condensation-Operation']);
-        restoreDropDownMenu('#anonOpConfig-Condensation-DescriptiveAttributes', logAttributes, cfg['Condensation-DescriptiveAttributes']);
 
         $("#anonOpConfig-Condensation-kClusters").val(cfg['Condensation-kClusters']);
     }
@@ -1678,13 +1707,46 @@
     }
 
     /* AnonOps - Swapping */
+    function swappingTargetChanged() {
+        let val = $('#anonOpConfig-Swapping-Target').val();
+
+        $("#anonOpConfig-Swapping-DescriptiveAttributes option").each((i, e) => {
+            //Remove d-none from previous sets (if the target attribute has changed)
+            $(e).removeClass("d-none");
+
+            if($(e).val() == val) {
+                $(e).prop("selected", false);
+                $(e).addClass("d-none");
+            }
+        });
+
+        $('#anonOpConfig-Swapping-DescriptiveAttributes').selectpicker('refresh');
+    }
     function swappingSaveOperationConfig(cfg) {
         cfg['Swapping-Operation'] = $("#anonOpConfig-Swapping-Operation").val();
         cfg['Swapping-Target'] = $("#anonOpConfig-Swapping-Target").val();
         cfg['Swapping-kClusters'] = $("#anonOpConfig-Swapping-kClusters").val();
     }
     function swappingRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes){
-        restoreDropDownMenu('#anonOpConfig-Swapping-Target', logAttributes, cfg['Swapping-Target']);
+        let nonUniqueEventAttributes = eventAttributes.filter(x=> !uniqueEventAttributes.includes(x));
+
+        if(cfg.Level == "Case"){
+            restoreDropDownMenu('#anonOpConfig-Swapping-Target', caseAttributes, cfg['Swapping-Target']);
+
+            caseAttributesWithoutTarget = caseAttributes.filter(x => x != cfg['Swapping-Target']);
+            restoreDropDownMenu('#anonOpConfig-Swapping-DescriptiveAttributes', caseAttributesWithoutTarget, cfg['Swapping-DescriptiveAttributes']);
+        }
+        else if(cfg.Level == "Event"){
+            restoreDropDownMenuOptGroups('#anonOpConfig-Swapping-Target', {'Attributes unique to first event': uniqueEventAttributes, 'Event-Attributes': nonUniqueEventAttributes}, cfg['Swapping-Target']);
+
+            uniqueWithoutTarget = uniqueEventAttributes.filter(x => x != cfg['Swapping-Target']);
+            nonUniqueWithoutTarget = nonUniqueEventAttributes.filter(x => x != cfg['Swapping-Target']);
+            restoreDropDownMenuOptGroups('#anonOpConfig-Swapping-DescriptiveAttributes', {'Attributes unique to first event': uniqueWithoutTarget, 'Event-Attributes': nonUniqueWithoutTarget}, cfg['Swapping-DescriptiveAttributes']);
+        }
+
+
+
+
 
         restoreDropDownMenuSelect("#anonOpConfig-Swapping-Operation", cfg['Swapping-Operation']);
 
