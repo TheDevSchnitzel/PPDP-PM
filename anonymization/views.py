@@ -266,8 +266,13 @@ def performSubstitution(log, op):
 
     s = Substitution()
     subTarget = op['Substitution-Target']
-    subSensitiveVal = op['Substitution-SensitiveVal']
-    log = s.SubstituteEventAttributeValue(log, subTarget, subSensitiveVal)
+    subSensitiveVal = op['Substitution-SensitiveVal'].split(',')
+    subSubstitutionVal = op['Substitution-SubstituteVal'].split(',')
+
+    if(level == "Event"):
+        log = s.SubstituteEventAttributeValue(log, subTarget, subSensitiveVal, subSubstitutionVal)
+    elif(level == "Case"):
+        log = s.SubstituteCaseAttributeValue(log, subTarget, subSensitiveVal, subSubstitutionVal)
     return log
 
 
@@ -306,6 +311,8 @@ def performSwapping(log, op):
         elif(level == "Event"):
             log = s.SwapEventAttributeValuesBykMeanCluster(log, swapTarget, k)
 
+# Building both conditional filters (case and event) for thegiven operation
+
 
 def buildConditional(operation, cfg):
     isConditionalActive = cfg[operation + '-ConditionalActive-Case']
@@ -324,6 +331,8 @@ def buildConditional(operation, cfg):
     condCase = getConditionalLambda(condModCase, condAttCase, condValCase, condOprCase)
     condEvent = getConditionalLambda(condModEvent, condAttEvent, condValEvent, condOprEvent)
     return (lambda c, e: condCase(c, e) and condEvent(c, e))
+
+# Constructing the lambdas for the conditional filters and generating operator lambdas
 
 
 def getConditionalLambda(matchOperation, attribute, value, operator):

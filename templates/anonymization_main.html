@@ -610,9 +610,17 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text input-group-Configure">
                                     Sensitive Attribute Value&nbsp;
-                                    <span data-toggle="tooltip" title="Value of the target attribute which will be substituted">&#x1F6C8;</span>:</span>
+                                    <span data-toggle="tooltip" title="Value(s) of the target attribute which will be substituted. Use comma seperation for more than one entry.">&#x1F6C8;</span>:</span>
                             </div>
                             <input type="text" class="form-control" placeholder="Value" id="anonOpConfig-Substitution-SensitiveVal"/>
+                        </div>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">
+                                    Substitute Values&nbsp;
+                                    <span data-toggle="tooltip" title="Value(s) which will be used to substitute the sensitive attribute value(s). If left empty a random selection is made from all available non-sensitive attribute values. Use comma seperation for more than one entry.">&#x1F6C8;</span>:</span>
+                            </div>
+                            <input type="text" class="form-control" placeholder="Value" id="anonOpConfig-Substitution-SubstituteVal"/>
                         </div>
                         <div class="row">
                             <div class="col-auto mr-auto">
@@ -1100,10 +1108,7 @@
         if(["Addition"].includes(operation)) {
             restoreDropDownMenu('#DDMB_anon_level', ['Case'], 'Case');
         }
-        else if(["Substitution"].includes(operation)) {
-            restoreDropDownMenu('#DDMB_anon_level', ['Event'], 'Event');
-        }
-        else if(["Condensation", "Cryptography", "Generalization", "Suppression", "Swapping"].includes(operation)) {
+        else if(["Condensation", "Cryptography", "Generalization", "Suppression", "Substitution", "Swapping"].includes(operation)) {
             restoreDropDownMenu('#DDMB_anon_level', ['Case', 'Event']);
         }
     }
@@ -1602,17 +1607,20 @@
 
     /* AnonOps - Substitution */
     function substitutionSaveOperationConfig(cfg) {
-        cfg['Substitution-SensitiveVal'] = $("#anonOpConfig-Substitution-SensitiveVal").val();
+        cfg['Substitution-SensitiveVal'] = $("#anonOpConfig-Substitution-SensitiveVal").val()
+        cfg['Substitution-SubstituteVal'] = $("#anonOpConfig-Substitution-SubstituteVal").val();
         cfg['Substitution-Target'] = $("#anonOpConfig-Substitution-Target").val();
     }
     function substitutionRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes) {
         $("#anonOpConfig-Substitution-SensitiveVal").val(cfg['Substitution-SensitiveVal']);
+        $("#anonOpConfig-Substitution-SubstituteVal").val(cfg['Substitution-SubstituteVal']);
 
         restoreDropDownMenu('#anonOpConfig-Substitution-Target', logAttributes, cfg['Substitution-Target']);
     }
     function substitutionGetEmptyConfig() {
         return {
-            'Substitution-SensitiveVal':'',
+            'Substitution-SensitiveVal': '',
+            'Substitution-SubstituteVal': '',
             'Substitution-Target': ''
         };
     }
