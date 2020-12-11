@@ -198,17 +198,17 @@ def performCondensation(log, op):
 
     if(level == "Event"):
         if(condenseOp == 'kMeans'):
-            log = c.CondenseEventAttributeBykMeanClusterMode(log, condenseTarget, k)
+            log = c.CondenseEventAttributeBykMeanClusterUsingMode(log, condenseTarget, descriptiveAttributes, k)
         elif(condenseOp == 'kModes'):
-            log = c.CondenseEventAttributeBykModeCluster(log, condenseTarget, descriptiveAttributes, k)
-        elif(condenseOp == 'Euclidian Distance'):
+            log = c.CondenseEventAttributeBykModesClusterUsingMode(log, condenseTarget, descriptiveAttributes, k)
+        elif(condenseOp == 'kModesEuclid'):
             log = c.CondenseEventAttributeByEuclidianDistance(log, condenseTarget, descriptiveAttributes, weights, k)
     elif(level == "Case"):
         if(condenseOp == 'kMeans'):
-            log = c.CondenseCaseAttributeBykMeanClusterMode(log, condenseTarget, k)
+            log = c.CondenseCaseAttributeBykMeanClusterUsingMode(log, condenseTarget, descriptiveAttributes, k)
         elif(condenseOp == 'kModes'):
-            log = c.CondenseCaseAttributeBykModeCluster(log, condenseTarget, descriptiveAttributes, k)
-        elif(condenseOp == 'Euclidian Distance'):
+            log = c.CondenseCaseAttributeBykModesClusterUsingMode(log, condenseTarget, descriptiveAttributes, k)
+        elif(condenseOp == 'kModesEuclid'):
             log = c.CondenseCaseAttributeByEuclidianDistance(log, condenseTarget, descriptiveAttributes, weights, k)
     return log
 
@@ -219,8 +219,6 @@ def performCryptography(log, op):
     c = Cryptography()
     cryptoOp = op['Cryptography-Operation']
     cryptTarget = op['Cryptography-Target']
-    cryptConditionalAttr = op['Cryptography-ConditionalAttr']
-    cryptConditionalVal = op['Cryptography-ConditionalVal']
     conditional = buildConditional('Cryptography', op)
 
     if(cryptoOp == "Hash"):
@@ -266,8 +264,8 @@ def performSubstitution(log, op):
 
     s = Substitution()
     subTarget = op['Substitution-Target']
-    subSensitiveVal = op['Substitution-SensitiveVal'].split(',')
-    subSubstitutionVal = op['Substitution-SubstituteVal'].split(',')
+    subSensitiveVal = [x.strip() for x in op['Substitution-SensitiveVal'].split(',')]
+    subSubstitutionVal = [x.strip() for x in op['Substitution-SubstituteVal'].split(',')]
 
     if(level == "Event"):
         log = s.SubstituteEventAttributeValue(log, subTarget, subSensitiveVal, subSubstitutionVal)
@@ -294,7 +292,7 @@ def performSuppression(log, op):
             log = s.SuppressCase(log, conditional)
         elif(suppressionOP == "SuppressAttribute"):
             log = s.SuppressCaseAttribute(log, suppressionTarget, conditional)
-    return level
+    return log
 
 
 def performSwapping(log, op):
@@ -303,14 +301,25 @@ def performSwapping(log, op):
     s = Swapping()
     swapOp = op['Swapping-Operation']
     swapTarget = op['Swapping-Target']
+    descriptiveAttributes = op['Swapping-DescriptiveAttributes']
+    weights = op['Swapping-AttributeWeights']
     k = int(op['Swapping-kClusters'])
 
-    if(swapOp == "kMeans"):
-        if(level == "Case"):
-            log = s.SwapCaseAttributeValuesBykMeanCluster(log, swapTarget, k)
-        elif(level == "Event"):
-            log = s.SwapEventAttributeValuesBykMeanCluster(log, swapTarget, k)
-
+    if(level == "Event"):
+        if(swapOp == 'kMeans'):
+            log = s.SwapEventAttributeValuesBykMeanCluster(log, swapTarget, descriptiveAttributes, k)
+        elif(swapOp == 'kModes'):
+            log = s.SwapEventAttributeBykModesClusterUsingMode(log, swapTarget, descriptiveAttributes, k)
+        elif(swapOp == 'kModesEuclid'):
+            log = s.SwapEventAttributeByEuclidianDistance(log, swapTarget, descriptiveAttributes, weights, k)
+    elif(level == "Case"):
+        if(swapOp == 'kMeans'):
+            log = s.SwapCaseAttributeValuesBykMeanCluster(log, swapTarget, descriptiveAttributes, k)
+        elif(swapOp == 'kModes'):
+            log = s.SwapCaseAttributeBykModesClusterUsingMode(log, swapTarget, descriptiveAttributes, k)
+        elif(swapOp == 'kModesEuclid'):
+            log = s.SwapCaseAttributeByEuclidianDistance(log, swapTarget, descriptiveAttributes, weights, k)
+    return log
 # Building both conditional filters (case and event) for thegiven operation
 
 
@@ -352,9 +361,9 @@ def getConditionalLambda(matchOperation, attribute, value, operator):
     elif(operator == "!="):
         op = (lambda l, r: str(l) != str(r))
     elif(operator == "in"):
-        op = (lambda l, r: l in r.split(','))
+        op = (lambda l, r: l in [x.strip() for x in r.split(',')])
     elif(operator == "not in"):
-        op = (lambda l, r: l not in r.split(','))
+        op = (lambda l, r: l not in [x.strip() for x in r.split(',')])
 
     if(matchOperation == "matchCase"):
         return (lambda c, e: attribute in c.attributes.keys() and op(c.attributes[attribute], value))

@@ -286,12 +286,14 @@
                     <form action="javascript:saveAnonOpConfig('Condensation')">
                         <div class="input-group mb-3">
                             <div class="input-group-prepend">
-                                <span class="input-group-text input-group-Configure">Clustering Technique:</span>
+                                <span class="input-group-text input-group-Configure">
+                                    Clustering Technique &nbsp;
+                                    <span data-toggle="tooltip" title="Warning: kMeans based approaches will perform OneHot-Encoding on categorical data!">&#x1F6C8;</span>:</span>
                             </div>
                             <select class="selectpicker" id="anonOpConfig-Condensation-Operation" onchange="condensationOperationChanged();">
                                 <option selected>kMeans</option>
                                 <option>kModes</option>
-                                <option>Euclidian Distance</option>
+                                <option value="kModesEuclid">kModes with Euclidian Distance</option>
                             </select>
                         </div>
                         <div class="input-group mb-3">
@@ -308,12 +310,13 @@
                             </div>
                             <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Condensation-Target" onchange="condensationTargetChanged();"></select>
                         </div>
-                        <div class="input-group mb-3 d-none" id="anonOpConfig-Condensation-INPUT-DescriptiveAttributes">
+                        <div class="input-group mb-3" id="anonOpConfig-Condensation-INPUT-DescriptiveAttributes">
                             <div class="input-group-prepend">
                                 <span class="input-group-text input-group-Configure">Descriptive Attributes:</span>
                             </div>
                             <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Condensation-DescriptiveAttributes" multiple></select>
-                            <button type="button" class="btn btn-primary" id="anonOpConfig-Condensation-AttributeWeights" onclick="condensationLoadAttributeWeights();" data-toggle="modal" data-target="#anonOpConfig-Condensation-AttributeWeights-Modal" style="margin: 0px 0px 0px 10px;"> Open Weight Designer</button>
+                            <br/>
+                            <button type="button" class="btn btn-primary d-none" id="anonOpConfig-Condensation-AttributeWeights" onclick="condensationLoadAttributeWeights();" data-toggle="modal" data-target="#anonOpConfig-Condensation-AttributeWeights-Modal" style="margin: 0px 0px 0px 10px;"> Open Weight Designer</button>
                         </div>
                         <!-- Modal -->
                         <div class="modal fade" id="anonOpConfig-Condensation-AttributeWeights-Modal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -498,7 +501,7 @@
                                     Generalization-Depth &nbsp;
                                     <span data-toggle="tooltip" title="Leaf-Node has depth 0 - Each step up in the tree is a +1">&#x1F6C8;</span>:</span>
                             </div>
-                            <input type="number" class="form-control" placeholder="Depth" min="0" value="2" id="anonOpConfig-Generalization-Depth"/>
+                            <input type="number" class="form-control" style="max-width:13.8em" placeholder="Depth" min="0" value="2" id="anonOpConfig-Generalization-Depth"/>
                         </div>
                         <div class="input-group mb-3 d-none" id="anonOpConfig-Generalization-INPUT-TimeDepth">
                             <div class="input-group-prepend">
@@ -584,7 +587,7 @@
                         <div class="input-group mb-3">
                             <div class="input-group-prepend">
                                 <span class="input-group-text input-group-Configure">
-                                    Sensitive Attribute Value&nbsp;
+                                    Sensitive Attr. Value&nbsp;
                                     <span data-toggle="tooltip" title="Value(s) of the target attribute which will be substituted. Use comma seperation for more than one entry.">&#x1F6C8;</span>:</span>
                             </div>
                             <input type="text" class="form-control" placeholder="Value" id="anonOpConfig-Substitution-SensitiveVal"/>
@@ -697,8 +700,10 @@
                             <div class="input-group-prepend">
                                 <span class="input-group-text input-group-Configure">Clustering Technique:</span>
                             </div>
-                            <select class="selectpicker" id="anonOpConfig-Swapping-Operation" required>
+                            <select class="selectpicker" id="anonOpConfig-Swapping-Operation" required onchange="swappingOperationChanged();">
                                 <option selected>kMeans</option>
+                                <option>kModes</option>
+                                <option value="kModesEuclid">kModes with Euclidian Distance</option>
                             </select>
                         </div>
                         <div class="input-group mb-3">
@@ -714,6 +719,52 @@
                                     <span data-toggle="tooltip" title="Attribute that will be altered by applying the configured operation">&#x1F6C8;</span>:</span>
                             </div>
                             <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Swapping-Target" onchange="swappingTargetChanged();" required></select>
+                        </div>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">Descriptive Attributes:</span>
+                            </div>
+                            <select class="selectpicker" title="Choose Attribute..." id="anonOpConfig-Swapping-DescriptiveAttributes" multiple></select>
+                            <br/>
+                            <button type="button" class="btn btn-primary d-none" id="anonOpConfig-Swapping-AttributeWeights" onclick="swappingLoadAttributeWeights();" data-toggle="modal" data-target="#anonOpConfig-Swapping-AttributeWeights-Modal" style="margin: 0px 0px 0px 10px;"> Open Weight Designer</button>
+                        </div>
+                        <!-- Modal -->
+                        <div class="modal fade" id="anonOpConfig-Swapping-AttributeWeights-Modal" tabindex="-1" role="dialog" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered" role="document">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="anonOpConfig-Swapping-AttributeWeights-ModalLongTitle">Weight Designer</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="table-responsive">
+                                            <table id="anonOpConfig-Swapping-AttributeWeights-Modal-Table" class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Attribute</th>
+                                                        <th>Weight</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <div class="container">
+                                            <div class="row">
+                                                <div class="col-auto mr-auto">
+                                                    <button class="btn btn-success mb-2" type="button" onclick="swappingSaveAttributeWeights();" data-dismiss="modal">Save</button>
+                                                </div>
+                                                <div class="col-auto">
+                                                    <button class="btn btn-danger mb-2" type="button" data-dismiss="modal">Close</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         <div class="row">
                             <div class="col-auto mr-auto">
@@ -1315,15 +1366,9 @@
     function condensationOperationChanged() {
         let op = $("#anonOpConfig-Condensation-Operation").val();
 
-        $("#anonOpConfig-Condensation-INPUT-DescriptiveAttributes").addClass("d-none");
         $("#anonOpConfig-Condensation-AttributeWeights").addClass("d-none");
 
-        if(op === "kMeans") {}
-        else if(op === "kModes") {
-            $("#anonOpConfig-Condensation-INPUT-DescriptiveAttributes").removeClass("d-none");
-        }
-        else if(op === "Euclidian Distance") {
-            $("#anonOpConfig-Condensation-INPUT-DescriptiveAttributes").removeClass("d-none");
+        if(op === "kModesEuclid") {
             $("#anonOpConfig-Condensation-AttributeWeights").removeClass("d-none");
         }
     }
@@ -1439,11 +1484,19 @@
         cfg['Cryptography-Operation'] = $("#anonOpConfig-Cryptography-Operation").val();
         cfg['Cryptography-Target'] = $("#anonOpConfig-Cryptography-Target").val();
 
+        let checked = $("#anonOpConfig-Cryptography-ConditionalActive-Case").prop("checked");
+        cfg['Cryptography-ConditionalActive-Case'] = checked;
+        cfg['Cryptography-ConditionalAttr-Case'] = (checked ? $("#anonOpConfig-Cryptography-ConditionalAttr-Case").val() : '');
+        cfg['Cryptography-ConditionalVal-Case'] = (checked ? $("#anonOpConfig-Cryptography-ConditionalVal-Case").val() : '');
+        cfg['Cryptography-ConditionalOperator-Case'] = (checked ? $("#anonOpConfig-Cryptography-ConditionalOperator-Case").val() : '');
+        cfg['Cryptography-MatchOp-Case'] = (checked ? $("#anonOpConfig-Cryptography-MatchOperation-Case").val() : '');
 
-        let checked = $("#anonOpConfig-Cryptography-ConditionalActive").prop("checked");
-        cfg['Cryptography-ConditionalActive'] = checked;
-        cfg['Cryptography-ConditionalAttr'] = (checked ? $("#anonOpConfig-Cryptography-ConditionalAttr").val() : '');
-        cfg['Cryptography-ConditionalVal'] = (checked ? $("#anonOpConfig-Cryptography-ConditionalVal").val() : '');
+        checked = $("#anonOpConfig-Cryptography-ConditionalActive-Event").prop("checked");
+        cfg['Cryptography-ConditionalActive-Event'] = checked;
+        cfg['Cryptography-ConditionalAttr-Event'] = (checked ? $("#anonOpConfig-Cryptography-ConditionalAttr-Event").val() : '');
+        cfg['Cryptography-ConditionalVal-Event'] = (checked ? $("#anonOpConfig-Cryptography-ConditionalVal-Event").val() : '');
+        cfg['Cryptography-ConditionalOperator-Event'] = (checked ? $("#anonOpConfig-Cryptography-ConditionalOperator-Event").val() : '');
+        cfg['Cryptography-MatchOp-Event'] = (checked ? $("#anonOpConfig-Cryptography-MatchOperation-Event").val() : '');
     }
     function cryptographyRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes) {
         let nonUniqueEventAttributes = eventAttributes.filter(x=> !uniqueEventAttributes.includes(x));
@@ -1601,7 +1654,14 @@
         cfg['Generalization-Operation'] = $('#anonOpConfig-Generalization-Operation').val();
     }
     function generalizationRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes){
-        restoreDropDownMenu('#anonOpConfig-Generalization-Target', logAttributes, cfg['Generalization-Target']);
+        let nonUniqueEventAttributes = eventAttributes.filter(x=> !uniqueEventAttributes.includes(x));
+
+        if(cfg.Level == "Case"){
+            restoreDropDownMenu('#anonOpConfig-Generalization-Target', caseAttributes, cfg['Generalization-Target']);
+        }
+        else if(cfg.Level == "Event"){
+            restoreDropDownMenuOptGroups('#anonOpConfig-Generalization-Target', {'Attributes unique to first event': uniqueEventAttributes, 'Event-Attributes': nonUniqueEventAttributes}, cfg['Generalization-Target']);
+        }
 
         //Only restore selection, as list should not change
         restoreDropDownMenuSelect('#anonOpConfig-Generalization-TaxTree', cfg['Generalization-TaxTreeSelection']);
@@ -1610,7 +1670,7 @@
 
         $('#anonOpConfig-Generalization-Depth').val(cfg['Generalization-Depth']);
     }
-    function generalisationGetEmptyConfig() {
+    function generalizationGetEmptyConfig() {
         return {
             'Generalization-Target': '',
             'Generalization-TaxTree': '',
@@ -1630,7 +1690,16 @@
         $("#anonOpConfig-Substitution-SensitiveVal").val(cfg['Substitution-SensitiveVal']);
         $("#anonOpConfig-Substitution-SubstituteVal").val(cfg['Substitution-SubstituteVal']);
 
-        restoreDropDownMenu('#anonOpConfig-Substitution-Target', logAttributes, cfg['Substitution-Target']);
+        let nonUniqueEventAttributes = eventAttributes.filter(x=> !uniqueEventAttributes.includes(x));
+
+        if(cfg.Level == "Case"){
+            $('#anonOpConfig-Substitution-INPUT-Conditional-Event').addClass('d-none');
+            restoreDropDownMenu('#anonOpConfig-Substitution-Target', caseAttributes, cfg['Substitution-Target']);
+        }
+        else if(cfg.Level == "Event"){
+            $('#anonOpConfig-Substitution-INPUT-Conditional-Event').removeClass('d-none');
+            restoreDropDownMenuOptGroups('#anonOpConfig-Substitution-Target', {'Attributes unique to first event': uniqueEventAttributes, 'Event-Attributes': nonUniqueEventAttributes}, cfg['Substitution-Target']);
+        }
     }
     function substitutionGetEmptyConfig() {
         return {
@@ -1718,6 +1787,15 @@
     }
 
     /* AnonOps - Swapping */
+    function swappingOperationChanged() {
+        let op = $("#anonOpConfig-Swapping-Operation").val();
+
+        $("#anonOpConfig-Swapping-AttributeWeights").addClass("d-none");
+
+        if(op === "kModesEuclid") {
+            $("#anonOpConfig-Swapping-AttributeWeights").removeClass("d-none");
+        }
+    }
     function swappingTargetChanged() {
         let val = $('#anonOpConfig-Swapping-Target').val();
 
@@ -1733,10 +1811,66 @@
 
         $('#anonOpConfig-Swapping-DescriptiveAttributes').selectpicker('refresh');
     }
+    function swappingLoadAttributeWeights() {
+        let cfg = getFirstMatch(appState['Operations'], (x => x.Id == appState['ActiveId']));
+
+        let attributes = [$("#anonOpConfig-Swapping-Target").val()];
+        $("#anonOpConfig-Swapping-DescriptiveAttributes option:selected").each((i, e) => {
+            attributes.push($(e).val());
+        });
+
+        if(!('Swapping-AttributeWeights' in cfg)) cfg['Swapping-AttributeWeights'] = {};
+
+        //Clear table from old entries
+        $('#anonOpConfig-Swapping-AttributeWeights-Modal-Table tbody tr').remove();
+
+        for(let i = 0; i < attributes.length; i++) {
+            let val = (!(attributes[i] in cfg['Swapping-AttributeWeights'])) ? (1.0/attributes.length) : cfg['Swapping-AttributeWeights'][attributes[i]];
+            html = '<tr>';
+            html += '<td>' + attributes[i] + '</td>';
+            html += '<td><input type="number" class="form-control" placeholder="Value" min="0" max="1" step="0.001" value="' + val + '" onchange="swappingWeightChanged(this);"></td>';
+            html += '</tr>';
+
+            $('#anonOpConfig-Swapping-AttributeWeights-Modal-Table tbody').append(html);
+        }
+    }
+    function swappingWeightChanged(element) {
+        let sum = 0, last = undefined;
+        $(element).closest("table").find("input").each((i,e) =>
+        {
+            sum += parseFloat($(e).val());
+            last = e;
+        });
+
+        if(sum > 1) $(element).val((parseFloat($(element).val()) - (sum - 1)).toFixed(3));
+        else if (sum < 1) $(last).val( ((1-sum) + parseFloat($(last).val())).toFixed(3));
+    }
+    function swappingSaveAttributeWeights() {
+        let cfg = getFirstMatch(appState['Operations'], (x => x.Id == appState['ActiveId']));
+        cfg['Swapping-AttributeWeights'] = {}
+
+        let rows = $('#anonOpConfig-Swapping-AttributeWeights-Modal-Table tbody').find('tr');
+        for(let i = 0; i < rows.length; i++) {
+            let row = rows[i];
+            let name = $(row).find("td").text();
+            let input = $(row).find("input");
+
+            cfg['Swapping-AttributeWeights'][name] = parseFloat(input.val()) || 0;
+        }
+    }
     function swappingSaveOperationConfig(cfg) {
         cfg['Swapping-Operation'] = $("#anonOpConfig-Swapping-Operation").val();
         cfg['Swapping-Target'] = $("#anonOpConfig-Swapping-Target").val();
         cfg['Swapping-kClusters'] = $("#anonOpConfig-Swapping-kClusters").val();
+
+        if (!Object.keys(cfg).includes('Swapping-AttributeWeights')) {
+            cfg['Swapping-AttributeWeights'] = [];
+        }
+
+        cfg['Swapping-DescriptiveAttributes'] = [];
+        $("#anonOpConfig-Swapping-DescriptiveAttributes option:selected").each((i, e) => {
+            cfg['Swapping-DescriptiveAttributes'].push($(e).val());
+        });
     }
     function swappingRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes){
         let nonUniqueEventAttributes = eventAttributes.filter(x=> !uniqueEventAttributes.includes(x));
@@ -1767,7 +1901,9 @@
         return {
             'Swapping-Target': '',
             'Swapping-Operation': '',
-            'Swapping-kClusters': 1
+            'Swapping-kClusters': 1,
+            'Swapping-DescriptiveAttributes': [],
+            'Swapping-AttributeWeights': []
         };
     }
 
