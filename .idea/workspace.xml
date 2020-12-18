@@ -33,15 +33,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="dd0398b0-c66c-4480-9be8-7dde6354bbde" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/media/none_event_logs/taxonomyTrees/anonymization/7004500 - event-act.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/media/temp/TLKC_EXT/TLKC_EXT 12-14-20 09-15-17 running_exampleWithCaseAttributes set_2_2_0.5_seconds.xes" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/privacy_django/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/privacy_django/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/anonymization_main.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/anonymization_main.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/base.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/privacy_analysis.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/privacy_analysis.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/upload.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/upload.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../Social_Network/.idea/SocialNetwork.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../Social_Network/.idea/SocialNetwork.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../TLKC-Privacy-Ext/.idea/TLKC-Privacy-Ext.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../TLKC-Privacy-Ext/.idea/TLKC-Privacy-Ext.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/../TLKC-Privacy-Ext/build/lib/p_tlkc_privacy_ext/Anonymizer.py" beforeDir="false" />
