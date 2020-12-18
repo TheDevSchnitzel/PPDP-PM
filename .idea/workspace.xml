@@ -199,8 +199,8 @@
     <list>
       <item itemvalue="Python.main" />
       <item itemvalue="Python.main_handover" />
-      <item itemvalue="Python.test" />
       <item itemvalue="Python.main_utility" />
+      <item itemvalue="Python.test" />
       <item itemvalue="Python tests.Unittests in test_addition.py" />
     </list>
     <recent_temporary>
