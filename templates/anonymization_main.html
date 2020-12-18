@@ -69,7 +69,8 @@
     <form class="needs-validation" action="javascript:addOperation()" novalidate>
         <div class="container">
             <div class="row">
-                <div class="col-sm">
+
+                <div class="col-sm-5">
                     <div class="input-group mb-3">
                         <div class="input-group-prepend">
                             <span class="input-group-text input-group-mediumWith" id="basic-addon1">Operation:</span>
@@ -88,7 +89,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="col-sm">
+
+                <div class="col-sm-5">
                     <div class="input-group mb-3">
                         <div class="input-group-prepend">
                             <span class="input-group-text input-group-mediumWith" id="basic-addon1">Level:</span>
@@ -112,35 +114,7 @@
     </form>
     <hr/>
     <div class="row">
-        <div class="col-2">
-            <label for="operationsList">Operations to apply (in order):</label>
-            <div class="list-group" id="operationsList" role="tablist" style="max-height: 250px; overflow-y: auto;">
-                <a class="list-group-item list-group-item-action active d-none" data-toggle="list" href="#anonOpConfig-default" role="tab">Default</a>
-            </div>
-            <div id="operationsListSorter" class="d-none">
-                <input
-                    style="margin-top: 10px;"
-                    data-toggle="tooltip"
-                    data-placement="top"
-                    title="Change execution order"
-                    type="button"
-                    class="btn btn-primary"
-                    value="Up &#x21D1;"
-                    onclick="moveOperationExecOrder('Up');"
-                />
-                <input
-                    style="margin-top: 10px; float: right;"
-                    data-toggle="tooltip"
-                    data-placement="top"
-                    title="Change execution order"
-                    type="button"
-                    class="btn btn-primary"
-                    value="Down &#x21D3;"
-                    onclick="moveOperationExecOrder('Down');"
-                />
-            </div>
-        </div>
-        <div class="col-10">
+        <div class="col-12">
             <label for="anonOpConfig">Configure:</label>
             <div class="tab-content border rounded" id="anonOpConfig" style="padding: 10px;">
                 <div class="tab-pane fade show active" id="anonOpConfig-default" role="tabpanel">No operation currently selected</div>
@@ -778,6 +752,39 @@
                 </div>
             </div>
         </div>
+
+
+    </div>
+    <div class="row">
+
+        <div class="col-4">
+            <label for="operationsList">Operations to apply (in order):</label>
+            <div class="list-group" id="operationsList" role="tablist" style="max-height: 250px; overflow-y: auto;">
+                <a class="list-group-item list-group-item-action active d-none" data-toggle="list" href="#anonOpConfig-default" role="tab">Default</a>
+            </div>
+            <div id="operationsListSorter" class="d-none">
+                <input
+                    style="margin-top: 10px;"
+                    data-toggle="tooltip"
+                    data-placement="top"
+                    title="Change execution order"
+                    type="button"
+                    class="btn btn-primary"
+                    value="Up &#x21D1;"
+                    onclick="moveOperationExecOrder('Up');"
+                />
+                <input
+                    style="margin-top: 10px; float: right;"
+                    data-toggle="tooltip"
+                    data-placement="top"
+                    title="Change execution order"
+                    type="button"
+                    class="btn btn-primary"
+                    value="Down &#x21D3;"
+                    onclick="moveOperationExecOrder('Down');"
+                />
+            </div>
+        </div>
     </div>
     <input
         style="margin-top: 10px;"
@@ -786,7 +793,7 @@
         title="Apply operations to selected log"
         type="button"
         class="btn btn-primary"
-        value="Apply operations to selected log"
+        value="Apply Operations"
         name="applyButton"
         id="applyButton"
         onclick="startAnonymization()"

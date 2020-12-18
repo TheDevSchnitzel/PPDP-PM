@@ -29,18 +29,17 @@
                         <div class=" col-sm-6 col-md-7 col-lg-8">
                             <form name="load" action="privacy_analysis_main" method="POST" enctype="multipart/form-data">
                                 {% csrf_token %}
-                                Event log:
-                                <input type="file" value="fileupload" name="event_log"/>
+                                <input type="file" value="fileupload" name="event_log" class="btn"/>
                                 <input type="submit" class="btn btn-primary mb-2" value="Upload" name="uploadButton" id="submitEL1"/>
                                 <input type="hidden" name="actionDisclosureRisk"/>
                             </form>
                         </div>
                     </div>
                     <div class="row">
-                        <div class=" col-sm-6 col-md-7 col-lg-8">
+                        <div class=" col-sm-8 col-md-9 col-lg-10">
                             <form name="choice" action="privacy_analysis_main" method="POST">
                                 {% csrf_token %}
-                                <select name="log_list" class="custom-select" size="10">
+                                <select name="log_list" class="custom-select" size="5">
                                     {% for eventlog in eventlog_list %}
                                     <option value="{{eventlog}}">{{eventlog}}</option>
                                     {% endfor %}
@@ -57,9 +56,11 @@
                                     id="setButton"
                                 />
                                 <input style="margin-top: 10px;" type="submit" class="btn btn-danger" value="Delete" name="deleteButton" id="deleteButton"/>
-                                <input style="float: right; margin-top: 10px;" type="submit" class="btn btn-info" value="Download" name="downloadButton" id="downloadButton"/>
+
+<!--                                <input style="float: right; margin-top: 10px;" type="submit" class="btn btn-info" value="Download" name="downloadButton" id="downloadButton"/>-->
                                 <input type="hidden" name="actionDisclosureRisk"/>
-                                <table style="width: 100%;">
+                                </br>
+                                <table style="width: 100%;" class="table table-borderless">
                                     <tr>
                                         <td>Existence Based:</td>
                                         <td>
@@ -67,7 +68,7 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>Is All Life-Cycles:</td>
+                                        <td>All Life-Cycles:</td>
                                         <td>
                                             <input type="checkbox" id="DR_IsAllLifeCycle"/>
                                         </td>
@@ -170,18 +171,17 @@
                         <div class=" col-sm-6 col-md-7 col-lg-8">
                             <form name="load" action="privacy_analysis_main" method="POST" enctype="multipart/form-data">
                                 {% csrf_token %}
-                                Event log:
-                                <input type="file" value="fileupload" name="event_log"/>
+                                <input type="file" value="fileupload" name="event_log" class="btn"/>
                                 <input type="submit" class="btn btn-primary mb-2" value="Upload" name="uploadButton" id="submitEL2"/>
                                 <input type="hidden" name="actionDataUtility"/>
                             </form>
                         </div>
                     </div>
                     <div class="row">
-                        <div class=" col-sm-6 col-md-7 col-lg-8">
+                        <div class=" col-sm-8 col-md-9 col-lg-10">
                             <form name="choice" action="privacy_analysis_main" method="POST">
                                 {% csrf_token %}
-                                <select name="log_list" class="custom-select" size="10">
+                                <select name="log_list" class="custom-select" size="5">
                                     {% for eventlog in eventlog_list %}
                                     <option value="{{eventlog}}">{{eventlog}}</option>
                                     {% endfor %}
@@ -209,17 +209,18 @@
                                     id="setButton2backup"
                                 />
                                 <input style="margin-top: 10px;" type="submit" class="btn btn-danger" value="Delete" name="deleteButton" id="deleteButton2"/>
-                                <input style="float: right; margin-top: 10px;" type="submit" class="btn btn-info" value="Download" name="downloadButton" id="downloadButton2"/>
+<!--                                <input style="float: right; margin-top: 10px;" type="submit" class="btn btn-info" value="Download" name="downloadButton" id="downloadButton2"/>-->
                                 <input type="hidden" name="actionDataUtility"/>
-                                <table style="width: 100%;">
+                                </br>
+                                <table style="width: 100%;" class="table table-borderless">
                                     <tr>
-                                        <td>From same origin:</td>
+                                        <td>Same Origin:</td>
                                         <td>
                                             <input type="checkbox" id="DU_IsFromSameOrigin"/>
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td>Is All Life-Cycles:</td>
+                                        <td>All Life-Cycles:</td>
                                         <td>
                                             <input type="checkbox" id="DU_IsAllLifeCycle"/>
                                         </td>

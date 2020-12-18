@@ -21,7 +21,8 @@
                 <form  name="load" action="upload_eventlog" method = "POST" enctype="multipart/form-data">
                     {% csrf_token %}
 
-                    <p>Event log: <input type = "file" value="fileupload" name = "event_log" /></p>
+
+                    <p> <input type = "file" value="fileupload" name = "event_log" /></p>
                     <p><input type = "submit" class="btn btn-primary mb-2" value = "Upload EventLog" name = "uploadButton" id ='submitresEL' /></p>
 
                 </form>

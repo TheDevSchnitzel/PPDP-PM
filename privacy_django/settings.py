@@ -148,6 +148,11 @@ TLKC_FILE = ''
 
 # for uploading large files > 2.5 Mb
 
+<<<<<<< HEAD
+=======
+ALLOWED_HOSTS=['*',]
+
+>>>>>>> origin/main
 
 TLKC_EXT_APPLIED = False
 TLKC_EXT_FILE = ''
