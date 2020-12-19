@@ -135,7 +135,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 EVENT_LOG_NAME = ':notset:'
-BACKUP_EVENT_LOG_NAME = ':notset:'
+PRIVACY_ANALYSIS = {"EVENT_LOG_NAME_1": ':notset:', "EVENT_LOG_NAME_2": ':notset:', "EVENT_LOG_LIFECYCLES_1": [], "EVENT_LOG_LIFECYCLES_2": []}
 
 ROLE_APPLIED = False
 ROLE_FILE = ''
@@ -148,11 +148,8 @@ TLKC_FILE = ''
 
 # for uploading large files > 2.5 Mb
 
-<<<<<<< HEAD
-=======
-ALLOWED_HOSTS=['*',]
+ALLOWED_HOSTS = ['*', ]
 
->>>>>>> origin/main
 
 TLKC_EXT_APPLIED = False
 TLKC_EXT_FILE = ''

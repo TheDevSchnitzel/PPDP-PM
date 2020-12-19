@@ -20,10 +20,12 @@ from p_privacy_qt.EMD import EMD
 
 
 def privacy_analysis_main(request):
+    paSettings = settings.PRIVACY_ANALYSIS
+
     event_logs_path = os.path.join(settings.MEDIA_ROOT, "event_logs")
 
-    event_log = getXesLogPath(settings.EVENT_LOG_NAME)
-    event_log_backup = getXesLogPath(settings.BACKUP_EVENT_LOG_NAME)
+    event_log = getXesLogPath(paSettings["EVENT_LOG_NAME_1"])
+    event_log_backup = getXesLogPath(paSettings["EVENT_LOG_NAME_2"])
 
     eventlogs = [f for f in listdir(event_logs_path) if isfile(join(event_logs_path, f))]
 
@@ -37,8 +39,14 @@ def privacy_analysis_main(request):
         logBackupEventAttributes = [a for a in eLog[0][0].keys()]
 
     returnObject = {'eventlog_list': eventlogs, 'disclosureRiskActive': "active", 'dataUtilityActive': '', 'logEventAttributes': logEventAttributes, 'logBackupEventAttributes': logBackupEventAttributes}
+    returnObject['log_name'] = paSettings["EVENT_LOG_NAME_1"]
+    returnObject['log_name_backup'] = paSettings["EVENT_LOG_NAME_2"]
+    returnObject['logLifecycles'] = paSettings["EVENT_LOG_LIFECYCLES_1"]
+    returnObject['logBackupLifecycles'] = paSettings["EVENT_LOG_LIFECYCLES_2"]
 
     if request.method == 'POST':
+        print(request.POST)
+
         if("actionDataUtility" in request.POST):
             returnObject['dataUtilityActive'] = "active"
             returnObject['disclosureRiskActive'] = ""
@@ -64,8 +72,8 @@ def privacy_analysis_main(request):
                     return HttpResponseRedirect(request.path_info)
 
                 filename = request.POST["log_list"]
-                if settings.EVENT_LOG_NAME == filename:
-                    settings.EVENT_LOG_NAME = ":notset:"
+                if paSettings["EVENT_LOG_NAME_1"] == filename:
+                    paSettings["EVENT_LOG_NAME_1"] = ":notset:"
 
                 eventlogs = [f for f in listdir(event_logs_path) if isfile(join(event_logs_path, f))]
 
@@ -85,16 +93,20 @@ def privacy_analysis_main(request):
                 eLog = xes_importer.apply(getXesLogPath(filename))
 
                 if "setButton" in request.POST:
-                    settings.EVENT_LOG_NAME = filename
+                    paSettings["EVENT_LOG_NAME_1"] = filename
                     returnObject['logEventAttributes'] = [a for a in eLog[0][0].keys()]
+                    paSettings["EVENT_LOG_LIFECYCLES_1"] = getUniqueLifecycles(eLog)
 
                 elif "setButtonBackup" in request.POST:
-                    settings.BACKUP_EVENT_LOG_NAME = filename
+                    paSettings["EVENT_LOG_NAME_2"] = filename
                     returnObject['logBackupEventAttributes'] = [a for a in eLog[0][0].keys()]
+                    paSettings["EVENT_LOG_LIFECYCLES_2"] = getUniqueLifecycles(eLog)
 
                 returnObject['eventlog_list'] = [f for f in listdir(event_logs_path) if isfile(join(event_logs_path, f))]
-                returnObject['log_name'] = settings.EVENT_LOG_NAME
-                returnObject['log_name_backup'] = settings.BACKUP_EVENT_LOG_NAME
+                returnObject['log_name'] = paSettings["EVENT_LOG_NAME_1"]
+                returnObject['log_name_backup'] = paSettings["EVENT_LOG_NAME_2"]
+                returnObject['logLifecycles'] = paSettings["EVENT_LOG_LIFECYCLES_1"]
+                returnObject['logBackupLifecycles'] = paSettings["EVENT_LOG_LIFECYCLES_2"]
                 return render(request, 'privacy_analysis.html', returnObject)
 
             elif "downloadButton" in request.POST:  # for event logs
@@ -129,6 +141,9 @@ def privacy_analysis_main(request):
 
                 rv_cd, rv_td = getRiskValue(event_log, getDisclosureRiskSettings(reqConfData))
                 return HttpResponse(json.dumps({"Risk": {"cd": rv_cd, "td": rv_td}}), content_type='application/json')
+        else:
+            returnObject['logLifecycles'] = getRequestParameter(request.GET, 'logLifecycles', [])
+            returnObject['logBackupLifecycles'] = getRequestParameter(request.GET, 'logBackupLifecycles', [])
 
         return render(request, 'privacy_analysis.html', returnObject)
 
@@ -147,9 +162,9 @@ def getDataUtilityValue(origLogPath, privLogPath, settings):
 
     sensitive = []
     time_accuracy = settings['DU_TimeAccuracy'].lower()  # original, seconds, minutes, hours, days
-    event_attributes = settings['DU_EventAttributes']
+    event_attributes = list(set(settings['DU_EventAttributes']))  # Make list unique
     # these life cycles are applied only when all_lif_cycle = False
-    life_cycle = settings['DU_LifeCycle']
+    life_cycle = list(set(settings['DU_LifeCycle']))  # Make list unique
     # when life cycle is in trace attributes then all_life_cycle has to be True
     all_life_cycle = settings['DU_IsAllLifeCycle']
 
@@ -198,9 +213,9 @@ def getRiskValue(event_log, settings):
     sensitive = []
     # is needed only when time is included in the event_attributes
     time_accuracy = settings['DR_TimeAccuracy'].lower()  # original, seconds, minutes, hours, days
-    event_attributes = settings['DR_EventAttributes']
+    event_attributes = list(set(settings['DR_EventAttributes']))  # Make list unique
     # these life cycles are applied only when all_lif_cycle = False
-    life_cycle = settings['DR_LifeCycle']
+    life_cycle = list(set(settings['DR_LifeCycle']))  # Make list unique
     # when life cycle is in trace attributes then all_life_cycle has to be True
     all_life_cycle = settings['DR_IsAllLifeCycle']
 
@@ -262,3 +277,12 @@ def getRequestParameter(requestData, parameter, default=None):
             return requestData[parameter]
     else:
         return default
+
+
+def getUniqueLifecycles(log):
+    ret = []
+    for tIdx, trace in enumerate(log):
+        for eIdx, event in enumerate(trace):
+            if 'lifecycle:transition' in event.keys():
+                ret.append(event['lifecycle:transition'])
+    return list(set(ret))
