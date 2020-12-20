@@ -69,7 +69,6 @@
     <form class="needs-validation" action="javascript:addOperation()" novalidate>
         <div class="container">
             <div class="row">
-
                 <div class="col-sm-5">
                     <div class="input-group mb-3">
                         <div class="input-group-prepend">
@@ -89,7 +88,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="col-sm-5">
                     <div class="input-group mb-3">
                         <div class="input-group-prepend">
@@ -163,7 +161,7 @@
                                     Case Filter
                                     <span data-toggle="tooltip" title="Only apply the operation if the according case contains the specified attribute whichs value matches the entered value and the operator">&#x1F6C8;</span>:</span>
                             </div>
-                            <select class="selectpicker" id="anonOpConfig-Addition-MatchOperation-Case" disabled>
+                            <select class="selectpicker" id="anonOpConfig-Addition-MatchOperation-Case" onchange="filterMatchChanged(this, '#anonOpConfig-Addition-ConditionalAttr-Case')" disabled>
                                 <option value="matchCase" selected>Match on case attribute</option>
                                 <option value="matchTraceLength">Trace Length</option>
                                 <option value="matchFirstEvent">Match on first event in trace needed</option>
@@ -360,7 +358,7 @@
                                     Case Filter
                                     <span data-toggle="tooltip" title="Only apply the operation if the according case contains the specified attribute whichs value matches the entered value and the operator">&#x1F6C8;</span>:</span>
                             </div>
-                            <select class="selectpicker" id="anonOpConfig-Cryptography-MatchOperation-Case" disabled>
+                            <select class="selectpicker" id="anonOpConfig-Cryptography-MatchOperation-Case" onchange="filterMatchChanged(this, '#anonOpConfig-Cryptography-ConditionalAttr-Case')" disabled>
                                 <option value="matchCase" selected>Match on case attribute</option>
                                 <option value="matchTraceLength">Trace Length</option>
                                 <option value="matchFirstEvent">Match on first event in trace needed</option>
@@ -604,7 +602,7 @@
                                     Case Filter
                                     <span data-toggle="tooltip" title="Only apply the operation if the according case contains the specified attribute whichs value matches the entered value and the operator">&#x1F6C8;</span>:</span>
                             </div>
-                            <select class="selectpicker" id="anonOpConfig-Suppression-MatchOperation-Case" disabled>
+                            <select class="selectpicker" id="anonOpConfig-Suppression-MatchOperation-Case" onchange="filterMatchChanged(this, '#anonOpConfig-Suppression-ConditionalAttr-Case')" disabled>
                                 <option value="matchCase" selected>Match on case attribute</option>
                                 <option value="matchTraceLength">Trace Length</option>
                                 <option value="matchFirstEvent">Match on first event in trace needed</option>
@@ -752,11 +750,8 @@
                 </div>
             </div>
         </div>
-
-
     </div>
     <div class="row">
-
         <div class="col-4">
             <label for="operationsList">Operations to apply (in order):</label>
             <div class="list-group" id="operationsList" role="tablist" style="max-height: 250px; overflow-y: auto;">
@@ -1330,8 +1325,9 @@
     function additionRestoreOperationConfig(cfg, caseAttributes, eventAttributes, uniqueEventAttributes) {
         let nonUniqueEventAttributes = eventAttributes.filter(x=> !uniqueEventAttributes.includes(x));
 
-        restoreDropDownMenuOptGroups('#anonOpConfig-Addition-ConditionalAttr-Case', {'Case-Attributes': caseAttributes, 'Attributes unique to first event': uniqueEventAttributes, 'Event-Attributes': nonUniqueEventAttributes}, cfg['Addition-ConditionalAttr-Case']);
         $("#anonOpConfig-Addition-ConditionalActive-Case").prop("checked", cfg['Addition-ConditionalActive-Case']);
+        checkboxToggleEnable($("#anonOpConfig-Addition-ConditionalActive-Case"), ['#anonOpConfig-Addition-ConditionalAttr-Case', '#anonOpConfig-Addition-ConditionalVal-Case', '#anonOpConfig-Addition-MatchOperation-Case', '#anonOpConfig-Addition-ConditionalOperator-Case']);
+        restoreDropDownMenuOptGroups('#anonOpConfig-Addition-ConditionalAttr-Case', {'Case-Attributes': caseAttributes, 'Attributes unique to first event': uniqueEventAttributes, 'Event-Attributes': nonUniqueEventAttributes}, cfg['Addition-ConditionalAttr-Case']);
         $("#anonOpConfig-Addition-ConditionalVal-Case").val(cfg['Addition-ConditionalVal-Case']);
         restoreDropDownMenuSelect('#anonOpConfig-Addition-ConditionalOperator-Case', cfg['Addition-ConditionalOperator-Case']);
         restoreDropDownMenuSelect('#anonOpConfig-Addition-MatchOperation-Case', cfg['Addition-MatchOp-Case']);
@@ -1360,7 +1356,7 @@
     function additionGetEmptyConfig() {
         return {
             'Addition-ConditionalAttr-Case': '',
-            'Addition-ConditionalActive-Case': '',
+            'Addition-ConditionalActive-Case': false,
             'Addition-ConditionalVal-Case': '',
             'Addition-ConditionalOperator-Case': '',
             'Addition-MatchOp-Case': '',
@@ -1517,14 +1513,17 @@
             restoreDropDownMenuOptGroups('#anonOpConfig-Cryptography-Target', {'Attributes unique to first event': uniqueEventAttributes, 'Event-Attributes': nonUniqueEventAttributes}, cfg['Cryptography-Target']);
         }
 
-        restoreDropDownMenuOptGroups('#anonOpConfig-Cryptography-ConditionalAttr-Case', {'Case-Attributes': caseAttributes, 'Attributes unique to first event': uniqueEventAttributes, 'Event-Attributes': nonUniqueEventAttributes}, cfg['Cryptography-ConditionalAttr-Case']);
+        //Restore the state of the filters including whether they are enabled or not
         $("#anonOpConfig-Cryptography-ConditionalActive-Case").prop("checked", cfg['Cryptography-ConditionalActive-Case']);
+        checkboxToggleEnable($("#anonOpConfig-Cryptography-ConditionalActive-Case"), ['#anonOpConfig-Cryptography-ConditionalAttr-Case','#anonOpConfig-Cryptography-ConditionalVal-Case', '#anonOpConfig-Cryptography-ConditionalOperator-Case','#anonOpConfig-Cryptography-MatchOperation-Case']);
+        restoreDropDownMenuOptGroups('#anonOpConfig-Cryptography-ConditionalAttr-Case', {'Case-Attributes': caseAttributes, 'Attributes unique to first event': uniqueEventAttributes, 'Event-Attributes': nonUniqueEventAttributes}, cfg['Cryptography-ConditionalAttr-Case']);
         $("#anonOpConfig-Cryptography-ConditionalVal-Case").val(cfg['Cryptography-ConditionalVal-Case']);
         restoreDropDownMenuSelect('#anonOpConfig-Cryptography-ConditionalOperator-Case', cfg['Cryptography-ConditionalOperator-Case']);
         restoreDropDownMenuSelect('#anonOpConfig-Cryptography-MatchOperation-Case', cfg['Cryptography-MatchOp-Case']);
 
-        restoreDropDownMenuOptGroups('#anonOpConfig-Cryptography-ConditionalAttr-Event', {'Attributes unique to first event': uniqueEventAttributes, 'Event-Attributes': nonUniqueEventAttributes}, cfg['Cryptography-ConditionalAttr-Event']);
         $("#anonOpConfig-Cryptography-ConditionalActive-Event").prop("checked", cfg['Cryptography-ConditionalActive-Event']);
+        checkboxToggleEnable($("#anonOpConfig-Cryptography-ConditionalActive-Event"), ['#anonOpConfig-Cryptography-ConditionalAttr-Event','#anonOpConfig-Cryptography-ConditionalVal-Event', '#anonOpConfig-Cryptography-ConditionalOperator-Event','#anonOpConfig-Cryptography-MatchOperation-Event']);
+        restoreDropDownMenuOptGroups('#anonOpConfig-Cryptography-ConditionalAttr-Event', {'Attributes unique to first event': uniqueEventAttributes, 'Event-Attributes': nonUniqueEventAttributes}, cfg['Cryptography-ConditionalAttr-Event']);
         $("#anonOpConfig-Cryptography-ConditionalVal-Event").val(cfg['Cryptography-ConditionalVal-Event']);
         restoreDropDownMenuSelect('#anonOpConfig-Cryptography-ConditionalOperator-Event', cfg['Cryptography-ConditionalOperator-Event']);
         restoreDropDownMenuSelect('#anonOpConfig-Cryptography-MatchOperation-Event', cfg['Cryptography-MatchOp-Event']);
@@ -1535,12 +1534,12 @@
     function cryptographyGetEmptyConfig() {
         return {
             'Cryptography-ConditionalAttr-Case': '',
-            'Cryptography-ConditionalActive-Case': '',
+            'Cryptography-ConditionalActive-Case': false,
             'Cryptography-ConditionalVal-Case': '',
             'Cryptography-ConditionalOperator-Case': '',
             'Cryptography-MatchOp-Case': '',
             'Cryptography-ConditionalAttr-Event': '',
-            'Cryptography-ConditionalActive-Event': '',
+            'Cryptography-ConditionalActive-Event': false,
             'Cryptography-ConditionalVal-Event': '',
             'Cryptography-ConditionalOperator-Event': '',
             'Cryptography-MatchOp-Event': '',
@@ -1757,14 +1756,16 @@
             restoreDropDownMenuOptGroups('#anonOpConfig-Suppression-Target', {'Attributes unique to first event': uniqueEventAttributes, 'Event-Attributes': nonUniqueEventAttributes}, cfg['Suppression-Target']);
         }
 
-        restoreDropDownMenuOptGroups('#anonOpConfig-Suppression-ConditionalAttr-Case',  {'Case-Attributes': caseAttributes, 'Attributes unique to first event': uniqueEventAttributes, 'Event-Attributes': nonUniqueEventAttributes}, cfg['Suppression-ConditionalAttr-Case']);
         $("#anonOpConfig-Suppression-ConditionalActive-Case").prop("checked", cfg['Suppression-ConditionalActive-Case']);
+        checkboxToggleEnable($("#anonOpConfig-Suppression-ConditionalActive-Case"), ['#anonOpConfig-Suppression-ConditionalAttr-Case', '#anonOpConfig-Suppression-ConditionalVal-Case', '#anonOpConfig-Suppression-MatchOperation-Case', '#anonOpConfig-Suppression-ConditionalOperator-Case']);
+        restoreDropDownMenuOptGroups('#anonOpConfig-Suppression-ConditionalAttr-Case',  {'Case-Attributes': caseAttributes, 'Attributes unique to first event': uniqueEventAttributes, 'Event-Attributes': nonUniqueEventAttributes}, cfg['Suppression-ConditionalAttr-Case']);
         $("#anonOpConfig-Suppression-ConditionalVal-Case").val(cfg['Suppression-ConditionalVal-Case']);
         restoreDropDownMenuSelect('#anonOpConfig-Suppression-ConditionalOperator-Case', cfg['Suppression-ConditionalOperator-Case']);
         restoreDropDownMenuSelect('#anonOpConfig-Suppression-MatchOperation-Case', cfg['Suppression-MatchOp-Case']);
 
-        restoreDropDownMenuOptGroups('#anonOpConfig-Suppression-ConditionalAttr-Event', {'Attributes unique to first event': uniqueEventAttributes, 'Event-Attributes': nonUniqueEventAttributes}, cfg['Suppression-ConditionalAttr-Event']);
         $("#anonOpConfig-Suppression-ConditionalActive-Event").prop("checked", cfg['Suppression-ConditionalActive-Event']);
+        checkboxToggleEnable($("#anonOpConfig-Suppression-ConditionalActive-Event"), ['#anonOpConfig-Suppression-ConditionalAttr-Event', '#anonOpConfig-Suppression-ConditionalVal-Event', '#anonOpConfig-Suppression-MatchOperation-Event', '#anonOpConfig-Suppression-ConditionalOperator-Event']);
+        restoreDropDownMenuOptGroups('#anonOpConfig-Suppression-ConditionalAttr-Event', {'Attributes unique to first event': uniqueEventAttributes, 'Event-Attributes': nonUniqueEventAttributes}, cfg['Suppression-ConditionalAttr-Event']);
         $("#anonOpConfig-Suppression-ConditionalVal-Event").val(cfg['Suppression-ConditionalVal-Event']);
         restoreDropDownMenuSelect('#anonOpConfig-Suppression-ConditionalOperator-Event', cfg['Suppression-ConditionalOperator-Event']);
         restoreDropDownMenuSelect('#anonOpConfig-Suppression-MatchOperation-Event', cfg['Suppression-MatchOp-Event']);
@@ -1778,7 +1779,7 @@
     function suppressionGetEmptyConfig() {
         return {
             'Suppression-ConditionalAttr-Case': '',
-            'Suppression-ConditionalActive-Case': '',
+            'Suppression-ConditionalActive-Case': false,
             'Suppression-ConditionalVal-Case': '',
             'Suppression-ConditionalOperator-Case': '',
             'Suppression-MatchOp-Case': '',
@@ -1952,6 +1953,14 @@
             $('#outputFileList option:selected').remove();
             $('#outputFileList :nth-child(1)').prop('selected', true);
         }).fail(result => console.log('handleOutput-Ajax failed'));
+    }
+
+    /* Handle case filters with trace length */
+    function filterMatchChanged(e, attrSelectID)
+    {
+        $(attrSelectID).prop("disabled", ($(e).val() === "matchTraceLength"));
+        if($(e).val() === "matchTraceLength") $(attrSelectID).val("");
+        $(attrSelectID).selectpicker('refresh');
     }
 
     /* Syntactic sugar */
