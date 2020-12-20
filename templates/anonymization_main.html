@@ -270,6 +270,16 @@
                         </div>
                         <div class="input-group mb-3">
                             <div class="input-group-prepend">
+                                <span class="input-group-text input-group-Configure">Assignment Method:</span>
+                            </div>
+                            <select class="selectpicker" id="anonOpConfig-Condensation-ClusterCondenseFunc">
+                                <option selected>Mode</option>
+                                <option>Mean</option>
+                                <option>Median</option>
+                            </select>
+                        </div>
+                        <div class="input-group mb-3">
+                            <div class="input-group-prepend">
                                 <span class="input-group-text input-group-Configure">Num. of clusters:</span>
                             </div>
                             <input type="number" class="form-control" style="max-width: 13.8em;" placeholder="kClusters" min="2" value="2" id="anonOpConfig-Condensation-kClusters"/>
@@ -1442,6 +1452,7 @@
         cfg['Condensation-Operation'] = $("#anonOpConfig-Condensation-Operation").val();
         cfg['Condensation-Target'] = $("#anonOpConfig-Condensation-Target").val();
         cfg['Condensation-kClusters'] = $("#anonOpConfig-Condensation-kClusters").val();
+        cfg['Condensation-ClusterCondenseFunc'] = $("#anonOpConfig-Condensation-ClusterCondenseFunc").val();
 
         if (!Object.keys(cfg).includes('Condensation-AttributeWeights')) {
             cfg['Condensation-AttributeWeights'] = [];
@@ -1469,6 +1480,7 @@
             restoreDropDownMenuOptGroups('#anonOpConfig-Condensation-DescriptiveAttributes', {'Attributes unique to first event': uniqueWithoutTarget, 'Event-Attributes': nonUniqueWithoutTarget}, cfg['Condensation-DescriptiveAttributes']);
         }
 
+        restoreDropDownMenuSelect("#anonOpConfig-Condensation-ClusterCondenseFunc", cfg['Condensation-ClusterCondenseFunc']);
         restoreDropDownMenuSelect("#anonOpConfig-Condensation-Operation", cfg['Condensation-Operation']);
 
         $("#anonOpConfig-Condensation-kClusters").val(cfg['Condensation-kClusters']);
@@ -1477,6 +1489,7 @@
         return {
             'Condensation-Target': '',
             'Condensation-Operation': '',
+            'Condensation-ClusterCondenseFunc': 'Mode',
             'Condensation-DescriptiveAttributes': [],
             'Condensation-kClusters': 4
         };

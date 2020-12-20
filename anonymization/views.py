@@ -194,22 +194,23 @@ def performCondensation(log, op):
     condenseTarget = op['Condensation-Target']
     descriptiveAttributes = op['Condensation-DescriptiveAttributes']
     weights = op['Condensation-AttributeWeights']
+    condenseFunc = op['Condensation-ClusterCondenseFunc']
     k = int(op['Condensation-kClusters'])
 
     if(level == "Event"):
         if(condenseOp == 'kMeans'):
-            log = c.CondenseEventAttributeBykMeanClusterUsingMode(log, condenseTarget, descriptiveAttributes, k)
+            log = c.CondenseEventAttributeBykMeanCluster(log, condenseTarget, descriptiveAttributes, k, condenseFunc)
         elif(condenseOp == 'kModes'):
-            log = c.CondenseEventAttributeBykModesClusterUsingMode(log, condenseTarget, descriptiveAttributes, k)
+            log = c.CondenseEventAttributeBykModesCluster(log, condenseTarget, descriptiveAttributes, k, condenseFunc)
         elif(condenseOp == 'kModesEuclid'):
-            log = c.CondenseEventAttributeByEuclidianDistance(log, condenseTarget, descriptiveAttributes, weights, k)
+            log = c.CondenseEventAttributeByEuclidianDistance(log, condenseTarget, descriptiveAttributes, weights, k, condenseFunc)
     elif(level == "Case"):
         if(condenseOp == 'kMeans'):
-            log = c.CondenseCaseAttributeBykMeanClusterUsingMode(log, condenseTarget, descriptiveAttributes, k)
+            log = c.CondenseCaseAttributeBykMeanCluster(log, condenseTarget, descriptiveAttributes, k, condenseFunc)
         elif(condenseOp == 'kModes'):
-            log = c.CondenseCaseAttributeBykModesClusterUsingMode(log, condenseTarget, descriptiveAttributes, k)
+            log = c.CondenseCaseAttributeBykModesCluster(log, condenseTarget, descriptiveAttributes, k, condenseFunc)
         elif(condenseOp == 'kModesEuclid'):
-            log = c.CondenseCaseAttributeByEuclidianDistance(log, condenseTarget, descriptiveAttributes, weights, k)
+            log = c.CondenseCaseAttributeByEuclidianDistance(log, condenseTarget, descriptiveAttributes, weights, k, condenseFunc)
     return log
 
 
