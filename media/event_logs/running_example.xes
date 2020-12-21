@@ -3,9 +3,6 @@
   <trace>
     <string key="concept:name" value="1"/>
     <string key="creator" value="Fluxicon Nitro"/>
-    <string key="Age" value="31"/>
-	<string key="Zip" value="52064"/>
-	<string key="Salary" value="1000"/>
     <event>
       <string key="concept:name" value="register request"/>
       <string key="org:resource" value="Pete"/>
@@ -60,9 +57,6 @@
   <trace>
     <string key="concept:name" value="2"/>
     <string key="creator" value="Fluxicon Nitro"/>
-    <string key="Age" value="27"/>
-	<string key="Zip" value="52062"/>
-	<string key="Salary" value="1700"/>
     <event>
       <string key="concept:name" value="register request"/>
       <string key="org:resource" value="Mike"/>
